@@ -14,9 +14,9 @@ const userSchema = z.object({
         .max(255, { message: "username must not be more than 255 characters" }),
 
     mobile_number: z
-        .string({ required_error: "Phone is required" })
-        .min(3, { message: "Phone must be atleast of 6 characters" })
-        .max(12, "Phone can't be greater than 12"),
+        .string({ required_error: "mobile_number is required" })
+        .min(3, { message: "mobile_number must be atleast of 6 characters" })
+        .max(12, "mobile_number can't be greater than 12"),
 
     email: z
         .string({ required_error: "Email is required" })
@@ -38,4 +38,17 @@ const userSchema = z.object({
         .max(255, { message: "gender must not be more than 255 characters" }),
 });
 
-module.exports = { userSchema };
+const loginSchema = z.object({
+    emailOrUsername: z
+        .string({ required_error: "Email is required" })
+        .trim()
+        .min(3, { message: "Email must be atleast 3 characters" })
+        .max(255, { message: "Email must not be more than 255 characters" }),
+
+    password: z
+        .string({ required_error: "password is required" })
+        .min(6, { message: "Password must be atleast of 6 characters" })
+        .max(1024, "Password can't be greater than 1024"),
+});
+
+module.exports = { userSchema, loginSchema };

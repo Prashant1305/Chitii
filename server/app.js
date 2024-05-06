@@ -10,8 +10,22 @@ const user_routes = require("./routes/user_routes");
 
 const PORT = process.env.PORT || 3012;
 const app = express();
-const corsOptions = {
-    origin: process.env.CORS_ORIGIN,
+
+
+const allowedOrigins = [
+    'http://www.example.com',
+    `${process.env.CORS_ORIGIN}`,
+]
+
+var corsOptions = {
+    origin: function (origin, callback) {
+        console.log("req is from ", origin);
+        if (allowedOrigins.includes(origin) || !origin) {
+            callback(null, true); // Allow the request
+        } else {
+            callback(new Error(`Not allowed by CORS ${origin}`)); // Block the request
+        }
+    },
     methods: "GET, POST, DELETE, PATCH, HEAD",
     credentials: true,
 };

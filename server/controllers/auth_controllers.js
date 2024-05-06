@@ -1,7 +1,7 @@
 const User = require("../models/user_model");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const options = { httpOnly: true, secure: process.env.NODE_ENV !== "development", sameSite: "strict" }
+const options = { httpOnly: false, secure: process.env.NODE_ENV !== "development", sameSite: "strict" }
 
 const signup = async (req, res, next) => {
     try {
@@ -14,7 +14,7 @@ const signup = async (req, res, next) => {
             ]
         });
         if (userExist) {
-            return next({ status: 400, message: "user already exist", extraDetails: "from signup function inside authcontroller" });
+            return next({ status: 201, message: "user already exist", extraDetails: "some of info provided are alredy registered" });
         }
         else {
 
@@ -30,7 +30,7 @@ const signup = async (req, res, next) => {
         }
     } catch (error) {
         const err = new Error("bad credentials");
-        err.status = 400;
+        err.status = 201;
         err.extraDetails = "from signup function inside authcontroller";
         next(err);
     }
@@ -48,7 +48,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 
     } catch (error) {
         const err = new Error("token generation failed");
-        err.status = 400;
+        err.status = 201;
         err.extraDetails = "from generateAccessAndRefreshToken function inside authcontroller";
         next(err);
     }
@@ -59,14 +59,14 @@ const login = async (req, res, next) => {
         const { emailOrUsername, password } = req.body;
 
         if (!emailOrUsername || !password) {
-            return next({ message: "email or password missing", status: 400, extraDetails: "from login function inside authcontroller" });
+            return next({ message: "email or password missing", status: 201, extraDetails: "from login function inside authcontroller" });
         }
         const user = await User.findOne({
             $or: [{ user_name: emailOrUsername }, { email: emailOrUsername }]
         })
 
         if (!user) {
-            return next({ message: "email or username invalid", status: 400, extraDetails: "from login function inside authcontroller" });
+            return next({ message: "email or username invalid", status: 201, extraDetails: "from login function inside authcontroller" });
         }
         // console.log(user);
         const isPasswordValid = await user.isPasswordCorrect(password);
