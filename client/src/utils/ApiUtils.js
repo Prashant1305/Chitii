@@ -1,8 +1,23 @@
 import axios from "axios";
+import { baseUrl } from "../Constant";
 
-const url = "http://localhost:3030/api/auth/login";
+export const signup_api = async (data) => {
+    const url = `${baseUrl}/api/auth/signup`;
+    const res = await axios.post(url, data, {
+        headers: {
+            "Content-Type": "application/json",
+        }
+    })
+    return res;
+}
 
-export const check = async () => {
-    const res = await axios.get(url);
+export const login_api = async (data) => {
+    const url = `${baseUrl}/api/auth/login`;
+    console.log(data);
+    const res = await axios.post(url, data, {
+        headers: {
+            "Content-Type": "application/json",
+        }
+    })
     return res;
 }

@@ -1,0 +1,166 @@
+section {
+    width: 100%;
+    min-height: 90vh;
+    /* border: 2px solid red; */
+}
+
+.sign_container {
+    width: 85%;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* border: 2px solid red; */
+}
+
+.sign_header img {
+    width: 150px;
+    margin-top: 0px;
+    cursor: pointer;
+    /* border: 2px solid red; */
+    padding: 0px;
+}
+
+.sign_form {
+    border: 1px solid #5a8bf3;
+
+    padding: 10px 30px;
+    margin-top: -20px;
+    border-radius: 5px;
+    /* border: 2px solid green; */
+}
+
+.sign_form h1 {
+    font-weight: 500;
+    font-size: 27px;
+    margin: 10px 0;
+}
+
+.sign_form label {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 1px;
+}
+
+.sign_form input {
+    width: 97%;
+    height: 27px;
+    border-radius: 3px;
+    outline: none;
+    border: 1px solid #5a8bf3;
+    margin-bottom: 10px;
+    margin-top: 1px;
+}
+
+.sign_form .signin_btn {
+    margin-top: 7px;
+    margin-bottom: 23px;
+    width: 100%;
+    cursor: pointer;
+    border: 1px solid #0575e3;
+    height: 29px;
+    outline: none;
+    border-radius: 3px;
+    color: #111;
+    background: linear-gradient(to bottom, #5aa6f1, #278aee);
+}
+
+.sign_form input:focus {
+    box-shadow: 0 0 5px 0px #0575e3;
+}
+
+.sign_form .signin_info {
+    /* margin-top: 23px; */
+    display: flex;
+    /* margin-bottom: 10px; */
+    /* border: 2px solid green; */
+    align-items: center;
+    justify-content: center;
+}
+
+.sign_form .signin_info p {
+    font-size: 13px;
+    font-weight: 600;
+    color: #222;
+}
+
+
+.sign_form .signin_info a {
+    font-size: 13px;
+    letter-spacing: .5px;
+    margin-left: 5px;
+    color: #0066c0;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+
+/* for login page */
+.create_accountinfo {
+    /* border: 2px solid cyan; */
+    margin: 30px;
+}
+
+.create_accountinfo p {
+    text-align: center;
+    margin-bottom: 0px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #222;
+    /* border: 2px solid green; */
+}
+
+.create_accountinfo button {
+
+    background: linear-gradient(to bottom, #a3cbf3, #2d8ae7);
+    height: 29px;
+    width: 300px;
+    border-radius: 3px;
+    border: 1px solid #057ff8;
+    outline: none;
+    /* border: 2px solid green; */
+}
+
+.create_accountinfo a {
+    text-decoration: none;
+    color: #111;
+    padding: 10px 35px;
+    letter-spacing: .5px;
+}
+
+.login_with_other {
+    /* border: 2px solid red; */
+    display: flex;
+    flex-direction: column;
+    padding: 2px;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.login_with_other div img {
+    width: 100px;
+    /* border: 2px solid green; */
+    margin: 15px;
+}
+
+.login_with_other div img:hover {
+    cursor: pointer;
+}
+
+.login_with_other .logo_container {
+    /* border: 2px solid pink; */
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.login_with_other .heading_of_logo_container {
+    text-align: center;
+    margin-bottom: 0px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #222;
+}
