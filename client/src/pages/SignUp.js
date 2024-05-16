@@ -1,9 +1,15 @@
 import React, { useState } from "react";
 import "./Sign.css";
+// import "./signup.css";
 import { NavLink, useNavigate } from "react-router-dom";
+import Stack from '@mui/material/Stack';
 
 import { toast } from 'react-toastify';
 import { signup_api } from "../utils/ApiUtils";
+import { Avatar, IconButton, Typography } from "@mui/material";
+import { CameraAlt } from "@mui/icons-material"
+import { VisuallyHiddenInput } from "../components/styles/StyledComponent";
+import { useFileHandler } from "6pp";
 
 function SignUp() {
   const [userData, setUserData] = useState({
@@ -17,6 +23,7 @@ function SignUp() {
     passwordAgain: "",
   });
   const navigate = useNavigate();
+  const avatar = useFileHandler("single")
   const handlesubmit = async (e) => {
     e.preventDefault();
     // console.log(userData);
@@ -62,6 +69,38 @@ function SignUp() {
           <div className="sign_form">
             <form onSubmit={handlesubmit}>
               <h1>Sign-Up</h1>
+              <div className="avatar_form_data">
+                <Stack position={"relative"} width={"10rem"} margin={"auto"}>
+                  <Avatar
+                    sx={{ width: "10rem", height: "10rem", color: "rgb(3, 113, 202)", backgroundColor: "rgb(89, 173, 243)", objectFit: "contain" }}
+                    src={avatar.preview} />
+                  <IconButton
+                    sx={{
+                      position: "absolute",
+                      bottom: "0",
+                      right: "0",
+                      color: "rgb(3, 113, 202)",
+                      bgcolor: "rgba(98, 170, 229,0.5)",
+                      ":hover": {
+                        bgcolor: "rgba(98, 170, 229,0.7)"
+                      }
+                    }}
+                    component="label">
+                    <>
+                      <CameraAlt></CameraAlt>
+                      <VisuallyHiddenInput type="file" onChange={(e) => {
+                        avatar.changeHandler(e);
+                        // console.log(avatar)
+                      }} />
+                    </>
+                  </IconButton>
+
+                </Stack>
+                {avatar.error && (
+                  <Typography m={"1rem auto"} color="error" variant="caption" width={"fit-content"} display={"block"}>{avatar.error}</Typography>
+                )}
+              </div>
+
               <div className="form_data">
                 <label htmlFor="full_name">Full Name</label>
                 <input
@@ -158,8 +197,8 @@ function SignUp() {
               </div>
             </form>
           </div>
-        </div>
-      </section>
+        </div >
+      </section >
     </>
   );
 }

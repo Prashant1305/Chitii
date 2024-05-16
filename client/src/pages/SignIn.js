@@ -67,9 +67,9 @@ function SignIn() {
                 <div className='login_with_other'>
                     <div className='heading_of_logo_container'> Login with</div>
                     <div className='logo_container'>
-                        <div><img src='./google_logo.png' /></div>
-                        <div><img src='./facebook_logo.png' /></div>
-                        <div><img src='./twitter_logo.png' /></div>
+                        <div><img src='./google_logo.png' alt='google_logo' /></div>
+                        <div><img src='./facebook_logo.png' alt='facebook_logo' /></div>
+                        <div><img src='./twitter_logo.png' alt='twitter_logo' /></div>
                     </div>
                 </div>
             </section>
