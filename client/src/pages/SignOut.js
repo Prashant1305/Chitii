@@ -18,7 +18,7 @@ function SignOut() {
             <section>
                 <div className='sign_container'>
                     <div className='sign_header'>
-                        <img src='./blacklogodigitalstore.png' alt='digitalstoreLogo' />
+                        <img src='chitii_logo.png' alt='chittiLogo' />
                     </div>
                     <div className='sign_form'>
                         <form onSubmit={handleSubmit}>

@@ -1,7 +1,8 @@
 section {
     width: 100%;
-    min-height: 90vh;
+    min-height: 100vh;
     /* border: 2px solid red; */
+    background-image: linear-gradient(#A9FF99, rgb(217, 234, 237));
 }
 
 .sign_container {
@@ -34,6 +35,7 @@ section {
     font-weight: 500;
     font-size: 27px;
     margin: 10px 0;
+    text-align: center;
 }
 
 .sign_form label {
@@ -139,7 +141,7 @@ section {
 
 
 .login_with_other div img {
-    width: 100px;
+    width: 80px;
     /* border: 2px solid green; */
     margin: 15px;
 }

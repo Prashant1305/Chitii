@@ -1,0 +1,17 @@
+.avatar_form_data #avatar_logo_001 {
+    border: 2px solid red;
+    color: rgb(98, 170, 229);
+    display: block;
+    width: 130px;
+    height: 130px;
+}
+
+.avatar_form_data FaUserAlt {
+    border: 2px solid black;
+
+}
+
+.avatar_form_data input {
+    border: none;
+    display: none;
+}
