@@ -6,9 +6,11 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import ProtectRoutes from "./components/ProtectRoutes";
-import AfterAuthenticationLayout from "./components/layout/AfterAuthenticationLayout";
+import PublicLayout from "./components/layout/PublicLayout";
 import { LayoutLoader } from "./components/layout/Loders";
 import ChatWindow from "./pages/ChatWindow";
+import AdminLayout from "./components/layout/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
 
 // import ErrorRoute from "./pages/ErrorRoute";
 // import SignIn from "./pages/SignIn";
@@ -35,21 +37,36 @@ const Chat = lazy(() => import("./components/Chat"));
 
 
 function Routing() {
-  const user = true; // dummy user
+  // const user = false;
+  const user = {
+    name: "BigDaddy",
+    isAdmin: false,
+    isLoading: false
+  }; // dummy user
   const router = createBrowserRouter(
     createRoutesFromElements(
-      <Route path="/" element={<RootLayout />} errorElement={<Error />}>
-        <Route element={<AfterAuthenticationLayout />}>
-          <Route element={<ProtectRoutes conditionValue={user} navigateTo={"/signin"} />}>
-            <Route index element={<Suspense fallback={<LayoutLoader />}><Home /></Suspense>} />
-            <Route path="groups" element={<Suspense fallback={<LayoutLoader />}><Groups /></Suspense>}></Route>
-            <Route path="chat" element={<Suspense fallback={<LayoutLoader />}><ChatWindow /></Suspense>}></Route>
-            <Route path="chat/:chatId" element={<Suspense fallback={<LayoutLoader />}><ChatWindow /></Suspense>}></Route>
+      <Route>
+        <Route element={<ProtectRoutes conditionValue={user && !user.isLoading} navigateTo={"/signin"} />}> {/*protecting inside routes*/}
+          <Route path="/" element={<RootLayout />} errorElement={<Error />}>
+            <Route element={<PublicLayout />}>
+              <Route index element={<Suspense fallback={<LayoutLoader />}><Home /></Suspense>} />
+              <Route path="groups" element={<Suspense fallback={<LayoutLoader />}><Groups /></Suspense>} />
+              <Route path="chat" element={<Suspense fallback={<LayoutLoader />}><ChatWindow /></Suspense>} />
+              <Route path="chat/:chatId" element={<Suspense fallback={<LayoutLoader />}><ChatWindow /></Suspense>} />
+            </Route>
+
+            {/* admin section */}
+            <Route element={<ProtectRoutes conditionValue={user.isAdmin} navigateTo={"/"} />}> {/*singin verified above, now checking for admin role*/}
+              <Route path="/admin" element={<AdminLayout />} >
+                <Route index element={<Dashboard />} />
+              </Route>
+            </Route>
+
           </Route>
         </Route>
 
         <Route path="signin" element={<ProtectRoutes conditionValue={!user} navigateTo={"/"}><Suspense fallback={<LayoutLoader />}><SignIn /></Suspense></ProtectRoutes>} />
-        <Route path="signup" element={<Suspense fallback={<LayoutLoader />}><SignUp /> </Suspense>} />
+        <Route path="signup" element={<Suspense fallback={<LayoutLoader />}><SignUp /></Suspense>} />
         <Route path="signout" element={<Suspense fallback={<LayoutLoader />}><SignOut /></Suspense>} />
 
         <Route path="*" element={<Suspense fallback={<LayoutLoader />}><ErrorRoute /></Suspense>} />

@@ -6,7 +6,7 @@ import ChatList from '../chatList/ChatList'
 import { sampledChats } from '../constants/sampleData'
 import Profile from '../profile.jsx/Profile'
 
-function AfterAuthenticationLayout() {
+function PublicLayout() {
     const params = useParams();
     const chatId = params.chatId;
     const handleDeleteChat = (e, _id, groupChat) => {
@@ -75,4 +75,4 @@ function AfterAuthenticationLayout() {
     )
 }
 
-export default AfterAuthenticationLayout
+export default PublicLayout
