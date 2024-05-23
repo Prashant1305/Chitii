@@ -2,13 +2,14 @@ import { Button, Dialog, DialogTitle, Stack, TextField, Typography } from '@mui/
 import React, { useState } from 'react'
 import { sampleUsers, sampleUsers as users } from '../constants/sampleData'
 import UserItem from '../shared/UserItem';
+import { MyToggleUiValues } from '../../context/ToggleUi';
 
 function NewGroup() {
 
     const [groupName, setGroupName] = useState("");
     const [members, setMembers] = useState(sampleUsers);
     const [selectedMembers, setSelectedMembers] = useState([]);
-
+    const { isNewGroup, setIsNewGroup } = MyToggleUiValues()
 
     const selectMemberHandler = (id) => {
         setSelectedMembers((prev) => (prev.includes(id)) ? prev.filter((ele) => ele !== id) : [...prev, id]);
@@ -24,10 +25,10 @@ function NewGroup() {
 
     }
     const closeHandler = () => {
-
+        setIsNewGroup(prev => !prev)
     }
     return (
-        <Dialog open onClose={closeHandler}>
+        <Dialog open={isNewGroup} onClose={closeHandler}>
             <Stack p={{ xs: "1rem", sm: "2rem" }} width={"25rem"} spacing={"2rem"}>
                 <DialogTitle textAlign={"center"} variant="h4">New Group</DialogTitle>
                 <TextField label="Group Name" value={groupName} onChange={groupNameHandler} />

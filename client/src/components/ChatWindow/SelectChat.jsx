@@ -1,17 +1,18 @@
-import { Box, Typography } from '@mui/material'
 import React from 'react'
+import { Box, Typography } from '@mui/material'
 
-function Home() {
+
+function SelectChat() {
     return (
         <Box height={"100%"}>
             <Typography
                 p={"2rem"}
                 variant='h4'
                 textAlign={"center"}>
-                Welcome to Chitti
+                Select conversation to start chat
             </Typography>
         </Box>
     )
 }
 
-export default Home
+export default SelectChat

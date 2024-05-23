@@ -5,28 +5,31 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { CssBaseline } from "@mui/material"
 import { HelmetProvider } from "react-helmet-async";
+import ToggleUi from "./context/ToggleUi";
 
 function App() {
   return (
     <div onContextMenu={e => e.preventDefault()}>
-      <HelmetProvider>
-        <CssBaseline />
+      <ToggleUi>
+        <HelmetProvider>
+          <CssBaseline />
 
-        <ToastContainer
-          position="bottom-right"
-          autoClose={1000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss={false}
-          draggable
-          pauseOnHover
-          theme="colored"
-        />
+          <ToastContainer
+            position="bottom-right"
+            autoClose={1000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss={false}
+            draggable
+            pauseOnHover
+            theme="colored"
+          />
 
-        <Routing />
-      </HelmetProvider>
+          <Routing />
+        </HelmetProvider>
+      </ToggleUi>
     </div>
   );
 }

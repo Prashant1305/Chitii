@@ -8,6 +8,7 @@ import {
 import ProtectRoutes from "./components/ProtectRoutes";
 import AfterAuthenticationLayout from "./components/layout/AfterAuthenticationLayout";
 import { LayoutLoader } from "./components/layout/Loders";
+import ChatWindow from "./pages/ChatWindow";
 
 // import ErrorRoute from "./pages/ErrorRoute";
 // import SignIn from "./pages/SignIn";
@@ -29,7 +30,7 @@ const SignOut = lazy(() => import("./pages/SignOut"));
 const Error = lazy(() => import("./pages/Error"));
 const RootLayout = lazy(() => import("./components/layout/RootLayout"));
 const Groups = lazy(() => import("./pages/Groups"));
-const Chat = lazy(() => import("./pages/Chat"));
+const Chat = lazy(() => import("./components/Chat"));
 
 
 
@@ -42,7 +43,8 @@ function Routing() {
           <Route element={<ProtectRoutes conditionValue={user} navigateTo={"/signin"} />}>
             <Route index element={<Suspense fallback={<LayoutLoader />}><Home /></Suspense>} />
             <Route path="groups" element={<Suspense fallback={<LayoutLoader />}><Groups /></Suspense>}></Route>
-            <Route path="chat/:chatId" element={<Suspense fallback={<LayoutLoader />}><Chat /></Suspense>}></Route>
+            <Route path="chat" element={<Suspense fallback={<LayoutLoader />}><ChatWindow /></Suspense>}></Route>
+            <Route path="chat/:chatId" element={<Suspense fallback={<LayoutLoader />}><ChatWindow /></Suspense>}></Route>
           </Route>
         </Route>
 

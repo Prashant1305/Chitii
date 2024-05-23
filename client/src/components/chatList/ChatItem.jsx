@@ -17,12 +17,18 @@ function ChatItem({
     handleDeleteChat
 }) {
     return (
-        <Link sx={{ padding: "0", }} to={`/chat/${_id}`} onContextMenu={(e) => handleDeleteChat(e, _id, groupChat)} >
+        <Link
+            sx={{
+                padding: "0",
+                borderBottom: "1px solid white"
+            }}
+            to={`/chat/${_id}`}
+            onContextMenu={(e) => handleDeleteChat(e, _id, groupChat)} >
             <div style={{
                 display: 'flex',
                 alignItems: "center",
                 padding: "1rem",
-                backgroundColor: sameSender ? "black" : "unset",
+                background: sameSender ? "linear-gradient(to bottom, #5aa6f1, #278aee)" : "unset",
                 color: sameSender ? "white" : "unset",
                 position: "relative"
             }}>
@@ -42,7 +48,7 @@ function ChatItem({
                             width: "10px",
                             height: "10px",
                             borderRadius: "50%",
-                            backgroundColor: "green",
+                            backgroundColor: "rgb(0, 200, 200)",
                             position: "absolute",
                             top: "50%",
                             right: "1rem",
