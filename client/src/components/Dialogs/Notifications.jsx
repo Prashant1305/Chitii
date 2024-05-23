@@ -1,13 +1,15 @@
 import { Avatar, Button, Dialog, DialogTitle, ListItem, Stack, Typography } from '@mui/material'
 import React, { memo } from 'react'
 import { sampleNotifications } from "../constants/sampleData"
+import { MyToggleUiValues } from '../../context/ToggleUi';
 
 function Notifications() {
     const freindRequesthandler = ({ _id, accept }) => {
 
     }
+    const { isNotification, setIsNotification } = MyToggleUiValues();
     return (
-        <Dialog open >
+        <Dialog open={isNotification} onClose={() => { setIsNotification(prev => !prev) }}>
             <Stack p={{ xs: "1rem", sm: "2rem" }} maxWidth={"25rem"}>
                 <DialogTitle>Notifications</DialogTitle>
                 {
