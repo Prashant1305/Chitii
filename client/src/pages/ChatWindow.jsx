@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { Grid } from '@mui/material'
+import { Drawer, Grid } from '@mui/material'
 import ChatList from '../components/chatList/ChatList'
 import { sampleChats } from '../components/constants/sampleData'
 import Chat from '../components/Chat'
@@ -10,7 +10,7 @@ import { MyToggleUiValues } from '../context/ToggleUi'
 function ChatWindow() {
     const params = useParams();
     const chatId = params.chatId;
-    const { setMobileBtnExist } = MyToggleUiValues()
+    const { isMobileOpen, setIsmobileOpen, setMobileBtnExist } = MyToggleUiValues()
     console.log(chatId)
     const handleDeleteChat = (e, _id, groupChat) => {
         e.preventDefault();
@@ -18,6 +18,9 @@ function ChatWindow() {
     }
     useEffect(() => {
         setMobileBtnExist(true);
+        return () => {
+            setMobileBtnExist(false)
+        };
     }, [])
     return (
         <Grid container height={"calc(100vh - 4rem)"}>
@@ -52,6 +55,30 @@ function ChatWindow() {
                 }} >
                 {chatId ? <Chat /> : <SelectChat />}
             </Grid>
+            <Drawer
+                PaperProps={{
+                    sx: {
+                        width: "50vw",
+                        display: {
+                            xs: "block",
+                            sm: "none"
+                        },
+                        height: "calc(100vh - 4rem)",
+                        top: "4rem",
+                        backgroundImage: "linear-gradient(#A9FF99, rgb(217, 234, 237))"
+                    }
+                }}
+                open={isMobileOpen} onClose={() => { setIsmobileOpen(false) }}>
+                <ChatList
+                    chats={sampleChats}
+                    chatId={chatId}
+                    newMessagesAlert={[{
+                        chatId,
+                        count: 4
+                    }]}
+                    handleDeleteChat={handleDeleteChat}
+                    onlineUsers={["1", "2"]} />
+            </Drawer>
         </Grid>
     )
 }

@@ -53,7 +53,7 @@ function Groups() {
 
     useEffect(() => {
         setMobileBtnExist(true);
-
+        return () => { setMobileBtnExist(false); }
     }, [])
 
     useEffect(() => {
@@ -90,9 +90,9 @@ function Groups() {
                 position: "absolute",
                 top: "2rem",
                 left: "2rem",
-                bgcolor: "rgba(0, 0, 0, 0.7)",
-                color: "rgba(50, 209, 22, 0.9)",
+                color: "rgba(0,0,0, 0.9)",
                 "&:hover": {
+                    color: "rgba(50, 209, 22, 0.9)",
                     bgcolor: "rgba(0, 0, 0, 0.6)"
                 }
             }}
@@ -151,7 +151,7 @@ function Groups() {
                 position: "relative",
                 padding: "1rem 3rem",
                 height: "100%",
-                // overflow: "auto"
+                overflow: "auto"
             }}>
                 {IconBtns}
 
@@ -205,7 +205,8 @@ function Groups() {
                             sm: "none"
                         },
                         height: "calc(100vh - 4rem)",
-                        top: "4rem"
+                        top: "4rem",
+                        backgroundImage: "linear-gradient(#A9FF99, rgb(217, 234, 237))"
                     }
                 }}
                 open={isMobileOpen} onClose={() => { setIsmobileOpen(false) }}><GroupList w={"100%"} myGroups={sampleChats} />

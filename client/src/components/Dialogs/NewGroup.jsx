@@ -1,8 +1,8 @@
-import { Button, Dialog, DialogTitle, Stack, TextField, Typography } from '@mui/material'
-import React, { useState } from 'react'
-import { sampleUsers, sampleUsers as users } from '../constants/sampleData'
-import UserItem from '../shared/UserItem';
+import { Button, Dialog, DialogTitle, Stack, TextField, Typography } from '@mui/material';
+import React, { useState } from 'react';
 import { MyToggleUiValues } from '../../context/ToggleUi';
+import { sampleUsers } from '../constants/sampleData';
+import UserItem from '../shared/UserItem';
 
 function NewGroup() {
 
@@ -10,6 +10,7 @@ function NewGroup() {
     const [members, setMembers] = useState(sampleUsers);
     const [selectedMembers, setSelectedMembers] = useState([]);
     const { isNewGroup, setIsNewGroup } = MyToggleUiValues()
+
 
     const selectMemberHandler = (id) => {
         setSelectedMembers((prev) => (prev.includes(id)) ? prev.filter((ele) => ele !== id) : [...prev, id]);
