@@ -1,21 +1,19 @@
-import { AppBar, Backdrop, Box, IconButton, Toolbar, Tooltip, Typography } from '@mui/material'
-import React, { Suspense, lazy, useState } from 'react'
-import { Menu as MenuIcon, Search as SearchIcon, Add as AddIcon, Group as GroupIcon, Logout as LogoutIcon, Notifications as NotificationIcon, Chat as ChatIcon, KeyboardBackspace as KeyboardBackspaceIcon, AdminPanelSettings as AdminPanelSettingsIcon } from "@mui/icons-material";
+import { Add as AddIcon, AdminPanelSettings as AdminPanelSettingsIcon, Chat as ChatIcon, Group as GroupIcon, Home as HomeIcon, Logout as LogoutIcon, Menu as MenuIcon, Notifications as NotificationIcon, Search as SearchIcon } from "@mui/icons-material";
 import CloseIcon from '@mui/icons-material/Close';
-import { useNavigate } from 'react-router-dom'
+import { AppBar, Backdrop, Box, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
+import React, { Suspense, lazy } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MyToggleUiValues } from '../../context/ToggleUi';
+import IconBtn from './IconBtn';
 const Search = lazy(() => import("../Dialogs/Search"));
 const Notifications = lazy(() => import("../Dialogs/Notifications"));
 const NewGroup = lazy(() => import("../Dialogs/NewGroup"));
-// import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+
 
 
 function Header() {
     const navigate = useNavigate()
-    // const [isMobileOpen, setIsmobileOpen] = useState(false);
-    // const [isSearch, setIsSearch] = useState(false);
-    // const [isNewGroup, setIsNewGroup] = useState(false);
-    // const [isNotification, setIsNotification] = useState(false);
+
     const { isMobileOpen, setIsmobileOpen, isSearch, setIsSearch, isNewGroup, setIsNewGroup, isNotification, setIsNotification, mobileBtnExist } = MyToggleUiValues();
 
     const openSearchDialog = () => {
@@ -30,13 +28,7 @@ function Header() {
         console.log("openNewGroup");
         setIsNewGroup(!isNewGroup)
     }
-    const navigateToGroup = () => {
-        console.log("groups");
-        navigate("/groups")
-    }
-    const logoutHandler = () => {
-        console.log("logged out");
-    }
+
     const openNotification = () => {
         console.log("mobile");
         setIsNotification(!isNotification);
@@ -45,7 +37,6 @@ function Header() {
         <>
             <Box sx={{
                 flexGrow: 1,
-
             }} >
                 <AppBar position='static' sx={{
                     bgcolor: "#057ff8",
@@ -60,7 +51,10 @@ function Header() {
                                     cursor: "pointer"
                                 }
                             }}
-                            onClick={() => { navigate("/") }}
+                            onClick={(e) => {
+                                console.dir(e.currentTarget)
+                                navigate("/")
+                            }}
                         >
                             Chitti
                         </Typography>
@@ -71,11 +65,13 @@ function Header() {
                             }}>
                                 {
                                     !isMobileOpen ?
-                                        (<Tooltip title="menu">
-                                            <IconButton color='inherit' onClick={handleMobile}>
-                                                <MenuIcon />
-                                            </IconButton>
-                                        </Tooltip>) :
+                                        (
+                                            <Tooltip title="menu">
+                                                <IconButton color='inherit' onClick={handleMobile}>
+                                                    <MenuIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        ) :
                                         (
                                             <Tooltip title="back">
                                                 <IconButton sx={{
@@ -91,15 +87,17 @@ function Header() {
                         }
 
                         <Box sx={{ flexGrow: 1 }} />
-                        <Box >
-                            <IconBtn title={"Admin Services"} icon={<AdminPanelSettingsIcon />} onClick={() => { navigate("/") }} />
-                            <IconBtn title={"Search"} icon={<ChatIcon />} onClick={() => { navigate("/chat") }} />
-                            <IconBtn title={"Search"} icon={<SearchIcon />} onClick={openSearchDialog} />
-                            <IconBtn title={"New Group"} icon={<AddIcon />} onClick={openNewGroup} />
-                            <IconBtn title={"Manage Groups"} icon={<GroupIcon />} onClick={navigateToGroup} />
-                            <IconBtn title={"Notification"} icon={< NotificationIcon />} onClick={openNotification} />
+                        <Box display={"flex"}
+                            flexDirection={"row"}>
+                            <IconBtn title={"Home"} icon={<HomeIcon />} pathname={"/"} />
+                            <IconBtn title={"Admin Services"} icon={<AdminPanelSettingsIcon />} pathname={"/admin"} /> {/*add conditions for user, if admin*/}
+                            <IconBtn title={"Search"} icon={<ChatIcon />} pathname={"/chat"} />
+                            <IconBtn title={"Search"} icon={<SearchIcon />} handleClick={openSearchDialog} />
+                            <IconBtn title={"New Group"} icon={<AddIcon />} handleClick={openNewGroup} />
+                            <IconBtn title={"Manage Groups"} icon={<GroupIcon />} pathname={"/groups"} />
+                            <IconBtn title={"Notification"} icon={< NotificationIcon />} handleClick={openNotification} />
 
-                            <IconBtn title={"Logout"} icon={<LogoutIcon />} onClick={logoutHandler} />
+                            <IconBtn title={"Logout"} icon={<LogoutIcon />} pathname={"/signout"} />
 
                         </Box>
                     </Toolbar>
@@ -117,12 +115,5 @@ function Header() {
 
         </>
     )
-}
-const IconBtn = ({ title, icon, onClick }) => {
-    return (<Tooltip title={title}>
-        <IconButton color='inherit' onClick={onClick}>
-            {icon}
-        </IconButton>
-    </Tooltip>)
 }
 export default Header
