@@ -25,13 +25,17 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    bio: {
+        type: String,
+        default: "Swagat nahi karoge nahi hamara!"
+    },
     gender: {
         type: String,
         required: true
     },
     avatar_url: {
         type: String,
-        default: ""
+        required: true,
     },
     refresh_token: {
         type: String
@@ -42,7 +46,7 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre("save", async function (next) { // cannot use arrow as "this" value will be undefined here
 
-    if (!this.isModified("password"))// since this will always run whenever we save user, even if we don't change password. so we will avoid this, and will encrypt password ony if it changes.
+    if (!this.isModified("password"))// since this will always run whenever we save user, even if we don't change password. so we will avoid this, and will encrypt password only if it changes.
     {
         return next();
     }
@@ -77,20 +81,20 @@ userSchema.methods.generateAccessToken = function () { // cannot use arrow as "t
     }
 };
 
-userSchema.methods.generateRefreshToken = function () { // cannot use arrow as "this" value will be undefined here
-    try {
-        return jwt.sign({
-            _id: this._id.toString(),
-            email: this.email
-        },
-            process.env.REFRESH_TOKEN_SECRET,
-            {
-                expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-            });
-    } catch (error) {
-        console.log(error);
-    }
-};
+// userSchema.methods.generateRefreshToken = function () { // cannot use arrow as "this" value will be undefined here
+//     try {
+//         return jwt.sign({
+//             _id: this._id.toString(),
+//             email: this.email
+//         },
+//             process.env.REFRESH_TOKEN_SECRET,
+//             {
+//                 expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+//             });
+//     } catch (error) {
+//         console.log(error);
+//     }
+// };
 
 //password verificaton
 userSchema.methods.isPasswordCorrect = async function (password) {
