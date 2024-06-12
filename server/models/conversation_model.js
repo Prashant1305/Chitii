@@ -1,21 +1,26 @@
 const mongoose = require('mongoose');
 const User = require('./user_model');
-const Message = require('./message_model');
 
 const conversationSchema = new mongoose.Schema({
-    participants: [
+    name: {
+        type: String,
+        required: true,
+    },
+    group_chat: {
+        type: Boolean,
+        default: false
+    },
+    creator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: User
+    },
+    members: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: User
         }
     ],
-    messages: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: Message,
-            default: []
-        }
-    ]
+
 }, { timestamps: true });
 
 const Conversation = mongoose.model("Conversation", conversationSchema);

@@ -1,11 +1,16 @@
 const User = require("../models/user_model");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const options = { httpOnly: false, secure: process.env.NODE_ENV !== "development", sameSite: "strict" }
+const cookieOptions = {
+    maxAge: 15 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    secure: process.env.NODE_ENV !== "development",
+    sameSite: "strict"
+}
 
 const signup = async (req, res, next) => {
     try {
-        let { full_name, user_name, mobile_number, email, gender, avatar_url, password } = req.body;
+        let { full_name, user_name, mobile_number, email, gender, bio, avatar_url, password } = req.body;
         const userExist = await User.findOne({
             $or: [
                 { email: email },
@@ -13,8 +18,9 @@ const signup = async (req, res, next) => {
                 { user_name: user_name }
             ]
         });
+
         if (userExist) {
-            return next({ status: 201, message: "user already exist", extraDetails: "some of info provided are alredy registered" });
+            return next({ status: 400, message: "user already exist", extraDetails: "some of info provided are alredy registered" });
         }
         else {
 
@@ -25,7 +31,7 @@ const signup = async (req, res, next) => {
             }
 
             // password will be encrypted befor being saved in db
-            await User.create({ full_name, user_name, mobile_number, email, gender, avatar_url, password });
+            await User.create({ full_name, user_name, mobile_number, email, gender, avatar_url, password, bio });
             res.status(200).json({ msg: "Successfully Registered" })
         }
     } catch (error) {
@@ -36,11 +42,11 @@ const signup = async (req, res, next) => {
     }
 }
 
-const generateAccessAndRefreshToken = async (userId) => {
+const generateAccessToken = async (userId) => {
     try {
         const user = await User.findById(userId);
         const accessToken = user.generateAccessToken();
-        const refreshToken = user.generateRefreshToken();
+        // const refreshToken = user.generateRefreshToken();
 
         user.refresh_token = refreshToken;
         await user.save({ validateBeforeSave: false });
@@ -49,7 +55,7 @@ const generateAccessAndRefreshToken = async (userId) => {
     } catch (error) {
         const err = new Error("token generation failed");
         err.status = 201;
-        err.extraDetails = "from generateAccessAndRefreshToken function inside authcontroller";
+        err.extraDetails = "from generateAccessToken function inside authcontroller";
         next(err);
     }
 }
@@ -73,13 +79,13 @@ const login = async (req, res, next) => {
         if (!isPasswordValid) {
             return next({ message: "password invalid", status: 400, extraDetails: "from login function inside authcontroller" });
         }
-        const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+        const { accessToken, refreshToken } = await generateAccessToken(user._id);
 
 
         res
             .status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
+            .cookie("accessToken", accessToken, cookieOptions)
+            .cookie("refreshToken", refreshToken, cookieOptions)
             .json({ msg: "userlogged in succesfully", tokens: { accessToken, refreshToken }, user: { email: user.email, gender: user.gender, avatar_url: user.avatar_url } });
     } catch (error) {
         const err = new Error("unable to login");
@@ -107,8 +113,8 @@ const logout = async (req, res, next) => {
 
         return res
             .status(200)
-            .clearCookie("accessToken", options)
-            .clearCookie("refreshToken", options)
+            .clearCookie("accessToken", cookieOptions)
+            .clearCookie("refreshToken", cookieOptions)
             .json({ message: "User logged Out" });
     }
     // res.status(200).json({ msg: "request reached to logout" })
@@ -120,37 +126,38 @@ const logout = async (req, res, next) => {
     }
 }
 
-const refreshAccessToken = async (req, res, next) => {
-    try {
-        const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
-        if (!incomingRefreshToken) {
-            return res.status(401).json({ message: "refreshToken not provided" });
-        }
-        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+// const refreshAccessToken = async (req, res, next) => {
+//     try {
+//         const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
-        const user = await User.findById(decodedToken?._id);
-        if (!user) {
-            return res.status(401).json({ message: "invalid refresh token provided" });
-        }
+//         if (!incomingRefreshToken) {
+//             return res.status(401).json({ message: "refreshToken not provided" });
+//         }
+//         const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
 
-        if (incomingRefreshToken !== user?.refresh_token) {
-            return res.status(401).json({ message: "Refresh token mismatch" });
-        }
-        const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+//         const user = await User.findById(decodedToken?._id);
+//         if (!user) {
+//             return res.status(401).json({ message: "invalid refresh token provided" });
+//         }
 
-        res
-            .status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
-            .json({ message: "Access token refreshed" })
+//         // if (incomingRefreshToken !== user?.refresh_token) {
+//         //     return res.status(401).json({ message: "Refresh token mismatch" });
+//         // }
+//         const { accessToken, refreshToken } = await generateAccessToken(user._id);
 
-    } catch (error) {
-        const err = new Error("refresh token failed");
-        err.status = 400;
-        err.extraDetails = "from refreshAccessToken function inside authcontroller";
-        next(err);
-    }
+//         console.log(accessToken);
+//         res
+//             .cookie("accessToken", accessToken, cookieOptions)
+//             .cookie("refreshToken", refreshToken, cookieOptions)
+//         // .json({ message: "Access token refreshed" })
 
-}
+//     } catch (error) {
+//         const err = new Error("refresh token failed");
+//         err.status = 400;
+//         err.extraDetails = "from refreshAccessToken function inside authcontroller";
+//         next(err);
+//     }
 
-module.exports = { login, logout, signup, refreshAccessToken };
+// }
+
+module.exports = { login, logout, signup };

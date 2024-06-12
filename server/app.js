@@ -31,6 +31,7 @@ var corsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(express.json()); // to parse incoming requests with json payload and storing it in req.body
+// app.use(express.urlencoded({ extended: true })); // to parse incoming formData that contains only file
 app.use(cookieParser());
 
 // checking connection
