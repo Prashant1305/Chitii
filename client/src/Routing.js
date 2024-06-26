@@ -41,12 +41,12 @@ const Chat = lazy(() => import("./components/Chat"));
 
 
 function Routing() {
-  const user = false;
-  // const user = {
-  //   name: "BigDaddy",
-  //   isAdmin: true,
-  //   isLoading: false
-  // }; // dummy user
+  // const user = false;
+  const user = {
+    name: "BigDaddy",
+    isAdmin: true,
+    isLoading: false
+  }; // dummy user
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route>

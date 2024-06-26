@@ -4,15 +4,16 @@ const User = require("../models/user_model");
 const verifyJwt = async (req, res, next) => {
     const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
 
-    console.log("from line 8", accessToken);
+    // console.log("from line 8", process.env.ACCESS_TOKEN_SECRET);
 
     if (!accessToken) {
         return res.status(401).json({ message: "cookies not available plz login" });
     }
     try {
+        let isVerified_access_token
         try {
-            const isVerified_access_token = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-            console.log("isVerified_access_token: ", isVerified_access_token);
+            isVerified_access_token = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+            // console.log("isVerified_access_token: ", isVerified_access_token);
         } catch (error) {
             return res.status(401).json({ message: "access token expired" })
         }

@@ -5,7 +5,7 @@ const auth_routes = require("./routes/auth_routes");
 const connectDb = require("./utils/mongoDb/connectToDb");
 const errorMiddleware = require("./middleware/error_middleware");
 const cookieParser = require("cookie-parser");
-const message_routes = require("./routes/message_routes");
+const chat_routes = require("./routes/chat_routes");
 const user_routes = require("./routes/user_routes");
 
 const PORT = process.env.PORT || 3012;
@@ -40,7 +40,7 @@ app.get('/check', (req, res) => {
 });
 
 app.use('/api/auth', auth_routes);
-app.use('/api/message', message_routes);
+app.use('/api/chat', chat_routes);
 app.use('/api/user', user_routes);
 
 
