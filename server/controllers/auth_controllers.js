@@ -46,11 +46,9 @@ const generateAccessToken = async (userId) => {
     try {
         const user = await User.findById(userId);
         const accessToken = user.generateAccessToken();
-        // const refreshToken = user.generateRefreshToken();
 
-        user.refresh_token = refreshToken;
         await user.save({ validateBeforeSave: false });
-        return { accessToken, refreshToken };
+        return { accessToken };
 
     } catch (error) {
         const err = new Error("token generation failed");
@@ -79,14 +77,13 @@ const login = async (req, res, next) => {
         if (!isPasswordValid) {
             return next({ message: "password invalid", status: 400, extraDetails: "from login function inside authcontroller" });
         }
-        const { accessToken, refreshToken } = await generateAccessToken(user._id);
+        const { accessToken } = await generateAccessToken(user._id);
 
-
+        // console.log(process.env.ACCESS_TOKEN_EXPIRY)
         res
             .status(200)
             .cookie("accessToken", accessToken, cookieOptions)
-            .cookie("refreshToken", refreshToken, cookieOptions)
-            .json({ msg: "userlogged in succesfully", tokens: { accessToken, refreshToken }, user: { email: user.email, gender: user.gender, avatar_url: user.avatar_url } });
+            .json({ msg: "userlogged in succesfully", tokens: { accessToken }, time: process.env.ACCESS_TOKEN_EXPIRY, user: { email: user.email, gender: user.gender, avatar_url: user.avatar_url } });
     } catch (error) {
         const err = new Error("unable to login");
         err.status = 400;
@@ -98,26 +95,13 @@ const login = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
     try {
-        // console.log(req.clientAuthData._id)
-        await User.findByIdAndUpdate(
-            req.clientAuthData._id,
-            {
-                $unset: {
-                    refresh_token: 1 // this removes the field from document
-                }
-            },
-            {
-                new: true
-            }
-        )
 
         return res
             .status(200)
-            .clearCookie("accessToken", cookieOptions)
-            .clearCookie("refreshToken", cookieOptions)
+            .clearCookie("accessToken", { ...cookieOptions, maxAge: 0 })
             .json({ message: "User logged Out" });
     }
-    // res.status(200).json({ msg: "request reached to logout" })
+
     catch (error) {
         const err = new Error("unable to logout");
         err.status = 400;
@@ -126,38 +110,7 @@ const logout = async (req, res, next) => {
     }
 }
 
-// const refreshAccessToken = async (req, res, next) => {
-//     try {
-//         const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
-//         if (!incomingRefreshToken) {
-//             return res.status(401).json({ message: "refreshToken not provided" });
-//         }
-//         const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
 
-//         const user = await User.findById(decodedToken?._id);
-//         if (!user) {
-//             return res.status(401).json({ message: "invalid refresh token provided" });
-//         }
 
-//         // if (incomingRefreshToken !== user?.refresh_token) {
-//         //     return res.status(401).json({ message: "Refresh token mismatch" });
-//         // }
-//         const { accessToken, refreshToken } = await generateAccessToken(user._id);
-
-//         console.log(accessToken);
-//         res
-//             .cookie("accessToken", accessToken, cookieOptions)
-//             .cookie("refreshToken", refreshToken, cookieOptions)
-//         // .json({ message: "Access token refreshed" })
-
-//     } catch (error) {
-//         const err = new Error("refresh token failed");
-//         err.status = 400;
-//         err.extraDetails = "from refreshAccessToken function inside authcontroller";
-//         next(err);
-//     }
-
-// }
-
-module.exports = { login, logout, signup };
+module.exports = { login, signup, logout };
