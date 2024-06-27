@@ -172,8 +172,7 @@ const addMembers = async (req, res, next) => {
 
         const allNewMembersPromise = members.map((i) => User.findById(i, "name"));
         const allNewMembers = await Promise.all(allNewMembersPromise);
-
-        const uniqueMembers = allNewMembers.filter((i) => chat.members.includes(i._id.toString()))
+        const uniqueMembers = allNewMembers.filter((i) => !chat.members.includes(i._id.toString()))
         chat.members.push(...uniqueMembers.map((i) => i._id));
 
         await chat.save();
@@ -195,10 +194,29 @@ const addMembers = async (req, res, next) => {
 const removeMembers = async (req, res, next) => { // incomplete
     try {
         const { userId, conversationId } = req.body;
+        if (!conversationId) {
+            return res.status(400).json({ message: "Conversation not found" });
+        }
+        if (!userId || userId.length === 0) {
+            return res.status(400).json({ message: "plz select userId" });
+        }
+
         const chat = await Conversation.findById(conversationId);
-        const modifiedMember = chat.members.filter((member) => userId.includes(member._id.toString()));
-        chat.members = modifiedMember;
-        res.status(200).json({ message: "member deleted successfully" });
+
+        if (chat.creator.toString() !== req.clientAuthData._id.toString()) {
+            return res.status(400).json({ message: "Only group creator can remove members" });
+        }
+
+        const modifiedMember = chat.members.filter((member) => !userId.includes(member._id.toString()));
+        chat.members = [...modifiedMember];
+
+        if (chat.members.length < 3) {
+            return res.status(400).json({ message: "minimum 3 members are needed in a group" });
+        }
+
+        chat.save();
+        emitEvent(req, REFETCH_CHATS, chat.members);
+        res.status(200).json({ message: "members removed successfully" });
 
 
     } catch (error) {
@@ -209,4 +227,32 @@ const removeMembers = async (req, res, next) => { // incomplete
     }
 }
 
-module.exports = { sendMessage, getMessages, newGroupChat, getMyChats, getMyGroups, addMembers, removeMembers };
+const leaveGroup = async (req, res, next) => {
+    try {
+        const chatId = req.params.id;
+
+        const chat = await Conversation.findById(chatId);
+
+        if (!chat) {
+            return res.status(400).json({ message: "Chat not found" });
+        }
+        if (!chat.group_chat) {
+            return res.status(400).json({ message: "user can't leave personal chat" })
+        }
+        chat.members = chat.members.filter((member) => member.toString() !== req.clientAuthData._id.toString())
+        if (chat.creator === req.clientAuthData._id) {
+            chat.creator = chat.members[0];
+        }
+        chat.save();
+        emitEvent(req, ALERT, chat.members, `${req.clientAuthData.user_name} has leaved ${chat.name}`)
+        res.status(200).json({ message: "Group leaved successfully" });
+
+    } catch (error) {
+        const err = new Error("cannot leave Groups, plz try later");
+        err.status = 400;
+        err.extraDetails = "from leaveGroup function inside chat_controller";
+        next(err);
+    }
+}
+
+module.exports = { sendMessage, getMessages, newGroupChat, getMyChats, getMyGroups, addMembers, removeMembers, leaveGroup };
