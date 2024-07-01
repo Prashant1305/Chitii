@@ -7,6 +7,8 @@ const errorMiddleware = require("./middleware/error_middleware");
 const cookieParser = require("cookie-parser");
 const chat_routes = require("./routes/chat_routes");
 const user_routes = require("./routes/user_routes");
+const bodyParser = require('body-parser');
+
 
 const PORT = process.env.PORT || 3012;
 const app = express();
@@ -31,7 +33,7 @@ var corsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(express.json()); // to parse incoming requests with json payload and storing it in req.body
-// app.use(express.urlencoded({ extended: true })); // to parse incoming formData that contains only file
+app.use(bodyParser.urlencoded({ extended: true })); // to parse incoming urlencoded data that contains only file
 app.use(cookieParser());
 
 // checking connection

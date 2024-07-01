@@ -3,77 +3,78 @@ const Message = require("../models/message_model");
 const User = require("../models/user_model");
 const mongoose = require('mongoose');
 const { emitEvent } = require("../utils/features");
-const { ALERT, REFETCH_CHATS } = require("../Constants/events");
+const { ALERT, REFETCH_CHATS, NEW_MESSAGE_ALERTS } = require("../Constants/events");
 const { ObjectId } = require('mongodb');
+const { uploadOnCloudinary, deleteFromCloudinary } = require("../utils/cloudinaryDb/cloudinary");
 
-const sendMessage = async (req, res, next) => {
-    try {
+// const sendMessage = async (req, res, next) => {
+//     try {
 
-        const { message } = req.body;
-        const { id: receiverId } = req.params;
-        const senderId = req.clientAuthData._id;
-        if (!mongoose.Types.ObjectId.isValid(receiverId)) {
-            return res.status(400).json({ message: "wrong receiver id provided" });
-        }
-        const receiverExist = await User.findById(receiverId);
-        if (!receiverExist) {
-            return res.status(400).json({ message: "receiver does not exist" });
-        }
+//         const { message } = req.body;
+//         const { id: receiverId } = req.params;
+//         const senderId = req.clientAuthData._id;
+//         if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+//             return res.status(400).json({ message: "wrong receiver id provided" });
+//         }
+//         const receiverExist = await User.findById(receiverId);
+//         if (!receiverExist) {
+//             return res.status(400).json({ message: "receiver does not exist" });
+//         }
 
-        let conversation = await Conversation.findOne({
-            participants: { $all: [senderId, receiverId] }
-        })
+//         let conversation = await Conversation.findOne({
+//             participants: { $all: [senderId, receiverId] }
+//         })
 
-        if (!conversation) { // if conversation does not exist, then create one
-            conversation = await Conversation.create({
-                participants: [senderId, receiverId],
-            })
-        }
+//         if (!conversation) { // if conversation does not exist, then create one
+//             conversation = await Conversation.create({
+//                 participants: [senderId, receiverId],
+//             })
+//         }
 
-        const newMessage = new Message({
-            senderId, receiverId, message
-        })
-        if (newMessage) {
-            conversation.messages.push(newMessage._id);
-        }
+//         const newMessage = new Message({
+//             senderId, receiverId, message
+//         })
+//         if (newMessage) {
+//             conversation.messages.push(newMessage._id);
+//         }
 
-        // await conversation.save();
-        // await newMessage.save();
-        //since above two promises are independent of each other so we can run them parallely
-        await Promise.all([conversation.save(), newMessage.save()]);
+//         // await conversation.save();
+//         // await newMessage.save();
+//         //since above two promises are independent of each other so we can run them parallely
+//         await Promise.all([conversation.save(), newMessage.save()]);
 
-        res.status(200).json({ message: "message Successfully sent", newMessage });
-    } catch (error) {
-        const err = new Error("message transaction failed");
-        err.status = 400;
-        err.extraDetails = "from sendMessage function inside chat_controller";
-        next(err);
-    }
-}
+//         res.status(200).json({ message: "message Successfully sent", newMessage });
+//     } catch (error) {
+//         const err = new Error("message transaction failed");
+//         err.status = 400;
+//         err.extraDetails = "from sendMessage function inside chat_controller";
+//         next(err);
+//     }
+// }
 
-const getMessages = async (req, res, next) => {
-    try {
-        const { id: userToChatId } = req.params;
-        const senderId = req.clientAuthData._id;
-        if (!mongoose.Types.ObjectId.isValid(userToChatId)) {
-            return res.status(400).json({ message: "wrong id provided" });
-        }
+// const getMessages = async (req, res, next) => {
+//     try {
+//         const { id: userToChatId } = req.params;
+//         const senderId = req.clientAuthData._id;
+//         if (!mongoose.Types.ObjectId.isValid(userToChatId)) {
+//             return res.status(400).json({ message: "wrong id provided" });
+//         }
 
-        const conversation = await Conversation.findOne({
-            participants: { $all: [senderId, userToChatId] },
-        }).populate("messages");// via populate command it will replace message refrence with original message
-        if (!conversation) {
-            return res.status(200).json([]);
-        }
-        // console.log(conversation);
-        res.status(200).json({ message: conversation.messages });
-    } catch (error) {
-        const err = new Error("cannot retrive message");
-        err.status = 400;
-        err.extraDetails = "from getMessage function inside chat_controller";
-        next(err);
-    }
-}
+//         const conversation = await Conversation.findOne({
+//             participants: { $all: [senderId, userToChatId] },
+//         }).populate("messages");// via populate command it will replace message refrence with original message
+//         if (!conversation) {
+//             return res.status(200).json([]);
+//         }
+//         // console.log(conversation);
+//         res.status(200).json({ message: conversation.messages });
+//     } catch (error) {
+//         const err = new Error("cannot retrive message");
+//         err.status = 400;
+//         err.extraDetails = "from getMessage function inside chat_controller";
+//         next(err);
+//     }
+// }
 
 const newGroupChat = async (req, res, next) => {
     try {
@@ -195,16 +196,22 @@ const removeMembers = async (req, res, next) => { // incomplete
     try {
         const { userId, conversationId } = req.body;
         if (!conversationId) {
-            return res.status(400).json({ message: "Conversation not found" });
+            return res.status(400).json({ message: "ConversationId not found" });
         }
         if (!userId || userId.length === 0) {
-            return res.status(400).json({ message: "plz select userId" });
+            return res.status(400).json({ message: "plz select user" });
         }
 
         const chat = await Conversation.findById(conversationId);
+        if (!chat) {
+            return res.status(400).json({ message: "Conversation not found" });
+        }
 
         if (chat.creator.toString() !== req.clientAuthData._id.toString()) {
             return res.status(400).json({ message: "Only group creator can remove members" });
+        }
+        if (userId.includes(chat.creator)) {
+            return res.status(400).json({ message: "Group creator can only leave & can't be removed" });
         }
 
         const modifiedMember = chat.members.filter((member) => !userId.includes(member._id.toString()));
@@ -239,7 +246,13 @@ const leaveGroup = async (req, res, next) => {
         if (!chat.group_chat) {
             return res.status(400).json({ message: "user can't leave personal chat" })
         }
+        if (!chat.members.includes(req.clientAuthData._id)) {
+            return res.status(400).json({ message: "you are already not in this group" });
+        }
         chat.members = chat.members.filter((member) => member.toString() !== req.clientAuthData._id.toString())
+        if (chat.members.length < 3) {
+            return res.status(400).json({ message: "minimum 3 members are needed in a group" });
+        }
         if (chat.creator === req.clientAuthData._id) {
             chat.creator = chat.members[0];
         }
@@ -255,4 +268,146 @@ const leaveGroup = async (req, res, next) => {
     }
 }
 
-module.exports = { sendMessage, getMessages, newGroupChat, getMyChats, getMyGroups, addMembers, removeMembers, leaveGroup };
+const sendMessage = async (req, res, next) => {
+    try {
+        const { conversationId, text_content } = req.body;
+        const files = req.files || [];
+
+        const chat = await Conversation.findById(conversationId);
+        if (!chat) {
+            // console.log(chat)
+            return res.status(400).json({ message: "Chat not found" })
+        }
+
+        const responsePromiseArray = req.files.map((file) => uploadOnCloudinary(file.path))
+        const fileUrlArray = await Promise.all(responsePromiseArray);
+
+        const attachments = fileUrlArray.map((file) => {
+            return {
+                public_id: file.public_id,
+                url: file.secure_url
+            }
+        })
+
+        const messageForDb = { sender: req.clientAuthData._id, conversation: conversationId, text_content, attachments }
+
+        await Message.create(messageForDb);
+
+        const messageNotification = { sender: { id: req.clientAuthData._id, name: req.clientAuthData.name }, conversation: conversationId, text_content, attachments }
+
+        // emitEvent(req, NEW_MESSAGE_ALERTS, chat.members, messageNotification)
+
+        res.status(269).json({ message: "received send message", text_data: req.body, files: req.files })
+    } catch (error) {
+        const err = new Error("cannot send message, plz try later");
+        err.status = 400;
+        err.extraDetails = "from sendeMessage function inside chat_controller";
+        next(err);
+    }
+}
+
+const getChatDetails = async (req, res, next) => {
+    try {
+        if (req.query.populate === "true") {
+            const chat = await Conversation.findById(req.params.id).populate("members", "user_name avatar_url")
+            if (!chat) {
+                return res.status(400).json({ message: "Conversation not found" });
+            }
+            return res.status(200).json({ message: chat });
+        } else {
+            const chat = await Conversation.findById(req.params.id)
+            if (!chat) {
+                return res.status(400).json({ message: "Conversation not found" });
+            }
+            return res.status(200).json({ message: chat });
+        }
+    } catch (error) {
+        const err = new Error("cannot get chat Detials, plz try later");
+        err.status = 400;
+        err.extraDetails = "from getChatDeatils function inside chat_controller";
+        next(err);
+    }
+}
+
+const renameConversation = async (req, res, next) => {
+    try {
+        const { conversationId, conversationName } = req.body;
+        const chat = await Conversation.findById(conversationId);
+
+        if (!chat?.group_chat) {
+            return res.status(400).json({ message: "can't rename personal chat" });
+        }
+        else if ("" + chat.creator !== req.clientAuthData._id + "") {
+            return res.status(400).json({ message: "Only admin can change name" });
+        }
+        chat.name = conversationName;
+        await chat.save();
+        return res.status(200).json({ message: "Group name changed succesfully" });
+    } catch (error) {
+        const err = new Error("cannot rename chat, plz try later");
+        err.status = 400;
+        err.extraDetails = "from renameConversation function inside chat_controller";
+        next(err);
+    }
+}
+
+const deleteChat = async (req, res, next) => {
+    try {
+        const { conversationId } = req.body;
+        const chat = await Conversation.findById(conversationId);
+        if (!chat) {
+            return res.status(400).json({ message: "No chat found" });
+        }
+
+        if (chat.group_chat && "" + chat.creator !== req.clientAuthData._id + "") {
+            return res.status(400).json({ message: "Only admin can delete chat" });
+        }
+        else if (!chat.group_chat && chat.members.includes(req.clientAuthData._id.toString())) {
+            return res.status(400).json({ message: "you are not allowed to delete the chat" });
+        }
+        // deleting messages of chat
+        const messagesOfDeletingConversation = await Message.find({ conversation: conversationId });
+
+        messagesOfDeletingConversation?.forEach(async (message) => {
+            if (message.attachments.length) {
+                message.attachments.forEach(async (attachment) => {
+                    await deleteFromCloudinary(attachment.public_id);
+                })
+            }
+            await Message.deleteOne({ _id: message._id })
+        })
+        emitEvent(req, REFETCH_CHATS, chat.members);
+        return res.status(200).json({ message: "Chat deleted succesfully" });
+
+    } catch (error) {
+        const err = new Error("cannot delete chat, plz try later");
+        err.status = 400;
+        err.extraDetails = "from deleteChat function inside chat_controller";
+        next(err);
+    }
+}
+
+const getMessages = async (req, res, next) => {
+    try {
+        const chatId = req.params.id;
+        const { page = 1, limit = 20 } = req.query;
+        const skip = (page - 1) * limit;
+
+        const messages = await Promise.all([
+            Message.find({ chat: chatId })
+                .sort({ created: -1 })
+                .skip(skip)
+                .limit(limit)
+                .populate("sender", "user_name avatar_url")
+                .lean()
+        ])
+
+    } catch (error) {
+        const err = new Error("messages can't be retrived, plz try later");
+        err.status = 400;
+        err.extraDetails = "from getMessages function inside chat_controller";
+        next(err);
+    }
+}
+
+module.exports = { newGroupChat, getMyChats, getMyGroups, addMembers, removeMembers, leaveGroup, sendMessage, getChatDetails, renameConversation, deleteChat, getMessages };
