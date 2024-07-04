@@ -28,7 +28,7 @@ const verifyJwt = async (req, res, next) => {
         req.clientAuthData = clientAuthData;
         next();
     } catch (error) {
-        const err = new Error("token authentication failed");
+        const err = new Error("token from Cookie, authentication failed");
         err.status = 400;
         err.extraDetails = "from auth_middleware";
         next(err);

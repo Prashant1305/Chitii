@@ -87,7 +87,7 @@ const newGroupChat = async (req, res, next) => {
 
         }
         const allMembers = [...members, req.clientAuthData._id]
-        console.log(allMembers)
+
         const temp = await Conversation.create({ name, group_chat: true, members: allMembers, creator: req.clientAuthData._id });
         // console.log(temp);
         emitEvent(req, ALERT, allMembers, `welcome to ${name} group`);
@@ -390,17 +390,22 @@ const deleteChat = async (req, res, next) => {
 const getMessages = async (req, res, next) => {
     try {
         const chatId = req.params.id;
-        const { page = 1, limit = 20 } = req.query;
+        const { page = 1 } = req.query;
+
+        const limit = 20; // no. of messages per page
         const skip = (page - 1) * limit;
 
-        const messages = await Promise.all([
-            Message.find({ chat: chatId })
-                .sort({ created: -1 })
+        const [messages, totalMessagesCount] = await Promise.all([
+            Message.find({ conversation: chatId })
+                .sort({ createdAt: -1 }) // descending order
                 .skip(skip)
                 .limit(limit)
-                .populate("sender", "user_name avatar_url")
-                .lean()
+                .populate("sender", "user_name")
+                .lean(),
+            Message.countDocuments({ conversation: chatId }),
         ])
+        const totalPages = Math.ceil(totalMessagesCount / limit) || 0;
+        return res.status(200).json({ messages: messages.reverse(), totalPages });
 
     } catch (error) {
         const err = new Error("messages can't be retrived, plz try later");
