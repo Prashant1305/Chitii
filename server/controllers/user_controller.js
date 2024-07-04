@@ -1,5 +1,9 @@
 const Conversation = require("../models/conversation_model");
 const User = require("../models/user_model");
+const Request = require("../models/request_model");
+const { emitEvent } = require("../utils/features");
+const { NEW_REQUEST, REFETCH_CHATS } = require("../Constants/events");
+
 
 // const getUserForSidebar = async (req, res, next) => {
 //     try {
@@ -44,11 +48,143 @@ const getMyProfile = async (req, res, next) => {
 
 const searchUser = async (req, res, next) => {
     try {
-        console.log(req.query);
-        res.status(200).json({ msg: req.query });
-    } catch (error) {
+        const { name = "" } = req.query;
+        console.log(req.clientAuthData._id.toString())
+        const myChats = await Conversation.find({ group_chat: false, members: req.clientAuthData._id.toString() });
 
+        const allUsersFromMyChats = myChats.map((chat) => chat.members).flat();
+        // console.log(allUsersFromMyChats)
+        const allusersExceptMeAndMyFriends = await User.find({
+            _id: { $nin: allUsersFromMyChats },
+            user_name: { $regex: name, $options: "i" }, // matching pattern with insenistive case
+            full_name: { $regex: name, $options: "i" },
+        });
+        const users = allusersExceptMeAndMyFriends.map((i) => ({ _id: i._id, user_name: i.user_name, full_name: i.full_name, avatar_url: i.avatar_url }))
+
+        console.log(allusersExceptMeAndMyFriends);
+        res.status(200).json({ msg: users });
+    } catch (error) {
+        const err = new Error("unable to Search user, plz try later");
+        err.status = 501;
+        err.extraDetails = "from searchUser function inside user_controller";
+        next(err);
     }
 }
 
-module.exports = { getMyProfile, searchUser }
+const sendFriendRequest = async (req, res, next) => {
+    try {
+        const { userId } = req.body;
+        const request = await Request.findOne({
+            $or: [
+                { sender: req.clientAuthData._id, receiver: userId },
+                { sender: userId, receiver: req.clientAuthData._id }
+            ]
+        });
+        // console.log(request)
+
+        if (request) {
+            return res.status(400).json({ message: "request already sent" });
+        }
+
+        await Request.create({ sender: req.clientAuthData._id, receiver: userId });
+
+        emitEvent(req, NEW_REQUEST, [userId]);
+
+        return res.status(200).json({ message: "Friend request sent succesfully" });
+
+    } catch (error) {
+        const err = new Error("unable to send request, plz try later");
+        err.status = 501;
+        err.extraDetails = "from sendFriendRequest function inside user_controller";
+        next(err);
+    }
+}
+
+const acceptFriendRequest = async (req, res, next) => {
+    try {
+        const { requestId, accept } = req.body;
+
+        const request = await Request.findById(requestId).populate("sender", "user_name").populate("receiver", "user_name");
+
+        if (!request) {
+            return res.status(400).json({ message: "No request found" });
+        }
+
+        if (request.receiver._id.toString() !== req.clientAuthData._id.toString()) {
+            return res.status(400).json({ message: "You are not allowed to modify request" });
+        }
+
+        if (!accept) {
+            res.status(200).json({ message: "friend request declined" });
+        }
+
+
+        const members = [request.sender._id, request.receiver._id];
+        await Promise.all([
+            Conversation.create({
+                members,
+                name: `${request.sender.user_name}-${request.receiver.user_name}`
+            })
+        ])
+
+        emitEvent(req, REFETCH_CHATS, members);
+
+        await request.deleteOne();
+        res.status(200).json({ message: `you are now friends with ${request.sender.user_name}` });
+    } catch (error) {
+        const err = new Error("unable to accept friend request, plz try later");
+        err.status = 501;
+        err.extraDetails = "from acceptFriendRequest function inside user_controller";
+        next(err);
+    }
+}
+
+const getAllNotifications = async (req, res, next) => {
+    try {
+        const requests = await Request.find({ receiver: req.clientAuthData._id }).populate(
+            "sender",
+            "user_name avatar_url"
+        )
+
+        res.status(200).json({ message: requests });
+    } catch (error) {
+        const err = new Error("unable to retrive notification, plz try later");
+        err.status = 501;
+        err.extraDetails = "from getAllNotifications function inside user_controller";
+        next(err);
+    }
+}
+
+const getMyfriends = async (req, res, next) => {
+    try {
+        const { conversationId } = req.query;
+        const chats = await Conversation.find({ members: req.clientAuthData.id, group_chat: false }).lean().populate("members", "user_name avatar_url")
+
+        const friends = chats.map((chat) => chat.members).flat().filter((member) => member._id.toString() !== req.clientAuthData._id.toString());
+
+
+        if (conversationId) {
+            const chat = await Conversation.findById(conversationId);
+
+            const friendsNotInChat = friends.filter((friend) => {
+
+                for (let i = 0; i < chat.members.length; i++) {
+                    if (chat.members[i].toString() === friend._id.toString()) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+            return res.status(200).json({ message: friendsNotInChat });
+        }
+
+        res.status(200).json({ message: friends });
+    } catch (error) {
+        const err = new Error("unable to retrive friend list, plz try later");
+        err.status = 501;
+        err.extraDetails = "from getMyfriends function inside user_controller";
+        next(err);
+    }
+}
+
+module.exports = { getMyProfile, searchUser, sendFriendRequest, acceptFriendRequest, getAllNotifications, getMyfriends }

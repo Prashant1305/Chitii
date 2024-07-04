@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const User = require("./user_model");
 const Conversation = require("./conversation_model")
 
-const messageSchema = new mongoose.Schema({
+const requestSchema = new mongoose.Schema({
     status: {
         type: String,
         default: "pending",
@@ -22,6 +22,6 @@ const messageSchema = new mongoose.Schema({
     { timestamps: true }
 )
 
-const Message = mongoose.model("Message", messageSchema);
+const Request = mongoose.model("Request", requestSchema);
 
-module.exports = Message;
+module.exports = Request;
