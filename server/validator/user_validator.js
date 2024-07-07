@@ -36,10 +36,6 @@ const userSchema = z.object({
         .trim()
         .min(3, { message: "gender must be atleast of 3 char." })
         .max(255, { message: "gender must not be more than 255 characters" }),
-
-    avatar_url: z
-        .string({ required_error: "url is required" })
-        .url({ message: "Invalid url" }),
 });
 
 const loginSchema = z.object({

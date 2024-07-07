@@ -1,6 +1,7 @@
 const User = require("../models/user_model");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { uploadOnCloudinary } = require("../utils/cloudinaryDb/cloudinary");
 const cookieOptions = {
     maxAge: 15 * 24 * 60 * 60 * 1000,
     httpOnly: true,
@@ -10,7 +11,7 @@ const cookieOptions = {
 
 const signup = async (req, res, next) => {
     try {
-        let { full_name, user_name, mobile_number, email, gender, bio, avatar_url, password } = req.body;
+        let { full_name, user_name, mobile_number, email, gender, bio = "", password } = req.body;
         const userExist = await User.findOne({
             $or: [
                 { email: email },
@@ -18,13 +19,17 @@ const signup = async (req, res, next) => {
                 { user_name: user_name }
             ]
         });
-
+        console.log(userExist)
         if (userExist) {
             return next({ status: 400, message: "user already exist", extraDetails: "some of info provided are alredy registered" });
         }
         else {
+            let avatar_url;
+            if (req.file) {
+                const uploadedDp = await uploadOnCloudinary(req.file.path);
+                avatar_url = uploadedDp.secure_url
 
-            if (avatar_url === '') {
+            } else {
                 const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${user_name}`;
                 const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${user_name}`;
                 avatar_url = (gender.toLowerCase() === "male") ? boyProfilePic : girlProfilePic;
@@ -36,7 +41,7 @@ const signup = async (req, res, next) => {
         }
     } catch (error) {
         const err = new Error("bad credentials");
-        err.status = 201;
+        err.status = 500;
         err.extraDetails = "from signup function inside authcontroller";
         next(err);
     }
@@ -52,7 +57,7 @@ const generateAccessToken = async (userId) => {
 
     } catch (error) {
         const err = new Error("token generation failed");
-        err.status = 201;
+        err.status = 500;
         err.extraDetails = "from generateAccessToken function inside authcontroller";
         next(err);
     }

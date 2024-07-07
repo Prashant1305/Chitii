@@ -7,8 +7,8 @@ const verifyJwt = require("../middleware/auth_middleware");
 
 const router = express.Router();
 
-router.post("/send/:id", verifyJwt, sendMessage);
-router.get("/all-message/:id", verifyJwt, getMessages);
+// router.post("/send/:id", verifyJwt, sendMessage);
+// router.get("/all-message/:id", verifyJwt, getMessages);
 router.post("/newgroupchat", verifyJwt, newGroupChatValidator(), validateHandler, newGroupChat);
 router.get("/getmychats", verifyJwt, getMyChats);
 router.get("/getgroupchats", verifyJwt, getMyGroups);
