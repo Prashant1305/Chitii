@@ -7,6 +7,8 @@ const errorMiddleware = require("./middleware/error_middleware");
 const cookieParser = require("cookie-parser");
 const chat_routes = require("./routes/chat_routes");
 const user_routes = require("./routes/user_routes");
+const admin_routes = require("./routes/admin/admin_routes");
+
 const bodyParser = require('body-parser');
 
 
@@ -44,6 +46,7 @@ app.get('/check', (req, res) => {
 app.use('/api/auth', auth_routes);
 app.use('/api/chat', chat_routes);
 app.use('/api/user', user_routes);
+app.use('/api/admin', admin_routes);
 
 
 // error middleware

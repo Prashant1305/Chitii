@@ -11,10 +11,6 @@ router.post("/login", validate(loginSchema), login); // used zod validation
 
 router.get("/logout", verifyJwt, logout);
 
-router.post("/signup", validate(userSchema), signup); // used zod validation
-
-router.post("/checkmiddle", verifyJwt)
-
-
+router.post("/signup", upload.single('avatar'), validate(userSchema), signup); // used zod validation
 
 module.exports = router

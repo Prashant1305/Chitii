@@ -107,7 +107,7 @@ const getMyChats = async (req, res, next) => {
     try {
         let chats = await Conversation.find({ members: req.clientAuthData._id }).populate("members", "avatar_url");
 
-        console.log(req.clientAuthData._id)
+        // console.log(req.clientAuthData._id)
         let modifiedchats = chats.map((singleChat) => {
 
             const temp = singleChat.members.filter((member) => {
@@ -246,14 +246,14 @@ const leaveGroup = async (req, res, next) => {
         if (!chat.group_chat) {
             return res.status(400).json({ message: "user can't leave personal chat" })
         }
-        if (!chat.members.includes(req.clientAuthData._id)) {
+        if (!chat.members.some(((member) => member._id + "" === req.clientAuthData._id + ""), req.clientAuthData._id)) {
             return res.status(400).json({ message: "you are already not in this group" });
         }
         chat.members = chat.members.filter((member) => member.toString() !== req.clientAuthData._id.toString())
         if (chat.members.length < 3) {
             return res.status(400).json({ message: "minimum 3 members are needed in a group" });
         }
-        if (chat.creator === req.clientAuthData._id) {
+        if (chat.creator + "" === req.clientAuthData._id + "") {
             chat.creator = chat.members[0];
         }
         chat.save();
@@ -310,14 +310,21 @@ const getChatDetails = async (req, res, next) => {
     try {
         if (req.query.populate === "true") {
             const chat = await Conversation.findById(req.params.id).populate("members", "user_name avatar_url")
+
             if (!chat) {
                 return res.status(400).json({ message: "Conversation not found" });
+            } else if (!chat.members.some(((member) => member._id + "" === req.clientAuthData._id + ""), req.clientAuthData._id)) {
+                return res.status(400).json({ message: "you are not allowed to see other chats" });
             }
             return res.status(200).json({ message: chat });
+
         } else {
             const chat = await Conversation.findById(req.params.id)
+
             if (!chat) {
                 return res.status(400).json({ message: "Conversation not found" });
+            } else if (!chat.members.some(((member) => member._id + "" === req.clientAuthData._id + ""), req.clientAuthData._id)) {
+                return res.status(400).json({ message: "you are not allowed to see other chats" });
             }
             return res.status(200).json({ message: chat });
         }
