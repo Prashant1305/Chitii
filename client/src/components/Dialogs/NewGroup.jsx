@@ -9,7 +9,7 @@ function NewGroup() {
     const [groupName, setGroupName] = useState("");
     const [members, setMembers] = useState(sampleUsers);
     const [selectedMembers, setSelectedMembers] = useState([]);
-    const { isNewGroup, setIsNewGroup } = MyToggleUiValues()
+    const { uiState, setUiState } = MyToggleUiValues()
 
 
     const selectMemberHandler = (id) => {
@@ -26,10 +26,10 @@ function NewGroup() {
 
     }
     const closeHandler = () => {
-        setIsNewGroup(prev => !prev)
+        setUiState(prev => ({ ...prev, isNewGroup: false }))
     }
     return (
-        <Dialog open={isNewGroup} onClose={closeHandler}>
+        <Dialog open={uiState.isNewGroup} onClose={closeHandler}>
             <Stack p={{ xs: "1rem", sm: "2rem" }} width={"25rem"} spacing={"2rem"}>
                 <DialogTitle textAlign={"center"} variant="h4">New Group</DialogTitle>
                 <TextField label="Group Name" value={groupName} onChange={groupNameHandler} />

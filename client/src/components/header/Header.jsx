@@ -13,25 +13,31 @@ const NewGroup = lazy(() => import("../Dialogs/NewGroup"));
 
 function Header() {
     const navigate = useNavigate()
-
-    const { isMobileOpen, setIsmobileOpen, isSearch, setIsSearch, isNewGroup, setIsNewGroup, isNotification, setIsNotification, mobileBtnExist } = MyToggleUiValues();
+    const { uiState, setUiState } = MyToggleUiValues();
 
     const openSearchDialog = () => {
-        console.log("searched");
-        setIsSearch(!isSearch);
+        // console.log("searched");
+        // setIsSearch(!isSearch);
+        setUiState((prev) => ({ ...prev, isSearch: !prev.isSearch }));
+
     }
     const handleMobile = () => {
-        console.log("mobile");
-        setIsmobileOpen(!isMobileOpen);
+        // console.log("mobile");
+        setUiState((prev) => ({ ...prev, isMobileOpen: !prev.isMobileOpen }));
+
     }
     const openNewGroup = () => {
-        console.log("openNewGroup");
-        setIsNewGroup(!isNewGroup)
+        // console.log("openNewGroup");
+        // setIsNewGroup(!isNewGroup)
+        setUiState((prev) => ({ ...prev, isNewGroup: !prev.isNewGroup }));
+
     }
 
     const openNotification = () => {
-        console.log("mobile");
-        setIsNotification(!isNotification);
+        // console.log("mobile");
+        // setIsNotification(!isNotification);
+        setUiState((prev) => ({ ...prev, isNotification: !prev.isNotification }));
+
     }
     return (
         <>
@@ -60,11 +66,11 @@ function Header() {
                         </Typography>
 
                         {
-                            mobileBtnExist && <Box sx={{
+                            uiState?.mobileBtnExist && <Box sx={{
                                 display: { xs: "block", sm: "none" },
                             }}>
                                 {
-                                    !isMobileOpen ?
+                                    !uiState?.isMobileOpen ?
                                         (
                                             <Tooltip title="menu">
                                                 <IconButton color='inherit' onClick={handleMobile}>
@@ -77,7 +83,7 @@ function Header() {
                                                 <IconButton sx={{
                                                     color: "rgba(255, 255, 255, 0.9)",
                                                 }}
-                                                    onClick={() => { setIsmobileOpen((prev) => !prev) }}>
+                                                    onClick={handleMobile}>
                                                     <CloseIcon />
                                                 </IconButton>
                                             </Tooltip>
@@ -105,12 +111,12 @@ function Header() {
             </Box>
 
             {
-                isSearch && <Suspense fallback={<Backdrop open />}><Search /></Suspense>
+                uiState?.isSearch && <Suspense fallback={<Backdrop open />}><Search /></Suspense>
             }
             {
-                isNotification && <Suspense fallback={<Backdrop open />}><Notifications /></Suspense>
+                uiState?.isNotification && <Suspense fallback={<Backdrop open />}><Notifications /></Suspense>
             }{
-                isNewGroup && <Suspense fallback={<Backdrop open />}><NewGroup /></Suspense>
+                uiState?.isNewGroup && <Suspense fallback={<Backdrop open />}><NewGroup /></Suspense>
             }
 
         </>

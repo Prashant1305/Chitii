@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -14,6 +14,9 @@ import Dashboard from "./pages/admin/Dashboard";
 import MessageManagement from "./pages/admin/MessageManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import ChatWindow from "./pages/ChatWindow";
+import { fetch_user_data } from "./utils/ApiUtils";
+import { useDispatch, useSelector } from "react-redux";
+import { userExist, userNotExist } from "./redux/reducers/Auth";
 
 
 // import ErrorRoute from "./pages/ErrorRoute";
@@ -22,11 +25,11 @@ import ChatWindow from "./pages/ChatWindow";
 // import Home from "./pages/Home";
 // import SignOut from "./pages/SignOut";
 // import Error from "./pages/Error";
-// import RootLayout from "./components/RootLayout";
+import RootLayout from "./components/layout/RootLayout";
+import { toast } from "react-toastify";
+import SocketProvider from "./utils/Socket";
 // import Groups from "./pages/Groups";
 // import Chat from "./pages/Chat";
-
-
 
 const Home = lazy(() => import("./pages/Home")); // using lazy, now this page will load when needed at first
 const SignUp = lazy(() => import("./pages/SignUp"));
@@ -34,24 +37,34 @@ const SignIn = lazy(() => import("./pages/SignIn"));
 const ErrorRoute = lazy(() => import("./pages/ErrorRoute"));
 const SignOut = lazy(() => import("./pages/SignOut"));
 const Error = lazy(() => import("./pages/Error"));
-const RootLayout = lazy(() => import("./components/layout/RootLayout"));
 const Groups = lazy(() => import("./pages/Groups"));
 const Chat = lazy(() => import("./components/Chat"));
 
-
-
 function Routing() {
-  // const user = false;
-  const user = {
-    name: "BigDaddy",
-    isAdmin: true,
-    isLoading: false
-  }; // dummy user
+  const { user, isLoading } = useSelector(state => state.auth);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchingUserData = async () => {
+      try {
+        const res = await fetch_user_data();
+        if (res.status === 200) {
+          dispatch(userExist(res?.data?.message));
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error(error.response.data.message || "something went wrong in getting user details");
+        dispatch(userNotExist());
+      }
+    }
+    fetchingUserData();
+  }, []);
+
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route>
         <Route element={<ProtectRoutes conditionValue={user && !user.isLoading} navigateTo={"/signin"} />}> {/*protecting inside routes*/}
-          <Route path="/" element={<RootLayout />} errorElement={<Error />}>
+          <Route path="/" element={<SocketProvider><RootLayout /></SocketProvider>} errorElement={<Error />}>
             <Route element={<PublicLayout />}>
               <Route index element={<Suspense fallback={<LayoutLoader />}><Home /></Suspense>} />
               <Route path="groups" element={<Suspense fallback={<LayoutLoader />}><Groups /></Suspense>} />
@@ -61,7 +74,7 @@ function Routing() {
             </Route>
 
             {/* admin section */}
-            <Route element={<ProtectRoutes conditionValue={user.isAdmin} navigateTo={"/"} />}> {/*singin verified above, now checking for admin role*/}
+            <Route element={<ProtectRoutes conditionValue={user?.isAdmin} navigateTo={"/"} />}> {/*singin verified above, now checking for admin role*/}
               <Route path="admin" element={<AdminLayout />} >
                 <Route index element={<Dashboard />} />
                 <Route path="chats" element={<ChatManagement />} />
@@ -81,7 +94,7 @@ function Routing() {
       </Route>
     )
   );
-  return (
+  return isLoading ? <LayoutLoader /> : (
     <>
       <RouterProvider router={router} />
     </>

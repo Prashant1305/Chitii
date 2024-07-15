@@ -1,8 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import "./Sign.css";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import { login_api } from '../utils/ApiUtils';
+import { useDispatch } from 'react-redux';
+import { userExist, userNotExist } from '../redux/reducers/Auth';
 
 function SignIn() {
     const [userData, setUserData] = useState({
@@ -10,25 +12,40 @@ function SignIn() {
         password: "",
     })
     const [btnActive, setbtnActive] = useState(false);
-    // const { setIsLogin } = MyLoginValues();
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const handlesubmit = async (e) => {
         e.preventDefault();
         try {
 
             const res = await login_api({ emailOrUsername: userData.email, password: userData.password });
-            console.dir(res);
+            if (res.status === 200) {
+                // user details will be stored from Routing section
+                dispatch(userExist(res.data.user));
+                toast.success("Login Succesfull");
+                navigate("/");
+            } else {
+                dispatch(userNotExist());
+                toast.error("Invalid Credentials");
+            }
 
         } catch (error) {
-
+            toast.error(error.response.data.message || "something went wrong");
+            dispatch(userNotExist())
+            console.log(error);
         }
     }
     const handleChange = (e) => {
         setUserData({ ...userData, [e.target.id]: e.target.value });
+    }
+
+    useEffect(() => {
         if (userData.email !== "" && userData.password.length > 0) {
             setbtnActive(true);
+        } else {
+            setbtnActive(false);
         }
-    }
+    }, [userData]);
     return (
         <>
             <section>
@@ -52,7 +69,7 @@ function SignIn() {
                                 handlesubmit(e);
                             }}>Submit</button >}
 
-                            {!btnActive && <button className='signin_btn' disabled>Submit</button >}
+
                         </form>
                     </div>
                     <div className='create_accountinfo'>

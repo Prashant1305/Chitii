@@ -37,7 +37,7 @@ const signup = async (req, res, next) => {
 
             // password will be encrypted befor being saved in db
             await User.create({ full_name, user_name, mobile_number, email, gender, avatar_url, password, bio });
-            res.status(200).json({ msg: "Successfully Registered" })
+            res.status(200).json({ message: "Successfully Registered" })
         }
     } catch (error) {
         const err = new Error("bad credentials");
@@ -84,11 +84,23 @@ const login = async (req, res, next) => {
         }
         const { accessToken } = await generateAccessToken(user._id);
 
-        // console.log(process.env.ACCESS_TOKEN_EXPIRY)
         res
             .status(200)
             .cookie("accessToken", accessToken, cookieOptions)
-            .json({ msg: "userlogged in succesfully", tokens: { accessToken }, time: process.env.ACCESS_TOKEN_EXPIRY, user: { email: user.email, gender: user.gender, avatar_url: user.avatar_url } });
+            .json({
+                message: "userlogged in succesfully", tokens: { accessToken }, time: process.env.ACCESS_TOKEN_EXPIRY, user: {
+                    _id: user._id,
+                    user_name: user.user_name,
+                    email: user.email,
+                    full_name: user.full_name,
+                    mobile_number: user.mobile_number,
+                    bio: user.bio,
+                    gender: user.gender,
+                    avatar_url: user.avatar_url,
+                    createdAt: user.createdAt,
+                    admin: user.admin
+                }
+            });
     } catch (error) {
         const err = new Error("unable to login");
         err.status = 400;

@@ -1,28 +1,68 @@
-import { Dialog, DialogTitle, InputAdornment, List, ListItem, ListItemText, Stack, TextField } from '@mui/material'
-import React, { useState } from 'react'
 import { Search as SearchIcon } from '@mui/icons-material';
-import UserItem from '../shared/UserItem';
-import { sampleUsers } from '../constants/sampleData';
+import { Dialog, DialogTitle, InputAdornment, List, Stack, TextField } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { MyToggleUiValues } from '../../context/ToggleUi';
+import { search_user, send_friend_request } from '../../utils/ApiUtils';
+import UserItem from '../shared/UserItem';
 
 function Search() {
-    const [search, setSearch] = useState("");
-    const { isSearch, setIsSearch } = MyToggleUiValues()
+    const [searchText, setSearchText] = useState("");
+    const { uiState, setUiState } = MyToggleUiValues();
+    const [users, setUsers] = useState([])
+    const [friendRequestSent, setFriendRequestSent] = useState([]);
+
 
     const changeHandler = (e) => {
-        // console.dir(e.currentTarget.value);
-        setSearch(`${e.currentTarget.value}`)
+        setSearchText(`${e.currentTarget.value}`)
     }
-    let isLoadingSendFriendRequest = false;
-    const addFriendHandler = (id) => {
-        console.log(id);
+    const [isLoadingSendFriendRequest, setIsLoadingSendFriendRequest] = useState([]);
+    const addFriendHandler = async (id) => {
+        setIsLoadingSendFriendRequest([...isLoadingSendFriendRequest, id]);
+        toast.info("loading");
+        try {
+            const res = await send_friend_request(id);
+            if (res.status === 200) {
+                toast.success("Friend Request Sent Successfully");
+            }
+        } catch (error) {
+            console.log(error)
+            toast.error(error.response.data.message || "failed to send request, plz try later")
+        }
+        finally {
+            setIsLoadingSendFriendRequest(isLoadingSendFriendRequest.filter((item) => item !== id));
+        }
     }
-    const [users, setUsers] = useState(sampleUsers) // temporary array
+
+    useEffect(() => {
+        const fetchSearchedUsers = async (searchText) => {
+            try {
+                const res = await search_user(searchText);
+                if (res.status === 200) {
+                    setUsers(res.data.message);
+                }
+            } catch (error) {
+                console.log(error);
+                toast.error(error.response.data.message || "failed to retrive searched users, plz try later")
+            }
+        }
+        const timeOutId = setTimeout(() => {
+            fetchSearchedUsers(searchText);
+            // console.log("search_Value", searchText);
+        }, 1000);
+
+        return () => {
+            clearTimeout(timeOutId);
+        }
+
+    }, [searchText]);
     return (
-        <Dialog open={isSearch} onClose={() => { setIsSearch(prev => !prev) }}>
+        <Dialog open={uiState.isSearch} onClose={() => {
+            setUiState({ ...uiState, isSearch: false });
+        }}>
             <Stack p={"2rem"} direction={"column"} width={"25rem"}>
                 <DialogTitle textAlign={"center"}>Find People</DialogTitle>
-                <TextField label="" value={search} onChange={changeHandler}
+                <TextField label="" value={searchText} onChange={changeHandler} placeholder='user_name or full_name'
                     variant='outlined'
                     size='small'
                     InputProps={{
@@ -36,7 +76,7 @@ function Search() {
                 <List>
                     {
                         users.map((user) => (
-                            <UserItem user={user} key={user._id} handler={addFriendHandler} handlerIsLoading={isLoadingSendFriendRequest} />
+                            <UserItem user={user} key={user._id} handler={addFriendHandler} handlerIsLoading={isLoadingSendFriendRequest.includes(user._id)} />
                         ))
                     }
                 </List>

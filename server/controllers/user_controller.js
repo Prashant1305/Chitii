@@ -34,8 +34,7 @@ const getMyProfile = async (req, res, next) => {
 
         console.log(req.clientAuthData);
         res.status(200).json({
-            success: true,
-            data: req.clientAuthData
+            message: req.clientAuthData
         });
     }
     catch (error) {
@@ -59,10 +58,10 @@ const searchUser = async (req, res, next) => {
             user_name: { $regex: name, $options: "i" }, // matching pattern with insenistive case
             full_name: { $regex: name, $options: "i" },
         });
-        const users = allusersExceptMeAndMyFriends.map((i) => ({ _id: i._id, user_name: i.user_name, full_name: i.full_name, avatar_url: i.avatar_url }))
+        const users = allusersExceptMeAndMyFriends.map((i) => ({ _id: i._id, name: i.user_name, full_name: i.full_name, avatar_url: i.avatar_url }))
 
         console.log(allusersExceptMeAndMyFriends);
-        res.status(200).json({ msg: users });
+        res.status(200).json({ message: users });
     } catch (error) {
         const err = new Error("unable to Search user, plz try later");
         err.status = 501;
@@ -115,7 +114,8 @@ const acceptFriendRequest = async (req, res, next) => {
         }
 
         if (!accept) {
-            res.status(200).json({ message: "friend request declined" });
+            await request.deleteOne();
+            return res.status(200).json({ message: "friend request declined" });
         }
 
 

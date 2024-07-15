@@ -1,15 +1,14 @@
 import React, { useState } from "react";
 import "./Sign.css";
-// import "./signup.css";
 import { NavLink, useNavigate } from "react-router-dom";
 import Stack from '@mui/material/Stack';
 
 import { toast } from 'react-toastify';
-import { signup_api } from "../utils/ApiUtils";
 import { Avatar, IconButton, Typography } from "@mui/material";
 import { CameraAlt } from "@mui/icons-material"
 import { VisuallyHiddenInput } from "../components/styles/StyledComponent";
 import { useFileHandler } from "6pp";
+import { signup_api } from "../utils/ApiUtils";
 
 function SignUp() {
   const [userData, setUserData] = useState({
@@ -27,24 +26,29 @@ function SignUp() {
   const handlesubmit = async (e) => {
     e.preventDefault();
     // console.log(userData);
-    if (userData.password.length > 0 && userData.password === userData.passwordAgain) {
-      let temp = { ...userData };
-      delete temp.passwordAgain;
-      try {
-        const res = await signup_api(temp);
-        console.log(res)
+    try {
+      if (userData.password.length > 0 && userData.password === userData.passwordAgain) {
+        const form_data = new FormData();
+        if (avatar.file) { form_data.append("avatar_url", avatar.file); }
+        form_data.append("full_name", userData.full_name);
+        form_data.append("user_name", userData.user_name);
+        form_data.append("mobile_number", userData.mobile_number);
+        form_data.append("email", userData.email);
+        form_data.append("gender", userData.gender);
+        form_data.append("password", userData.password);
+        const res = await signup_api(form_data);
         if (res.status === 200) {
-          toast.success("Login Successfull");
-        } else {
-          toast.error(res.data.message);
-          toast.error(res.data.extraDetails);
+          navigate("../signin")
         }
-      } catch (error) {
-        toast.error("connection failed");
+
+
+      } else {
+        toast.warning("password did not match");
+        setUserData({ ...userData, password: "", passwordAgain: "" });
       }
-    } else {
-      toast.warning("password did not match");
-      setUserData({ ...userData, password: "", passwordAgain: "" });
+    } catch (error) {
+      toast.error(error.response.data.message || "something went unexpected")
+      console.log(error)
     }
   };
   const handleChange = (e) => {

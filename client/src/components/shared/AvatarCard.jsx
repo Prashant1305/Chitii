@@ -7,6 +7,7 @@ function AvatarCard({ avatar = [], max = 4 }) {
         <Stack direction={"row"} spacing={0.5}>
             <AvatarGroup max={max} sx={{
                 position: "relative",
+                paddingRight: "0.5rem"
             }}>
                 <Box width={"5rem"} height={"3rem"}>
                     {avatar.map((i, index) => (

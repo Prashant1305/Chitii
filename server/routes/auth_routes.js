@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post("/login", validate(loginSchema), login); // used zod validation
 
-router.get("/logout", verifyJwt, logout);
+router.get("/logout", logout);
 
 router.post("/signup", upload.single('avatar'), validate(userSchema), signup); // used zod validation
 

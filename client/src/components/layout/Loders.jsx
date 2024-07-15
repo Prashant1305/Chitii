@@ -3,7 +3,9 @@ import React from 'react'
 
 export const LayoutLoader = () => {
     return (
-        <Grid container height={"calc(100vh - 4rem)"} spacing={"1rem"}>
+        <Grid container height={"calc(100vh - 4rem)"} spacing={"1rem"} sx={{
+            backgroundImage: "linear-gradient(#A9FF99, rgb(217, 234, 237))",
+        }}>
             <Grid item
                 sm={4}
                 md={3}

@@ -3,7 +3,7 @@ import { Add as AddIcon, Remove as RemoveIcon } from "@mui/icons-material"
 import React from 'react'
 
 function UserItem({ user, handler, handlerIsLoading, isAdded = false, styling = {} }) {
-    const { name, _id, avatar } = user
+    const { name, _id, avatar_url } = user
     return (
         <ListItem >
             <Stack
@@ -13,7 +13,7 @@ function UserItem({ user, handler, handlerIsLoading, isAdded = false, styling = 
                 width={"100%"}
                 {...styling}>
 
-                <Avatar />
+                <Avatar src={avatar_url} />
 
                 <Typography
                     variant='h5'
@@ -36,14 +36,14 @@ function UserItem({ user, handler, handlerIsLoading, isAdded = false, styling = 
                         color: 'white',
                         "&:hover": {
                             bgcolor: isAdded ? "error.dark" : "primary.dark",
-                        }
+                        },
                     }}
-                    onClick={() => {
-                        handler(_id)
-                    }}
+
                     disabled={handlerIsLoading}
                 >
-                    {isAdded ? <RemoveIcon /> : <AddIcon />}
+                    {isAdded ? <RemoveIcon /> : <AddIcon onClick={() => {
+                        handler(_id)
+                    }} />}
                 </IconButton>
             </Stack>
         </ListItem>
