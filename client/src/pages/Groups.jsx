@@ -16,7 +16,7 @@ function Groups() {
     const chatId = useSearchParams()[0].get("group");
     console.dir(chatId)
 
-    const { isMobileOpen, setIsmobileOpen, setMobileBtnExist } = MyToggleUiValues()
+    const { uiState, setUiState } = MyToggleUiValues()
 
     const [isEdit, setIsEdit] = useState(false);
     const [groupName, setGroupName] = useState("");
@@ -52,8 +52,10 @@ function Groups() {
     }
 
     useEffect(() => {
-        setMobileBtnExist(true);
-        return () => { setMobileBtnExist(false); }
+        setUiState({ ...uiState, mobileBtnExist: true })
+        return () => {
+            setUiState({ ...uiState, mobileBtnExist: false })
+        }
     }, [])
 
     useEffect(() => {
@@ -67,7 +69,7 @@ function Groups() {
     }, [chatId])
 
     const handleMobile = () => {
-        setIsmobileOpen((prev) => !prev)
+        setUiState({ ...uiState, isMobileOpen: !uiState.isMobileOpen })
     }
     const IconBtns = <>
         {/* <Box sx={{
@@ -209,7 +211,7 @@ function Groups() {
                         backgroundImage: "linear-gradient(#A9FF99, rgb(217, 234, 237))"
                     }
                 }}
-                open={isMobileOpen} onClose={() => { setIsmobileOpen(false) }}><GroupList w={"100%"} myGroups={sampleChats} />
+                open={uiState.isMobileOpen} onClose={() => { setUiState({ ...uiState, ismobileOpen: false }) }}><GroupList w={"100%"} myGroups={sampleChats} />
             </Drawer>
         </Grid>
     )

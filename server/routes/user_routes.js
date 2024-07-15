@@ -6,7 +6,7 @@ const { route } = require("./chat_routes");
 
 const router = express.Router();
 
-router.post("/getmyprofile", verifyJwt, getMyProfile);
+router.get("/getmyprofile", verifyJwt, getMyProfile);
 router.get("/search", verifyJwt, searchUser); // will search user by querying url
 router.put("/sendfriendrequest", verifyJwt, sendFriendRequestValidator(), validateHandler, sendFriendRequest)
 router.delete("/acceptfriendrequest", verifyJwt, acceptFriendRequestValidator(), validateHandler, acceptFriendRequest);

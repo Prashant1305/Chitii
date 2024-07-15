@@ -35,10 +35,10 @@ function ChatItem({
 
                 <AvatarCard avatar={avatar} />
 
-                <Stack>
-                    <Typography>{name}</Typography>
+                <Stack >
+                    <Typography variant="h5">{name}</Typography>
                     {newMessageAlert && (
-                        <Typography>{newMessageAlert.count} New Message</Typography>
+                        <Typography variant="body2">{newMessageAlert.count} New Message</Typography>
                     )}
                 </Stack>
 

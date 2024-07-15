@@ -3,15 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import "./Sign.css"
 // import { MyLoginValues } from '../Context/AuthContext';
 import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
+import { userExist, userNotExist } from '../redux/reducers/Auth';
+import { logout } from '../utils/ApiUtils';
 
 function SignOut() {
     const navigate = useNavigate();
-    // const { setIsLogin } = MyLoginValues();
-    const handleSubmit = (e) => {
+    const dispatch = useDispatch();
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // setIsLogin(false);
-        toast.success("Logout Successful");
-        navigate('/');
+
+        try {
+            const res = await logout();
+            if (res.status === 200) {
+                dispatch(userNotExist());
+                toast.success("Logout Successful");
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error(error.response.data.message || "logout Failed")
+        }
     }
     return (
         <>

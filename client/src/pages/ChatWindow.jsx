@@ -1,25 +1,45 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Drawer, Grid } from '@mui/material'
+import { Drawer, Grid, Skeleton } from '@mui/material'
 import ChatList from '../components/chatList/ChatList'
 import { sampleChats } from '../components/constants/sampleData'
 import Chat from '../components/Chat'
 import SelectChat from '../components/ChatWindow/SelectChat'
 import { MyToggleUiValues } from '../context/ToggleUi'
+import { toast } from 'react-toastify'
+import { get_my_chats } from '../utils/ApiUtils'
 
 function ChatWindow() {
     const params = useParams();
     const chatId = params.chatId;
-    const { isMobileOpen, setIsmobileOpen, setMobileBtnExist } = MyToggleUiValues()
+    const [chatIsLoading, setChatIsLoading] = useState(false);
+    const { uiState, setUiState } = MyToggleUiValues()
+    const [chats, setChats] = useState([])
     console.log(chatId)
     const handleDeleteChat = (e, _id, groupChat) => {
         e.preventDefault();
         console.log("delete chat", _id, groupChat)
     }
+    const my_chats = async () => {
+        try {
+            setChatIsLoading(true)
+            const res = await get_my_chats();
+            console.log(res);
+            setChats(res?.data?.message)
+        } catch (error) {
+            console.log(error);
+            toast.error(error.response.data.message || "failed to retrive chats, plz try later")
+        }
+        finally {
+            setChatIsLoading(false)
+        }
+    }
     useEffect(() => {
-        setMobileBtnExist(true);
+        my_chats();
+        setUiState((prev) => ({ ...prev, mobileBtnExist: true }))
+
         return () => {
-            setMobileBtnExist(false)
+            setUiState((prev) => ({ ...prev, mobileBtnExist: false }))
         };
     }, [])
     return (
@@ -33,15 +53,26 @@ function ChatWindow() {
                     backgroundImage: "linear-gradient(#A9FF99, rgb(217, 234, 237))",
                     border: "1px solid white"
                 }} height={"100%"} >
-                <ChatList
-                    chats={sampleChats}
+                {
+                    chatIsLoading ? <Skeleton /> : <ChatList
+                        chats={chats}
+                        chatId={chatId}
+                        newMessagesAlert={[{
+                            chatId,
+                            count: 4
+                        }]}
+                        handleDeleteChat={handleDeleteChat}
+                        onlineUsers={["1", "2"]} />
+                }
+                {/* <ChatList
+                    chats={chats}
                     chatId={chatId}
                     newMessagesAlert={[{
                         chatId,
                         count: 4
                     }]}
                     handleDeleteChat={handleDeleteChat}
-                    onlineUsers={["1", "2"]} />
+                    onlineUsers={["1", "2"]} /> */}
             </Grid>
 
             <Grid item
@@ -55,7 +86,7 @@ function ChatWindow() {
                 }} >
                 {chatId ? <Chat /> : <SelectChat />}
             </Grid>
-            <Drawer
+            {chatIsLoading ? <Skeleton /> : (<Drawer
                 PaperProps={{
                     sx: {
                         width: "50vw",
@@ -68,7 +99,10 @@ function ChatWindow() {
                         backgroundImage: "linear-gradient(#A9FF99, rgb(217, 234, 237))"
                     }
                 }}
-                open={isMobileOpen} onClose={() => { setIsmobileOpen(false) }}>
+                open={uiState.isMobileOpen} onClose={() => {
+                    console.log("clicked")
+                    setUiState({ ...uiState, isMobileOpen: false })
+                }}>
                 <ChatList
                     chats={sampleChats}
                     chatId={chatId}
@@ -79,6 +113,7 @@ function ChatWindow() {
                     handleDeleteChat={handleDeleteChat}
                     onlineUsers={["1", "2"]} />
             </Drawer>
+            )}
         </Grid>
     )
 }

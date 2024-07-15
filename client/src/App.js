@@ -6,6 +6,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { CssBaseline } from "@mui/material"
 import { HelmetProvider } from "react-helmet-async";
 import ToggleUi from "./context/ToggleUi";
+import { Provider } from "react-redux";
+import store from "./redux/store";
 
 function App() {
   return (
@@ -26,8 +28,11 @@ function App() {
             pauseOnHover
             theme="colored"
           />
+          <Provider store={store}>
 
-          <Routing />
+            <Routing />
+          </Provider>
+
         </HelmetProvider>
       </ToggleUi>
     </div>

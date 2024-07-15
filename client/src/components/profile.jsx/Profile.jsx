@@ -2,8 +2,11 @@ import { Avatar, Stack, Typography } from '@mui/material'
 import React from 'react'
 import { Face as FaceIcon, AlternateEmail as UserNameIcon, CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import moment from "moment"
+import { useSelector } from 'react-redux';
 
 function Profile() {
+    const user = useSelector(state => state.auth);
+
     return (
         <Stack spacing={"2rem"} direction={"column"} alignItems={"center"}>
             <Avatar sx={{
@@ -12,11 +15,12 @@ function Profile() {
                 objectFit: "contain",
                 marginBottom: "1rem",
                 border: "5px solid white"
-            }} />
-            <ProfileCard heading={"Bio"} text={"qwertyhjaslfj"} />
-            <ProfileCard heading={"Username"} text={"Praash"} Icon={<UserNameIcon />} />
-            <ProfileCard heading={"Name"} text={"Prashant Singh"} Icon={<FaceIcon />} />
-            <ProfileCard heading={"Joined On"} text={moment('2023-11-04T18:30:00.000Z').fromNow()} Icon={<FaceIcon />} />
+            }}
+                src={user?.user?.avatar_url} alt="no avatar found" />
+            <ProfileCard heading={"Bio"} text={user?.user?.bio || "bio not available"} />
+            <ProfileCard heading={"Username"} text={user?.user?.user_name || "No username found"} Icon={<UserNameIcon />} />
+            <ProfileCard heading={"Name"} text={user?.user?.full_name || "full name not availabale"} Icon={<FaceIcon />} />
+            <ProfileCard heading={"Joined On"} text={moment(user?.user?.createdAt).fromNow() || "joining Date not availabale"} Icon={<CalendarIcon />} />
 
         </Stack>
     )

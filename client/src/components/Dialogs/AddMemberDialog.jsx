@@ -3,10 +3,12 @@ import React, { useState } from 'react'
 import { sampleUsers } from '../constants/sampleData'
 import UserItem from '../shared/UserItem'
 import { v4 as uuid } from "uuid";
+import { MyToggleUiValues } from '../../context/ToggleUi';
 
 function AddMemberDialog({ addMember, isLoadingAddMember, chatId }) {
     const [members, setMembers] = useState(sampleUsers);
     const [selectedMembers, setSelectedMembers] = useState([]);
+    const { uiState, setUiState } = MyToggleUiValues();
 
     const selectMemberHandler = (id) => {
         setSelectedMembers((prev) => (prev.includes(id)) ? prev.filter((ele) => ele !== id) : [...prev, id]);
@@ -21,10 +23,11 @@ function AddMemberDialog({ addMember, isLoadingAddMember, chatId }) {
         setSelectedMembers([]);
         setMembers([])
         console.log("close add member dialog");
+        setUiState({ ...uiState, isAddMember: false })
     }
 
     return (
-        <Dialog open={false} onClose={closeHandler}>
+        <Dialog open={uiState.isAddMember} onClose={closeHandler}>
             <Stack p={"2rem"} width={"25rem"} >
                 <DialogTitle textAlign={"center"}>Add Member</DialogTitle>
                 <Stack spacing={"1rem"}>
