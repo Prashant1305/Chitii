@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user_model");
 
 const verifyAdmin = async (req, res, next) => {
-    if (req?.clientAuthData?.admin) {
+    if (req?.clientAuthData?.isAdmin) {
         next();
     }
     else {

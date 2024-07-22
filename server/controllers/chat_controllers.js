@@ -3,9 +3,11 @@ const Message = require("../models/message_model");
 const User = require("../models/user_model");
 const mongoose = require('mongoose');
 const { emitEvent } = require("../utils/features");
-const { ALERT, REFETCH_CHATS, NEW_MESSAGE_ALERTS } = require("../Constants/events");
+const { ALERT, REFETCH_CHATS, NEW_MESSAGE_ALERTS, NEW_MESSAGE } = require("../Constants/events");
 const { ObjectId } = require('mongodb');
 const { uploadOnCloudinary, deleteFromCloudinary } = require("../utils/cloudinaryDb/cloudinary");
+const { activeUserSocketIDs } = require("../utils/activeUsersInSockets");
+const { getSockets } = require("../utils/helper");
 
 // const sendMessage = async (req, res, next) => {
 //     try {
@@ -279,6 +281,13 @@ const sendMessage = async (req, res, next) => {
             return res.status(400).json({ message: "Chat not found" })
         }
 
+        const io = req.app.get('socketio'); // Retrieve io instance from app
+        const membersSocket = getSockets(chat.members, activeUserSocketIDs);
+        if (membersSocket.length > 0) {
+            io.to(membersSocket).emit(NEW_MESSAGE, { conversationId, message: text_content });
+        }
+
+
         const responsePromiseArray = req.files.map((file) => uploadOnCloudinary(file.path))
         const fileUrlArray = await Promise.all(responsePromiseArray);
 
@@ -297,7 +306,7 @@ const sendMessage = async (req, res, next) => {
 
         // emitEvent(req, NEW_MESSAGE_ALERTS, chat.members, messageNotification)
 
-        res.status(269).json({ message: "received send message", text_data: req.body, files: req.files })
+        res.status(269).json({ message: "received send message", text_data: req.body, attachments })
     } catch (error) {
         const err = new Error("cannot send message, plz try later");
         err.status = 400;
@@ -422,4 +431,21 @@ const getMessages = async (req, res, next) => {
     }
 }
 
-module.exports = { newGroupChat, getMyChats, getMyGroups, addMembers, removeMembers, leaveGroup, sendMessage, getChatDetails, renameConversation, deleteChat, getMessages };
+const getSingleMessage = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        console.log(id)
+        const message = await Message.findById(id).populate("sender", "user_name").lean();
+        if (!message) {
+            return res.status(400).json({ message: "message not found" });
+        }
+        res.status(200).json({ message });
+    } catch (error) {
+        const err = new Error("messages can't get your single message, plz try later");
+        err.status = 500;
+        err.extraDetails = "from getMessages function inside chat_controller";
+        next(err);
+    }
+}
+
+module.exports = { newGroupChat, getMyChats, getMyGroups, addMembers, removeMembers, leaveGroup, sendMessage, getChatDetails, renameConversation, deleteChat, getMessages, getSingleMessage };

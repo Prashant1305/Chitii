@@ -1,5 +1,5 @@
 const express = require("express");
-const verifyJwt = require("../middleware/auth_middleware");
+const { verifyJwt } = require("../middleware/auth_middleware");
 const { getMyProfile, searchUser, sendFriendRequest, acceptFriendRequest, getAllNotifications, getMyfriends } = require("../controllers/user_controller");
 const { sendFriendRequestValidator, validateHandler, acceptFriendRequestValidator } = require("../middleware/express-validator_middleware");
 const { route } = require("./chat_routes");

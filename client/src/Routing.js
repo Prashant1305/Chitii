@@ -38,7 +38,7 @@ const ErrorRoute = lazy(() => import("./pages/ErrorRoute"));
 const SignOut = lazy(() => import("./pages/SignOut"));
 const Error = lazy(() => import("./pages/Error"));
 const Groups = lazy(() => import("./pages/Groups"));
-const Chat = lazy(() => import("./components/Chat"));
+const Chat = lazy(() => import("./components/ChatWindow/Chat"));
 
 function Routing() {
   const { user, isLoading } = useSelector(state => state.auth);

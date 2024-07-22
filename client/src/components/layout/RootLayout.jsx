@@ -6,7 +6,7 @@ import { GetSocket } from '../../utils/Socket';
 
 function RootLayout() {
     const socket = GetSocket();
-    console.log(socket.id)
+    console.log("sockit Id Is", socket)
 
     return (
         <>

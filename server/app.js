@@ -17,12 +17,11 @@ const { NEW_MESSAGE } = require("./Constants/events");
 const { getSockets } = require("./utils/helper");
 const Conversation = require("./models/conversation_model");
 const Message = require("./models/message_model");
-
+const { socketAuthenticator } = require("./middleware/auth_middleware");
+const { activeUserSocketIDs } = require("./utils/activeUsersInSockets");
 
 const PORT = process.env.PORT || 3012;
 const app = express();
-const activeUserSocketIDs = new Map();
-
 
 const allowedOrigins = [
     'http://www.example.com',
@@ -31,7 +30,7 @@ const allowedOrigins = [
 
 var corsOptions = {
     origin: function (origin, callback) {
-        console.log("req is from ", origin);
+        // console.log("req is from ", origin);
         if (allowedOrigins.includes(origin) || !origin) {
             callback(null, true); // Allow the request
         } else {
@@ -45,6 +44,18 @@ app.use(cors(corsOptions));
 app.use(express.json()); // to parse incoming requests with json payload and storing it in req.body
 app.use(bodyParser.urlencoded({ extended: true })); // to parse incoming urlencoded data that contains only file
 app.use(cookieParser());
+
+// SOCKET
+const server = createServer(app);
+const io = new Server(server, { cors: corsOptions })
+
+app.set('socketio', io); // Store io instance in app
+
+io.use((socket, next) => {
+    cookieParser()(socket.request, socket.request.res, async (err) => { // cookieParser returns a middleware function which can be used like this
+        return await socketAuthenticator(err, socket, next);
+    });
+});
 
 // checking connection
 app.get('/check', (req, res) => {
@@ -65,32 +76,32 @@ app.get('/check', (req, res) => {
         }
     });
 });
-app.post('/addtodo', (req, res) => {
-    res.status(200).json({
-        msg: "your post request has reached destination"
-    });
-});
+
 
 app.use('/api/auth', auth_routes);
 app.use('/api/chat', chat_routes);
 app.use('/api/user', user_routes);
 app.use('/api/admin', admin_routes);
 
-const server = createServer(app);
-const io = new Server(server, { cors: corsOptions })
+
+
+// app.get('/api/event', (req, res, next) => {
+//     // console.dir(next)
+//     sendMessage(req, res, next, io)
+// })
+
 io.on("connection", (socket) => {
-    console.log("user Connected", socket.id);
-    // const user = socket.user;
-    user = {
-        _id: "666b18ac26af93467acb91b2",
-        name: "lavda lassan"
-    }
-    activeUserSocketIDs.set(user._id.toString(), socket.id);
+    const user = socket.clientAuthData;
+    // user = {
+    //     _id: "666b18ac26af93467acb91b2",
+    //     name: "lavda lassan"
+    // }
+    activeUserSocketIDs.set(user?._id.toString(), socket.id);
+    console.log(activeUserSocketIDs)
 
     socket.on(NEW_MESSAGE, async ({ chatId, message }) => {
-
         const messageForRealTime = {
-            content: message,
+            text_content: message,
             _id: v4(),
             sender: {
                 _id: user._id,
@@ -99,20 +110,19 @@ io.on("connection", (socket) => {
             chat: chatId,
             createdAt: new Date().toISOString(),
         };
-        // console.log(messageForRealTime)
+        console.log(messageForRealTime)
 
         const messageForDb = {
             text_content: message,
             sender: user._id,
             conversation: chatId,
-            attachment: true
+            attachments: []
         }
         try {
-            const { members } = await Conversation.findById(chatId).select({ members: 1 }).lean();
+            const { members } = await Conversation.findById(chatId)?.select({ members: 1 })?.lean();
 
-            const membersSocket = getSockets(members, activeUserSocketIDs); // members that will receive this message
-            io.to(membersSocket).emit("NEW_MESSAGE", { conversationId: chatId });
-            console.log("members are: ", members);
+            const membersSocket = getSockets(members, activeUserSocketIDs); // active members that will receive this message
+            io.to(membersSocket).emit("NEW_MESSAGE", { conversationId: chatId, message: messageForRealTime });
             await Message.create(messageForDb);
         } catch (error) {
             console.log("failed to get members of chat")
@@ -122,12 +132,13 @@ io.on("connection", (socket) => {
 
     socket.on("disconnect", () => {
         console.log("user disconnected");
-        activeUserSocketIDs.delete(user._id.toString());
+        activeUserSocketIDs.delete(user?._id.toString());
     });
 });
 
 // error middleware
 app.use(errorMiddleware);
+
 
 // app.listen(PORT, () => {
 //     connectDb();
@@ -137,5 +148,3 @@ server.listen(PORT, () => {
     connectDb();
     console.log(`server running on port ${PORT}`);
 })
-
-module.exports = { activeUserSocketIDs };
