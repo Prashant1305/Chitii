@@ -31,8 +31,6 @@ const { NEW_REQUEST, REFETCH_CHATS } = require("../Constants/events");
 
 const getMyProfile = async (req, res, next) => {
     try {
-
-        console.log(req.clientAuthData);
         res.status(200).json({
             message: req.clientAuthData
         });

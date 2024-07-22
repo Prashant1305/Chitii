@@ -65,7 +65,7 @@ export const sampleMessage = [
                 url: "https://www.w3schools.com/howto/img_avatar.png"
             },
         ],
-        content: "message ka text content",
+        text_content: "message ka text content",
         _id: "id of messaage",
         sender: {
             _id: "user._id",

@@ -85,3 +85,28 @@ export const accept_friend_request = async (data) => {
     );
     return res;
 }
+
+export const all_messages_of_chat = async (chatId, page) => {
+    const url = page ? `${baseUrl}/api/chat/getmessages/${chatId}?page=${page}` : `${baseUrl}/api/chat/getmessages/${chatId}`;
+    const res = await axios.get(url, { withCredentials: true });
+    return res;
+}
+
+export const chat_details = async (chatId, populate) => {
+    const url = populate ? `${baseUrl}/api/chat/${chatId}?populate=true` : `${baseUrl}/api/chat/${chatId}`;
+    const res = await axios.get(url, { withCredentials: true });
+    return res;
+
+}
+
+export const send_message_api = async (form_data) => {
+    console.log(form_data)
+    const url = `${baseUrl}/api/chat/sendmessage`
+    const res = await axios.post(url, form_data, {
+        withCredentials: true,
+        headers: {
+            "Content-Type": "multipart/form-data",
+        }
+    });
+    return res;
+}

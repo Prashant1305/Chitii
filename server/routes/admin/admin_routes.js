@@ -1,5 +1,5 @@
 const express = require("express");
-const verifyJwt = require("../../middleware/auth_middleware");
+const { verifyJwt } = require("../../middleware/auth_middleware");
 const verifyAdmin = require("../../middleware/admin_middleware");
 const { allUsers, allChats, allMessages, getDashboardStats } = require("../../controllers/admin/admin_controller");
 

@@ -1,4 +1,5 @@
 const { body, param, validationResult } = require("express-validator");
+const mongoose = require('mongoose');
 
 const validateHandler = (req, res, next) => {
     const errors = validationResult(req); // returns array of object of errors
@@ -68,4 +69,10 @@ const acceptFriendRequestValidator = () => [
         .withMessage("accept is Boolean type")
 ]
 
-module.exports = { validateHandler, renameGroupValidator, addMemberValidator, newGroupChatValidator, removeMembersValidator, leaveGroupValidator, sendFriendRequestValidator, acceptFriendRequestValidator }
+const validateMongoId = (paramName) => [
+    param(paramName)
+        .custom((value) => mongoose.Types.ObjectId.isValid(value))
+        .withMessage('Invalid MongoDB ObjectId'),
+];
+
+module.exports = { validateHandler, renameGroupValidator, addMemberValidator, newGroupChatValidator, removeMembersValidator, leaveGroupValidator, sendFriendRequestValidator, acceptFriendRequestValidator, validateMongoId }

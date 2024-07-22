@@ -5,6 +5,7 @@ import React, { Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MyToggleUiValues } from '../../context/ToggleUi';
 import IconBtn from './IconBtn';
+import { useSelector } from "react-redux";
 const Search = lazy(() => import("../Dialogs/Search"));
 const Notifications = lazy(() => import("../Dialogs/Notifications"));
 const NewGroup = lazy(() => import("../Dialogs/NewGroup"));
@@ -14,6 +15,7 @@ const NewGroup = lazy(() => import("../Dialogs/NewGroup"));
 function Header() {
     const navigate = useNavigate()
     const { uiState, setUiState } = MyToggleUiValues();
+    const user = useSelector((state) => state.auth)
 
     const openSearchDialog = () => {
         // console.log("searched");
@@ -96,7 +98,7 @@ function Header() {
                         <Box display={"flex"}
                             flexDirection={"row"}>
                             <IconBtn title={"Home"} icon={<HomeIcon />} pathname={"/"} />
-                            <IconBtn title={"Admin Services"} icon={<AdminPanelSettingsIcon />} pathname={"/admin"} /> {/*add conditions for user, if admin*/}
+                            {user.isAdmin && <IconBtn title={"Admin Services"} icon={<AdminPanelSettingsIcon />} pathname={"/admin"} />}
                             <IconBtn title={"Search"} icon={<ChatIcon />} pathname={"/chat"} />
                             <IconBtn title={"Search"} icon={<SearchIcon />} handleClick={openSearchDialog} />
                             <IconBtn title={"New Group"} icon={<AddIcon />} handleClick={openNewGroup} />

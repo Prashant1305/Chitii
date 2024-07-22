@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { Drawer, Grid, Skeleton } from '@mui/material'
 import ChatList from '../components/chatList/ChatList'
 import { sampleChats } from '../components/constants/sampleData'
-import Chat from '../components/Chat'
+import Chat from '../components/ChatWindow/Chat'
 import SelectChat from '../components/ChatWindow/SelectChat'
 import { MyToggleUiValues } from '../context/ToggleUi'
 import { toast } from 'react-toastify'
@@ -15,7 +15,6 @@ function ChatWindow() {
     const [chatIsLoading, setChatIsLoading] = useState(false);
     const { uiState, setUiState } = MyToggleUiValues()
     const [chats, setChats] = useState([])
-    console.log(chatId)
     const handleDeleteChat = (e, _id, groupChat) => {
         e.preventDefault();
         console.log("delete chat", _id, groupChat)
@@ -24,7 +23,6 @@ function ChatWindow() {
         try {
             setChatIsLoading(true)
             const res = await get_my_chats();
-            console.log(res);
             setChats(res?.data?.message)
         } catch (error) {
             console.log(error);
@@ -84,7 +82,7 @@ function ChatWindow() {
                 sx={{
                     backgroundImage: "linear-gradient(#A9FF99, rgb(217, 234, 237))",
                 }} >
-                {chatId ? <Chat /> : <SelectChat />}
+                {chatId ? <Chat chatId={chatId} /> : <SelectChat />}
             </Grid>
             {chatIsLoading ? <Skeleton /> : (<Drawer
                 PaperProps={{
