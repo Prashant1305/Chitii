@@ -16,6 +16,7 @@ function Header() {
     const navigate = useNavigate()
     const { uiState, setUiState } = MyToggleUiValues();
     const user = useSelector((state) => state.auth)
+    const { notificationCount } = useSelector((state) => state.chat);
 
     const openSearchDialog = () => {
         // console.log("searched");
@@ -103,7 +104,7 @@ function Header() {
                             <IconBtn title={"Search"} icon={<SearchIcon />} handleClick={openSearchDialog} />
                             <IconBtn title={"New Group"} icon={<AddIcon />} handleClick={openNewGroup} />
                             <IconBtn title={"Manage Groups"} icon={<GroupIcon />} pathname={"/groups"} />
-                            <IconBtn title={"Notification"} icon={< NotificationIcon />} handleClick={openNotification} />
+                            <IconBtn title={"Notification"} icon={< NotificationIcon />} value={notificationCount} handleClick={openNotification} />
 
                             <IconBtn title={"Logout"} icon={<LogoutIcon />} pathname={"/signout"} />
 

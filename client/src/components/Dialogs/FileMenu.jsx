@@ -11,11 +11,11 @@ function FileMenu({ anchor, files, setFiles }) {
         // console.log("fileChangeHandler got fired")
         // console.dir(e.currentTarget.files)
         setFiles([...files, ...Array.from(e.currentTarget.files)]);
+        setUiState({ ...uiState, isFileMenu: false })
     }
 
     const selectFileHandler = (e) => {
         e.currentTarget.children[2].click();
-
     }
 
     return (
@@ -55,7 +55,7 @@ function FileMenu({ anchor, files, setFiles }) {
                         <input
                             type='file'
                             multiple
-                            accept='audio/mpeg, audio/wav'
+                            accept='audio/mpeg, audio/wav,audio/.M4A'
                             style={{ display: "none" }}
                             onChange={(e) => {
                                 fileChangeHandler(e, "Audios");

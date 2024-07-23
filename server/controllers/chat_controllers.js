@@ -281,12 +281,6 @@ const sendMessage = async (req, res, next) => {
             return res.status(400).json({ message: "Chat not found" })
         }
 
-        const io = req.app.get('socketio'); // Retrieve io instance from app
-        const membersSocket = getSockets(chat.members, activeUserSocketIDs);
-        if (membersSocket.length > 0) {
-            io.to(membersSocket).emit(NEW_MESSAGE, { conversationId, message: text_content });
-        }
-
 
         const responsePromiseArray = req.files.map((file) => uploadOnCloudinary(file.path))
         const fileUrlArray = await Promise.all(responsePromiseArray);
@@ -302,9 +296,13 @@ const sendMessage = async (req, res, next) => {
 
         await Message.create(messageForDb);
 
-        const messageNotification = { sender: { id: req.clientAuthData._id, name: req.clientAuthData.name }, conversation: conversationId, text_content, attachments }
+        const messageNotification = { sender: { _id: req.clientAuthData._id, name: req.clientAuthData.name }, conversation: conversationId, text_content, attachments }
 
-        // emitEvent(req, NEW_MESSAGE_ALERTS, chat.members, messageNotification)
+        const io = req.app.get('socketio'); // Retrieve io instance from app
+        const membersSocket = getSockets(chat.members, activeUserSocketIDs);
+        if (membersSocket.length > 0) {
+            io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
+        }
 
         res.status(269).json({ message: "received send message", text_data: req.body, attachments })
     } catch (error) {

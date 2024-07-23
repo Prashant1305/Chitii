@@ -3,13 +3,6 @@ import React, { createContext, useContext, useState } from 'react'
 const ToggleContext = createContext();
 
 function ToggleUi({ children }) {
-    // const [isMobileOpen, setIsmobileOpen] = useState(false);
-    // const [mobileBtnExist, setMobileBtnExist] = useState(false);
-
-    // const [isSearch, setIsSearch] = useState(false);
-    // const [isNewGroup, setIsNewGroup] = useState(false);
-    // const [isAddMember, setIsAddMember] = useState(false);
-    // const [isNotification, setIsNotification] = useState(false);
     const [uiState, setUiState] = useState({
         isMobileOpen: false,
         mobileBtnExist: false,

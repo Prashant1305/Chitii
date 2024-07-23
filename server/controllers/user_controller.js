@@ -3,6 +3,8 @@ const User = require("../models/user_model");
 const Request = require("../models/request_model");
 const { emitEvent } = require("../utils/features");
 const { NEW_REQUEST, REFETCH_CHATS } = require("../Constants/events");
+const { getSockets } = require("../utils/helper");
+const { activeUserSocketIDs } = require("../utils/activeUsersInSockets");
 
 
 // const getUserForSidebar = async (req, res, next) => {
@@ -58,7 +60,6 @@ const searchUser = async (req, res, next) => {
         });
         const users = allusersExceptMeAndMyFriends.map((i) => ({ _id: i._id, name: i.user_name, full_name: i.full_name, avatar_url: i.avatar_url }))
 
-        console.log(allusersExceptMeAndMyFriends);
         res.status(200).json({ message: users });
     } catch (error) {
         const err = new Error("unable to Search user, plz try later");
@@ -85,7 +86,13 @@ const sendFriendRequest = async (req, res, next) => {
 
         await Request.create({ sender: req.clientAuthData._id, receiver: userId });
 
-        emitEvent(req, NEW_REQUEST, [userId]);
+        // emitEvent(req, NEW_REQUEST, [userId]);
+
+        const io = req.app.get('socketio'); // Retrieve io instance from app
+        const memberSocket = activeUserSocketIDs.get(userId);
+        if (memberSocket.length > 0) {
+            io.to(memberSocket).emit(NEW_REQUEST, { msg: `you received freind request from ${req.clientAuthData.user_name}` });
+        }
 
         return res.status(200).json({ message: "Friend request sent succesfully" });
 

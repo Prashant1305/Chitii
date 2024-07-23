@@ -3,6 +3,7 @@ import React from 'react'
 import { Face as FaceIcon, AlternateEmail as UserNameIcon, CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import moment from "moment"
 import { useSelector } from 'react-redux';
+import { transformImage } from '../lib/features';
 
 function Profile() {
     const user = useSelector(state => state.auth);
@@ -16,7 +17,7 @@ function Profile() {
                 marginBottom: "1rem",
                 border: "5px solid white"
             }}
-                src={user?.user?.avatar_url} alt="no avatar found" />
+                src={transformImage(user?.user?.avatar_url)} alt="no avatar found" />
             <ProfileCard heading={"Bio"} text={user?.user?.bio || "bio not available"} />
             <ProfileCard heading={"Username"} text={user?.user?.user_name || "No username found"} Icon={<UserNameIcon />} />
             <ProfileCard heading={"Name"} text={user?.user?.full_name || "full name not availabale"} Icon={<FaceIcon />} />

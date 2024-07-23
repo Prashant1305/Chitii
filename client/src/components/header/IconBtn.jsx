@@ -1,8 +1,8 @@
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { Badge, Box, IconButton, Tooltip } from '@mui/material';
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 
-function IconBtn({ title, icon, handleClick = () => { }, pathname }) {
+function IconBtn({ title, icon, value, handleClick = () => { }, pathname }) {
     const navigate = useNavigate();
     const currUrl = useLocation();
 
@@ -15,7 +15,8 @@ function IconBtn({ title, icon, handleClick = () => { }, pathname }) {
                 handleClick();
             }}>
                 <IconButton color='inherit' >
-                    {icon}
+                    {value ? (<Badge badgeContent={value} color='error'>{icon}</Badge>) : icon}
+
                 </IconButton>
             </Tooltip>
         </Box>

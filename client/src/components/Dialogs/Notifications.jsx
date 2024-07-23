@@ -4,12 +4,15 @@ import { sampleNotifications } from "../constants/sampleData"
 import { MyToggleUiValues } from '../../context/ToggleUi';
 import { accept_friend_request, my_notification } from '../../utils/ApiUtils';
 import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
+import { resetNotificationCount } from '../../redux/reducers/chat';
 
 
 function Notifications() {
     const [notificationData, setNotificationData] = useState([])
     const { uiState, setUiState } = MyToggleUiValues();
     const [isLoading, setIsLoading] = useState(false);
+    const dispatch = useDispatch();
 
     const fetchNotification = async () => {
         try {
@@ -43,8 +46,9 @@ function Notifications() {
 
     }
     useEffect(() => {
-
         fetchNotification();
+
+        dispatch(resetNotificationCount())
     }, []);
     return (
         <Dialog open={uiState.isNotification} onClose={() => { setUiState({ ...uiState, isNotification: false }) }}>

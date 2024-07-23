@@ -14,6 +14,7 @@ import { useSelector } from 'react-redux';
 import { useSocketEvent } from '../../hooks/socket_hooks';
 import infiniteScroll from '../lib/infiniteScroll';
 import { MyToggleUiValues } from '../../context/ToggleUi';
+import { v4 as uuid } from 'uuid';
 
 
 function Chat({ chatId }) {
@@ -46,7 +47,6 @@ function Chat({ chatId }) {
 
         if (!sendMessage?.text_content.trim()) return;
 
-        // socket.emit(NEW_MESSAGE, { chatId, message: sendMessage })
         try {
             const res = await send_message_api(form_data);
             if (res.status = 200) {
@@ -58,6 +58,7 @@ function Chat({ chatId }) {
         } finally {
             setSendMessage({ attachments: [], conversationId: chatId, text_content: "" });
         }
+        setFiles([]);
     }
 
     const handleAttachFile = (e) => {
@@ -66,12 +67,12 @@ function Chat({ chatId }) {
     }
 
     const newMessageHandler = useCallback((data) => {
-        const temp = { ...data.message };
+        const temp = { ...data };
         console.log("newMessage event triggereed and sensed at client", data);
-        temp.conversation = temp.chat
-        delete temp.chat;
-        // console.log(oldMessages)
-        // setOldMessages([...oldMessages, temp])
+        console.log()
+        if (data.conversation === chatId) {
+            setOldMessages([...oldMessages, temp])
+        }
     }, [oldMessages]);
     const eventHandler = { [NEW_MESSAGE]: newMessageHandler }
     useSocketEvent(socket, eventHandler);
@@ -169,7 +170,7 @@ function Chat({ chatId }) {
                     "height": "100%"
                 }} /> :
                     (oldMessages?.length > 0 ? oldMessages.map(i => (
-                        <MessageComponent message={i} user={{ _id: user?.user._id }} key={i._id} />
+                        <MessageComponent message={i} user={{ _id: user?.user._id }} key={i._id || uuid()} />
                     )) : <Typography
                         p={"2rem"}
                         variant='h4'
