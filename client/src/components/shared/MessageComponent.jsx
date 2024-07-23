@@ -31,10 +31,10 @@ function MessageComponent({ message, user }) {
                 fontSize: "1.3rem"
             }} variant='caption' color={"text.secondary"}>{text_content}</Typography>}
 
-            {attachments.length > 0 && attachments.map((attachment, index) => {
+            {attachments.length > 0 && attachments.map((attachment) => {
                 const url = transformImage(attachment.url);
                 const file = fileFormat(url);
-                return <Box key={index} sx={{
+                return <Box key={attachment?.public_id} sx={{
                     display: 'flex',
                     margin: "2px",
                     // border: "2px solid green",

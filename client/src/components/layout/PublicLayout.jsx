@@ -1,18 +1,39 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { Outlet, useParams } from 'react-router-dom'
 import Header from '../header/Header'
 import { Grid } from '@mui/material'
 import ChatList from '../chatList/ChatList'
 import { sampledChats } from '../constants/sampleData'
 import Profile from '../profile.jsx/Profile'
+import { NEW_MESSAGE_ALERTS, NEW_REQUEST } from '../constants/events'
+import { useSocketEvent } from '../../hooks/socket_hooks'
+import { GetSocket } from '../../utils/Socket'
+import { useDispatch } from 'react-redux'
+import { incrementNotificationCount } from '../../redux/reducers/chat'
+import { toast } from 'react-toastify'
 
 function PublicLayout() {
     const params = useParams();
     const chatId = params.chatId;
+    const socket = GetSocket();
+    const dispatch = useDispatch();
     const handleDeleteChat = (e, _id, groupChat) => {
         e.preventDefault();
         console.log("delete chat", _id, groupChat)
     }
+
+    const newMessageAlertHandler = useCallback(() => { }, []);
+    const newRequestHandler = useCallback((data) => {
+        toast.info(data.msg)
+        dispatch(incrementNotificationCount())
+    }, []);
+
+    const eventHandlers = {
+        [NEW_MESSAGE_ALERTS]: newMessageAlertHandler,
+        [NEW_REQUEST]: newRequestHandler
+    }
+    useSocketEvent(socket, eventHandlers);
+
     return (
         <>
 
