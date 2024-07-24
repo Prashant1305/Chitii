@@ -9,7 +9,7 @@ import { NEW_MESSAGE_ALERTS, NEW_REQUEST } from '../constants/events'
 import { useSocketEvent } from '../../hooks/socket_hooks'
 import { GetSocket } from '../../utils/Socket'
 import { useDispatch } from 'react-redux'
-import { incrementNotificationCount } from '../../redux/reducers/chat'
+import { incrementNotificationCount, setNewMessagesAlert } from '../../redux/reducers/chat'
 import { toast } from 'react-toastify'
 
 function PublicLayout() {
@@ -22,7 +22,12 @@ function PublicLayout() {
         console.log("delete chat", _id, groupChat)
     }
 
-    const newMessageAlertHandler = useCallback(() => { }, []);
+    const newMessageAlertHandler = useCallback((data) => {
+        // dispatch(setNewMessagesAlert(data));
+        // if(chatId===){
+
+        // }
+    }, []);
     const newRequestHandler = useCallback((data) => {
         toast.info(data.msg)
         dispatch(incrementNotificationCount())

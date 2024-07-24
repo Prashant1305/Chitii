@@ -10,11 +10,12 @@ import { GetSocket } from '../../utils/Socket';
 import { NEW_MESSAGE } from '../constants/events';
 import { all_messages_of_chat, chat_details, send_message_api } from '../../utils/ApiUtils';
 import { toast } from 'react-toastify';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useSocketEvent } from '../../hooks/socket_hooks';
-import infiniteScroll from '../lib/infiniteScroll';
+
 import { MyToggleUiValues } from '../../context/ToggleUi';
 import { v4 as uuid } from 'uuid';
+import { setNewMessagesAlert } from '../../redux/reducers/chat';
 
 
 function Chat({ chatId }) {
@@ -24,14 +25,17 @@ function Chat({ chatId }) {
     const socket = GetSocket()
     const [sendMessage, setSendMessage] = useState({ attachments: undefined, conversationId: chatId, text_content: "" });
     const [files, setFiles] = useState([]);
+    const dispatch = useDispatch();
     const [oldMessages, setOldMessages] = useState([]);
     const [messageIsLoading, setMessageIsLoading] = useState(false);
     const [member, setMember] = useState([]);
-    const [oldMessageFetchDetails, setOldMessageFetchDetails] = useState("end of messages");
-    let page = 1;
+    const [messageAtEndOfMessages, setMessageAtEndOfMessages] = useState("");
+    let oldMessageFetchDetails = "";
+
     const user = useSelector(state => state.auth);
     const { uiState, setUiState } = MyToggleUiValues();
-    let totalPageOfChat = 10;
+    let page = 1;
+    let totalPageOfChat = 0;
 
     const submitHandler = async (e) => {
         e.preventDefault()
@@ -67,52 +71,21 @@ function Chat({ chatId }) {
     }
 
     const newMessageHandler = useCallback((data) => {
-        const temp = { ...data };
+        // const temp = { ...data };
         console.log("newMessage event triggereed and sensed at client", data);
-        console.log()
+        console.log(data)
         if (data.conversation === chatId) {
-            setOldMessages([...oldMessages, temp])
+            setOldMessages([...oldMessages, data])
+        } else {
+            dispatch(setNewMessagesAlert(data));
         }
     }, [oldMessages]);
     const eventHandler = { [NEW_MESSAGE]: newMessageHandler }
     useSocketEvent(socket, eventHandler);
 
-    const fetchOldmessage = async (chatId) => {
-        console.log("page= ", page, totalPageOfChat)
-        if (page <= totalPageOfChat) {
-            setOldMessageFetchDetails("loading");
-            try {
-                const res = await all_messages_of_chat(chatId, page);
-                if (res.status === 200) {
-                    toast.success("Messages fetched successfully");
-                    page++;
-                    setOldMessages((prev) => {
-                        return [...res.data.messages, ...prev]
-                    })
-                    console.log(res.data.totalPages)
-                    totalPageOfChat = res.data.totalPages;
-                    setOldMessageFetchDetails("end of messages");
-                }
-            } catch (error) {
-                console.log(error);
-                toast.error(error.response.data.message || "failed to retrive messages, plz try later")
-                setOldMessageFetchDetails("failed")
-            }
-        }
-    }
-    useEffect(() => {
-
-        if (containerRef) {
-            infiniteScroll(containerRef, fetchOldmessage, chatId);
-        }
-    }, [containerRef, chatId])
 
 
     useEffect(() => {
-        setSendMessage({ attachments: [], conversationId: chatId, text_content: "" });
-        setOldMessages([]);
-        page = 1;
-        totalPageOfChat = 10;
         const fetchChatData = async (chatId) => {
             setMessageIsLoading(true);
             try {
@@ -122,7 +95,7 @@ function Chat({ chatId }) {
                     page++;
                     setOldMessages(res.data.messages)
                     totalPageOfChat = res.data.totalPages;
-                    setOldMessageFetchDetails("");
+                    oldMessageFetchDetails = "";
                 }
             } catch (error) {
                 console.log(error);
@@ -145,9 +118,58 @@ function Chat({ chatId }) {
             }
         }
 
+        // infinite scroll starts
+        const fetchOldmessage = async (chatId) => {
+            if (page <= totalPageOfChat) {
+                oldMessageFetchDetails = "loading";
+                setMessageAtEndOfMessages((prev) => "loading")
+                try {
+                    console.log("page= ", page, totalPageOfChat, "chatId ", chatId)
+
+                    const res = await all_messages_of_chat(chatId, page);
+                    if (res.status === 200) {
+                        toast.success("Messages fetched successfully");
+                        setOldMessages((prev) => {
+                            return [...res.data.messages, ...prev]
+                        })
+                        page++;
+
+                        if (page > totalPageOfChat) {
+                            oldMessageFetchDetails = "end of messages";
+                            setMessageAtEndOfMessages((prev) => "end of messages")
+
+                        } else {
+                            oldMessageFetchDetails = ""
+                            setMessageAtEndOfMessages((prev) => "")
+                        }
+                    }
+                } catch (error) {
+                    console.log(error);
+                    toast.error(error.response.data.message || "failed to retrive messages, plz try later")
+                    oldMessageFetchDetails = "failed"
+                }
+            } else {
+                oldMessageFetchDetails = "end of messages"
+                setMessageAtEndOfMessages((prev) => "end of messages")
+            }
+        }
+        const infiniteScroll = () => {
+            if (containerRef1.current?.scrollTop == 0 && !messageIsLoading && oldMessageFetchDetails === "") {
+                fetchOldmessage(chatId);
+            }
+        }
+        containerRef?.current.addEventListener("scroll", infiniteScroll)
+        // infinite scroll ends
+
         fetchChatDetails(chatId);
         fetchChatData(chatId, page);
-
+        return (() => {
+            setSendMessage({ attachments: [], conversationId: chatId, text_content: "" });
+            setOldMessages([]);
+            page = 1;
+            totalPageOfChat = 0;
+            containerRef?.current?.removeEventListener("scroll", infiniteScroll);
+        })
     }, [chatId]);
 
     return (
@@ -163,9 +185,10 @@ function Chat({ chatId }) {
                     overflowY: "auto",
                 }}
             >
-                <Typography p={"2rem"}
+                {messageAtEndOfMessages?.length > 0 && <Typography p={"2rem"}
                     variant='h6'
-                    textAlign={"center"}>{oldMessageFetchDetails}</Typography>
+                    textAlign={"center"}>{messageAtEndOfMessages}</Typography>}
+
                 {messageIsLoading ? <Skeleton sx={{
                     "height": "100%"
                 }} /> :
