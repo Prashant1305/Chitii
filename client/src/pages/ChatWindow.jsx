@@ -8,6 +8,7 @@ import SelectChat from '../components/ChatWindow/SelectChat'
 import { MyToggleUiValues } from '../context/ToggleUi'
 import { toast } from 'react-toastify'
 import { get_my_chats } from '../utils/ApiUtils'
+import { useSelector } from 'react-redux'
 
 function ChatWindow() {
     const params = useParams();
@@ -19,6 +20,8 @@ function ChatWindow() {
         e.preventDefault();
         console.log("delete chat", _id, groupChat)
     }
+    const chatNotification = useSelector(state => state.chat);
+
     const my_chats = async () => {
         try {
             setChatIsLoading(true)
@@ -55,10 +58,7 @@ function ChatWindow() {
                     chatIsLoading ? <Skeleton /> : <ChatList
                         chats={chats}
                         chatId={chatId}
-                        newMessagesAlert={[{
-                            chatId,
-                            count: 4
-                        }]}
+                        newMessagesAlert={chatNotification.newMessageAlert}
                         handleDeleteChat={handleDeleteChat}
                         onlineUsers={["1", "2"]} />
                 }

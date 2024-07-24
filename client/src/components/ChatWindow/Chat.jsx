@@ -15,7 +15,7 @@ import { useSocketEvent } from '../../hooks/socket_hooks';
 
 import { MyToggleUiValues } from '../../context/ToggleUi';
 import { v4 as uuid } from 'uuid';
-import { setNewMessagesAlert } from '../../redux/reducers/chat';
+import { popMessageAlert } from '../../redux/reducers/chat';
 
 
 function Chat({ chatId }) {
@@ -33,6 +33,7 @@ function Chat({ chatId }) {
     let oldMessageFetchDetails = "";
 
     const user = useSelector(state => state.auth);
+    const chatNotification = useSelector(state => state.chat);
     const { uiState, setUiState } = MyToggleUiValues();
     let page = 1;
     let totalPageOfChat = 0;
@@ -49,7 +50,7 @@ function Chat({ chatId }) {
         form_data.append("conversationId", sendMessage.conversationId);
         form_data.append("text_content", sendMessage.text_content);
 
-        if (!sendMessage?.text_content.trim()) return;
+        if (!sendMessage?.text_content.trim() || files.length > 0) return;
 
         try {
             const res = await send_message_api(form_data);
@@ -61,8 +62,8 @@ function Chat({ chatId }) {
             console.log(error);
         } finally {
             setSendMessage({ attachments: [], conversationId: chatId, text_content: "" });
+            setFiles([]);
         }
-        setFiles([]);
     }
 
     const handleAttachFile = (e) => {
@@ -70,22 +71,22 @@ function Chat({ chatId }) {
         setUiState({ ...uiState, isFileMenu: true })
     }
 
-    const newMessageHandler = useCallback((data) => {
-        // const temp = { ...data };
-        console.log("newMessage event triggereed and sensed at client", data);
-        console.log(data)
-        if (data.conversation === chatId) {
-            setOldMessages([...oldMessages, data])
-        } else {
-            dispatch(setNewMessagesAlert(data));
+
+    useEffect(() => {
+        const newMessages = chatNotification.newMessageAlert.find((notification) => (notification.chatId === chatId))
+        if (newMessages) {
+            setOldMessages([...oldMessages, ...newMessages.messageData])
+            console.log("first")
+            dispatch(popMessageAlert(chatId));
         }
-    }, [oldMessages]);
-    const eventHandler = { [NEW_MESSAGE]: newMessageHandler }
-    useSocketEvent(socket, eventHandler);
+
+
+    }, [chatNotification])
 
 
 
     useEffect(() => {
+        dispatch(popMessageAlert(chatId));
         const fetchChatData = async (chatId) => {
             setMessageIsLoading(true);
             try {
@@ -192,8 +193,7 @@ function Chat({ chatId }) {
                 {messageIsLoading ? <Skeleton sx={{
                     "height": "100%"
                 }} /> :
-                    (oldMessages?.length > 0 ? oldMessages.map(i => (
-                        <MessageComponent message={i} user={{ _id: user?.user._id }} key={i._id || uuid()} />
+                    (oldMessages?.length > 0 ? oldMessages.map(i => (<MessageComponent message={i} user={{ _id: user?.user?._id }} key={i?._id || uuid()} />
                     )) : <Typography
                         p={"2rem"}
                         variant='h4'
