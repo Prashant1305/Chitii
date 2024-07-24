@@ -294,9 +294,9 @@ const sendMessage = async (req, res, next) => {
 
         const messageForDb = { sender: req.clientAuthData._id, conversation: conversationId, text_content, attachments }
 
-        await Message.create(messageForDb);
+        const dbMessageSaved = await Message.create(messageForDb);
 
-        const messageNotification = { sender: { _id: req.clientAuthData._id, name: req.clientAuthData.name }, conversation: conversationId, text_content, attachments }
+        const messageNotification = { sender: { _id: req.clientAuthData._id, name: req.clientAuthData.name }, conversation: conversationId, text_content, attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt }
 
         const io = req.app.get('socketio'); // Retrieve io instance from app
         const membersSocket = getSockets(chat.members, activeUserSocketIDs);
@@ -376,7 +376,7 @@ const deleteChat = async (req, res, next) => {
         if (chat.group_chat && "" + chat.creator !== req.clientAuthData._id + "") {
             return res.status(400).json({ message: "Only admin can delete chat" });
         }
-        else if (!chat.group_chat && chat.members.includes(req.clientAuthData._id.toString())) {
+        else if (!chat.group_chat && !chat.members.includes(req.clientAuthData._id.toString())) {
             return res.status(400).json({ message: "you are not allowed to delete the chat" });
         }
         // deleting messages of chat

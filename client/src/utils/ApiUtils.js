@@ -100,7 +100,6 @@ export const chat_details = async (chatId, populate) => {
 }
 
 export const send_message_api = async (form_data) => {
-    console.log(form_data)
     const url = `${baseUrl}/api/chat/sendmessage`
     const res = await axios.post(url, form_data, {
         withCredentials: true,

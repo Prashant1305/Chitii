@@ -5,7 +5,7 @@ import { Grid } from '@mui/material'
 import ChatList from '../chatList/ChatList'
 import { sampledChats } from '../constants/sampleData'
 import Profile from '../profile.jsx/Profile'
-import { NEW_MESSAGE_ALERTS, NEW_REQUEST } from '../constants/events'
+import { NEW_MESSAGE, NEW_MESSAGE_ALERTS, NEW_REQUEST } from '../constants/events'
 import { useSocketEvent } from '../../hooks/socket_hooks'
 import { GetSocket } from '../../utils/Socket'
 import { useDispatch } from 'react-redux'
@@ -22,19 +22,20 @@ function PublicLayout() {
         console.log("delete chat", _id, groupChat)
     }
 
-    const newMessageAlertHandler = useCallback((data) => {
-        // dispatch(setNewMessagesAlert(data));
-        // if(chatId===){
+    const newMessageHandler = useCallback((data) => {
+        console.log("newMessageHandler event triggereed and sensed at client", data);
 
-        // }
+        dispatch(setNewMessagesAlert(data));
+
     }, []);
+
     const newRequestHandler = useCallback((data) => {
         toast.info(data.msg)
         dispatch(incrementNotificationCount())
     }, []);
 
     const eventHandlers = {
-        [NEW_MESSAGE_ALERTS]: newMessageAlertHandler,
+        [NEW_MESSAGE]: newMessageHandler,
         [NEW_REQUEST]: newRequestHandler
     }
     useSocketEvent(socket, eventHandlers);
