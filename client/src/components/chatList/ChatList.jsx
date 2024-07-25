@@ -12,6 +12,7 @@ function ChatList({
         { chatId: "", count: 0 },
     ],
     handleDeleteChat, }) {
+
     const { user, isLoading } = useSelector(state => state.auth);
     return (
         <Stack width={w} direction={"column"} overflow={"auto"} height={"100%"}>

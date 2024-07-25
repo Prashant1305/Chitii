@@ -13,12 +13,13 @@ const { createServer } = require('http');
 const { v4 } = require("uuid");
 
 const bodyParser = require('body-parser');
-const { NEW_MESSAGE } = require("./Constants/events");
+const { NEW_MESSAGE, START_TYPING } = require("./Constants/events");
 const { getSockets } = require("./utils/helper");
 const Conversation = require("./models/conversation_model");
 const Message = require("./models/message_model");
 const { socketAuthenticator } = require("./middleware/auth_middleware");
 const { activeUserSocketIDs } = require("./utils/activeUsersInSockets");
+const { startTypingFeature, stopTypingFeature } = require("./utils/features");
 
 const PORT = process.env.PORT || 3012;
 const app = express();
@@ -99,36 +100,39 @@ io.on("connection", (socket) => {
     activeUserSocketIDs.set(user?._id.toString(), socket.id);
     console.log(activeUserSocketIDs)
 
-    socket.on(NEW_MESSAGE, async ({ chatId, message }) => {
-        const messageForRealTime = {
-            text_content: message,
-            _id: v4(),
-            sender: {
-                _id: user._id,
-                name: user.name
-            },
-            chat: chatId,
-            createdAt: new Date().toISOString(),
-        };
-        console.log(messageForRealTime)
+    // socket.on(NEW_MESSAGE, async ({ chatId, message }) => {
+    //     const messageForRealTime = {
+    //         text_content: message,
+    //         _id: v4(),
+    //         sender: {
+    //             _id: user._id,
+    //             name: user.name
+    //         },
+    //         chat: chatId,
+    //         createdAt: new Date().toISOString(),
+    //     };
+    //     console.log(messageForRealTime)
 
-        const messageForDb = {
-            text_content: message,
-            sender: user._id,
-            conversation: chatId,
-            attachments: []
-        }
-        try {
-            const { members } = await Conversation.findById(chatId)?.select({ members: 1 })?.lean();
+    //     const messageForDb = {
+    //         text_content: message,
+    //         sender: user._id,
+    //         conversation: chatId,
+    //         attachments: []
+    //     }
+    //     try {
+    //         const { members } = await Conversation.findById(chatId)?.select({ members: 1 })?.lean();
 
-            const membersSocket = getSockets(members, activeUserSocketIDs); // active members that will receive this message
-            io.to(membersSocket).emit("NEW_MESSAGE", { conversationId: chatId, message: messageForRealTime });
-            await Message.create(messageForDb);
-        } catch (error) {
-            console.log("failed to get members of chat")
-        }
+    //         const membersSocket = getSockets(members, activeUserSocketIDs); // active members that will receive this message
+    //         io.to(membersSocket).emit("NEW_MESSAGE", { conversationId: chatId, message: messageForRealTime });
+    //         await Message.create(messageForDb);
+    //     } catch (error) {
+    //         console.log("failed to get members of chat")
+    //     }
 
-    })
+    // })
+
+    startTypingFeature(socket, io);
+    stopTypingFeature(socket, io);
 
     socket.on("disconnect", () => {
         console.log("user disconnected");
