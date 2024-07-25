@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Drawer, Grid, Skeleton } from '@mui/material'
 import ChatList from '../components/chatList/ChatList'
@@ -8,7 +8,11 @@ import SelectChat from '../components/ChatWindow/SelectChat'
 import { MyToggleUiValues } from '../context/ToggleUi'
 import { toast } from 'react-toastify'
 import { get_my_chats } from '../utils/ApiUtils'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { useSocketEvent } from '../hooks/socket_hooks'
+import { START_TYPING, STOP_TYPING } from '../components/constants/events'
+import { GetSocket } from '../utils/Socket'
+import { popInTypingArray, pushInTypingArray } from '../redux/reducers/typing'
 
 function ChatWindow() {
     const params = useParams();
@@ -21,6 +25,9 @@ function ChatWindow() {
         console.log("delete chat", _id, groupChat)
     }
     const chatNotification = useSelector(state => state.chat);
+    const socket = GetSocket();
+    const dispatch = useDispatch()
+
 
     const my_chats = async () => {
         try {
@@ -35,6 +42,31 @@ function ChatWindow() {
             setChatIsLoading(false)
         }
     }
+
+    const startTypingListner = useCallback(
+        (data) => {
+            console.log("form startyping listner", data)
+            // store data in typing
+            dispatch(pushInTypingArray(data));
+
+            // removing data after some seconds, when user closes it before event fires
+            // setTimeout(() => {
+            //     dispatch(popInTypingArray(data))
+            // }, [2500])
+
+        }, []
+    )
+
+    const stopTypingListener = useCallback((data) => {
+        console.log("form stop typing listner", data)
+
+        dispatch(popInTypingArray(data))
+    }, [])
+
+    const eventHandler = { [START_TYPING]: startTypingListner, [STOP_TYPING]: stopTypingListener }
+
+    useSocketEvent(socket, eventHandler);
+
     useEffect(() => {
         my_chats();
         setUiState((prev) => ({ ...prev, mobileBtnExist: true }))

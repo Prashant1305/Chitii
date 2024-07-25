@@ -7,7 +7,7 @@ import FileMenu from '../Dialogs/FileMenu';
 import { sampleMessage } from '../constants/sampleData';
 import MessageComponent from '../shared/MessageComponent';
 import { GetSocket } from '../../utils/Socket';
-import { NEW_MESSAGE } from '../constants/events';
+import { NEW_MESSAGE, START_TYPING, STOP_TYPING } from '../constants/events';
 import { all_messages_of_chat, chat_details, send_message_api } from '../../utils/ApiUtils';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
@@ -37,6 +37,10 @@ function Chat({ chatId }) {
     const { uiState, setUiState } = MyToggleUiValues();
     let page = 1;
     let totalPageOfChat = 0;
+
+    const [iAmTyping, setIAmTyping] = useState(false);
+    const [userTyping, setUserTyping] = useState(false);
+    const typingTimeout = useRef(null);
 
     const submitHandler = async (e) => {
         e.preventDefault()
@@ -71,6 +75,25 @@ function Chat({ chatId }) {
         setUiState({ ...uiState, isFileMenu: true })
     }
 
+    const handleInputMessageChange = (e) => {
+        setSendMessage({ ...sendMessage, text_content: e.target.value })
+        if (!iAmTyping) {
+            socket.emit(START_TYPING, { chatId });
+            console.log("startTyping")
+            setIAmTyping(true);
+        }
+        if (typingTimeout.current) {
+            clearTimeout(typingTimeout.current)
+        }
+
+        typingTimeout.current = setTimeout(() => {
+
+            socket.emit(STOP_TYPING, { chatId })
+            console.log("stopTyping")
+            setIAmTyping(false);
+
+        }, 500);
+    }
 
     useEffect(() => {
         const newMessages = chatNotification.newMessageAlert.find((notification) => (notification.chatId === chatId))
@@ -227,9 +250,7 @@ function Chat({ chatId }) {
                         <AttachFileIcon />
                     </IconButton>
 
-                    <InputBox placeholder='Type your text here' value={sendMessage.text_content} onChange={(e) => {
-                        setSendMessage({ ...sendMessage, text_content: e.target.value })
-                    }} />
+                    <InputBox placeholder='Type your text here' value={sendMessage.text_content} onChange={handleInputMessageChange} />
 
                     <IconButton type='submit' sx={{
                         backgroundColor: "rgb(4, 237, 254)",

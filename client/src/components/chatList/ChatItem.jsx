@@ -2,6 +2,7 @@ import React, { memo } from 'react'
 import { Link } from '../styles/StyledComponent'
 import { Box, Stack, Typography } from '@mui/material'
 import AvatarCard from '../shared/AvatarCard';
+import { useSelector } from 'react-redux';
 
 function ChatItem({
     avatar = [],
@@ -16,6 +17,9 @@ function ChatItem({
     index = 0,
     handleDeleteChat
 }) {
+
+    const { typingArray } = useSelector(state => state.typing);
+    const typingUser = typingArray?.find((ele) => ele.chatId + "" === _id + "")
     return (
         <Link
             sx={{
@@ -57,8 +61,16 @@ function ChatItem({
                         </Box>
                     )
                 }
+                {typingUser && <Stack sx={{
+                    position: "absolute",
+                    bottom: 0,
+                    right: 0
+                }}>
+                    <Typography variant="body2" >{`${typingUser?.user?.user_name} is typing...`}</Typography>
 
+                </Stack>}
             </div>
+
         </Link>
     )
 }
