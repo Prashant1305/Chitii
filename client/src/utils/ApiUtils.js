@@ -109,3 +109,20 @@ export const send_message_api = async (form_data) => {
     });
     return res;
 }
+
+export const get_my_friends_api = async (chatId) => {
+    const url = chatId ? `${baseUrl}/api/user/getmyfriends?conversationId=${chatId}` : `${baseUrl}/api/user/getmyfriends`;
+    const res = await axios.get(url, { withCredentials: true });
+    return res;
+}
+
+export const new_group_chat_api = async (data) => {
+    const url = `${baseUrl}/api/chat/newgroupchat`
+    const res = await axios.post(url, data, {
+        withCredentials: true,
+        headers: {
+            "Content-Type": "application/json",
+        }
+    });
+    return res;
+}

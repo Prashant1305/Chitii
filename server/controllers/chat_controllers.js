@@ -88,14 +88,29 @@ const newGroupChat = async (req, res, next) => {
             return next(err);
 
         }
-        const allMembers = [...members, req.clientAuthData._id]
+        const allMembers = [...members, req.clientAuthData._id.toString()]
+        const newGroup = await Conversation.create({ name, group_chat: true, members: allMembers, creator: req.clientAuthData._id });
+        // console.log(newGroup);
 
-        const temp = await Conversation.create({ name, group_chat: true, members: allMembers, creator: req.clientAuthData._id });
-        // console.log(temp);
-        emitEvent(req, ALERT, allMembers, `welcome to ${name} group`);
-        emitEvent(req, REFETCH_CHATS, members);
+        const messageForDb = { sender: req.clientAuthData._id, conversation: newGroup._id, text_content: `Group Created by ${req.clientAuthData.user_name}`, attachments: [] }
 
-        return res.status(201).json({ message: "Grouop created successfully" });
+        const dbMessageSaved = await Message.create(messageForDb);
+
+        const messageNotification = {
+            sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name },
+            conversation: messageForDb.conversation, text_content: messageForDb.text_content, attachments: messageForDb.attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt
+        }
+        // console.log("messageNotification ", messageNotification);
+
+        const io = req.app.get('socketio'); // Retrieve io instance from app
+        const modifiedAllMember = allMembers.map((member) => ({ _id: member }))
+        const membersSocket = getSockets(modifiedAllMember, activeUserSocketIDs);
+        if (membersSocket.length > 0) {
+            io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
+            io.to(membersSocket).emit(REFETCH_CHATS, {});
+        }
+
+        return res.status(200).json({ message: "Grouop created successfully" });
 
     } catch (error) {
         const err = new Error("cannot create group, plz try later");
@@ -296,7 +311,7 @@ const sendMessage = async (req, res, next) => {
 
         const dbMessageSaved = await Message.create(messageForDb);
 
-        const messageNotification = { sender: { _id: req.clientAuthData._id, name: req.clientAuthData.name }, conversation: conversationId, text_content, attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt }
+        const messageNotification = { sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name }, conversation: conversationId, text_content, attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt }
 
         const io = req.app.get('socketio'); // Retrieve io instance from app
         const membersSocket = getSockets(chat.members, activeUserSocketIDs);

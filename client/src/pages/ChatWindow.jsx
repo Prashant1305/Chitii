@@ -10,7 +10,7 @@ import { toast } from 'react-toastify'
 import { get_my_chats } from '../utils/ApiUtils'
 import { useDispatch, useSelector } from 'react-redux'
 import { useSocketEvent } from '../hooks/socket_hooks'
-import { START_TYPING, STOP_TYPING } from '../components/constants/events'
+import { REFETCH_CHATS, START_TYPING, STOP_TYPING } from '../components/constants/events'
 import { GetSocket } from '../utils/Socket'
 import { popInTypingArray, pushInTypingArray } from '../redux/reducers/typing'
 
@@ -57,13 +57,17 @@ function ChatWindow() {
         }, []
     )
 
+    const refetchChatsListner = useCallback(() => {
+        my_chats();
+    }, [])
+
     const stopTypingListener = useCallback((data) => {
         console.log("form stop typing listner", data)
 
         dispatch(popInTypingArray(data))
     }, [])
 
-    const eventHandler = { [START_TYPING]: startTypingListner, [STOP_TYPING]: stopTypingListener }
+    const eventHandler = { [START_TYPING]: startTypingListner, [STOP_TYPING]: stopTypingListener, [REFETCH_CHATS]: refetchChatsListner }
 
     useSocketEvent(socket, eventHandler);
 

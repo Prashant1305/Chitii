@@ -21,6 +21,8 @@ import { popMessageAlert } from '../../redux/reducers/chat';
 function Chat({ chatId }) {
     const containerRef = useRef(null)
     const containerRef1 = useRef(null)
+    const bottomScrollRef = useRef(null)
+
 
     const socket = GetSocket()
     const [sendMessage, setSendMessage] = useState({ attachments: undefined, conversationId: chatId, text_content: "" });
@@ -39,7 +41,6 @@ function Chat({ chatId }) {
     let totalPageOfChat = 0;
 
     const [iAmTyping, setIAmTyping] = useState(false);
-    const [userTyping, setUserTyping] = useState(false);
     const typingTimeout = useRef(null);
 
     const submitHandler = async (e) => {
@@ -79,7 +80,6 @@ function Chat({ chatId }) {
         setSendMessage({ ...sendMessage, text_content: e.target.value })
         if (!iAmTyping) {
             socket.emit(START_TYPING, { chatId });
-            console.log("startTyping")
             setIAmTyping(true);
         }
         if (typingTimeout.current) {
@@ -89,11 +89,16 @@ function Chat({ chatId }) {
         typingTimeout.current = setTimeout(() => {
 
             socket.emit(STOP_TYPING, { chatId })
-            console.log("stopTyping")
             setIAmTyping(false);
 
         }, 500);
     }
+
+    useEffect(() => {
+        if (bottomScrollRef.current && page === 1) {
+            bottomScrollRef.current.scrollIntoView({ behavior: "smooth" })
+        }
+    }, [oldMessages])
 
     useEffect(() => {
         const newMessages = chatNotification.newMessageAlert.find((notification) => (notification.chatId === chatId))
@@ -102,8 +107,6 @@ function Chat({ chatId }) {
             console.log("first")
             dispatch(popMessageAlert(chatId));
         }
-
-
     }, [chatNotification])
 
 
@@ -178,7 +181,7 @@ function Chat({ chatId }) {
             }
         }
         const infiniteScroll = () => {
-            if (containerRef1.current?.scrollTop == 0 && !messageIsLoading && oldMessageFetchDetails === "") {
+            if (containerRef1.current?.scrollTop === 0 && !messageIsLoading && oldMessageFetchDetails === "") {
                 fetchOldmessage(chatId);
             }
         }
@@ -224,6 +227,7 @@ function Chat({ chatId }) {
                         Start Conversation
                     </Typography>)
                 }
+                <div ref={bottomScrollRef} ></div>
             </Stack>
             <form
                 style={{
