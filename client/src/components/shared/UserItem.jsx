@@ -41,7 +41,9 @@ function UserItem({ user, handler, handlerIsLoading, isAdded = false, styling = 
 
                     disabled={handlerIsLoading}
                 >
-                    {isAdded ? <RemoveIcon /> : <AddIcon onClick={() => {
+                    {isAdded ? <RemoveIcon onClick={() => {
+                        handler(_id)
+                    }} /> : <AddIcon onClick={() => {
                         handler(_id)
                     }} />}
                 </IconButton>

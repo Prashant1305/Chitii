@@ -163,7 +163,7 @@ const getAllNotifications = async (req, res, next) => {
 const getMyfriends = async (req, res, next) => {
     try {
         const { conversationId } = req.query;
-        const chats = await Conversation.find({ members: req.clientAuthData.id, group_chat: false }).lean().populate("members", "user_name avatar_url")
+        const chats = await Conversation.find({ members: req.clientAuthData._id, group_chat: false }).lean().populate("members", "user_name avatar_url")
 
         const friends = chats.map((chat) => chat.members).flat().filter((member) => member._id.toString() !== req.clientAuthData._id.toString());
 
