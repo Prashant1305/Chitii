@@ -91,7 +91,15 @@ function ChatWindow() {
                     border: "1px solid white"
                 }} height={"100%"} >
                 {
-                    chatIsLoading ? <Skeleton /> : <ChatList
+                    chatIsLoading ? <Skeleton
+                        animation="wave"
+                        variant="rectangular"
+                        width={"90%"} height={"90%"}
+                        sx={{
+                            margin: "auto",
+                            mt: "2rem",
+                        }}
+                    /> : <ChatList
                         chats={chats}
                         chatId={chatId}
                         newMessagesAlert={chatNotification.newMessageAlert}
@@ -137,15 +145,21 @@ function ChatWindow() {
                     console.log("clicked")
                     setUiState({ ...uiState, isMobileOpen: false })
                 }}>
-                <ChatList
-                    chats={sampleChats}
-                    chatId={chatId}
-                    newMessagesAlert={[{
-                        chatId,
-                        count: 4
-                    }]}
-                    handleDeleteChat={handleDeleteChat}
-                    onlineUsers={["1", "2"]} />
+                {chatIsLoading ? <Skeleton
+                    animation="wave"
+                    variant="rectangular"
+                    height={"100%"}
+                    width={"100%"} />
+                    :
+                    <ChatList
+                        chats={chats}
+                        chatId={chatId}
+                        newMessagesAlert={[{
+                            chatId,
+                            count: 4
+                        }]}
+                        handleDeleteChat={handleDeleteChat}
+                        onlineUsers={["1", "2"]} />}
             </Drawer>
             )}
         </Grid>

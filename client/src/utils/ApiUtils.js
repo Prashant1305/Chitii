@@ -126,3 +126,36 @@ export const new_group_chat_api = async (data) => {
     });
     return res;
 }
+
+export const get_group_chat_list_api = async () => {
+    const url = `${baseUrl}/api/chat/getgroupchats`
+    const res = await axios.get(url, { withCredentials: true });
+    return res;
+}
+
+export const rename_chat_api = async (data) => {
+    const url = `${baseUrl}/api/chat/renamechat`
+    const res = await axios.post(url, data, {
+        withCredentials: true,
+    });
+    return res;
+}
+
+export const remove_member_from_group_api = async (conversationId) => {
+    const url = `${baseUrl}/api/chat/removemember`;
+    const res = await axios.delete(url, { conversationId }, {
+        withCredentials: true,
+    })
+    return res;
+}
+
+export const add_member_in_group_api = async (data) => {
+    const url = `${baseUrl}/api/chat/addmembers`;
+    const res = await axios.put(url, data, {
+        withCredentials: true,
+        headers: {
+            "Content-Type": "application/json",
+        }
+    })
+    return res;
+}

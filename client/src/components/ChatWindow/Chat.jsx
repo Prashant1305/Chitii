@@ -216,9 +216,15 @@ function Chat({ chatId }) {
                     variant='h6'
                     textAlign={"center"}>{messageAtEndOfMessages}</Typography>}
 
-                {messageIsLoading ? <Skeleton sx={{
-                    "height": "100%"
-                }} /> :
+                {messageIsLoading ? <Skeleton
+                    animation="wave"
+                    variant="rectangular"
+                    sx={{
+                        width: "100%",
+                        height: "100%",
+                    }}
+
+                /> :
                     (oldMessages?.length > 0 ? oldMessages.map(i => (<MessageComponent message={i} user={{ _id: user?.user?._id }} key={i?._id || uuid()} />
                     )) : <Typography
                         p={"2rem"}

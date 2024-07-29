@@ -48,8 +48,7 @@ function NewGroup() {
             try {
                 const res = await get_my_friends_api();
                 if (res.status === 200) {
-                    const modifiedUser = res.data.message.map(({ _id, user_name, avatar_url }) => ({ _id, name: user_name, avatar_url }))
-                    setAllFriends(modifiedUser)
+                    setAllFriends(res.data.message)
                 }
                 else {
                     toast.info(res.data.message)

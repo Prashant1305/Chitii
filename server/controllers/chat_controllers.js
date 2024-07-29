@@ -346,7 +346,7 @@ const getChatDetails = async (req, res, next) => {
             if (!chat) {
                 return res.status(400).json({ message: "Conversation not found" });
             } else if (!chat.members.some(((member) => member._id + "" === req.clientAuthData._id + ""), req.clientAuthData._id)) {
-                return res.status(400).json({ message: "you are not allowed to see other chats" });
+                return res.status(400).json({ message: "you are not allowed to see others chats" });
             }
             return res.status(200).json({ message: chat });
         }
@@ -371,6 +371,13 @@ const renameConversation = async (req, res, next) => {
         }
         chat.name = conversationName;
         await chat.save();
+
+        const io = req.app.get('socketio'); // Retrieve io instance from app
+        const membersSocket = getSockets(chat.members, activeUserSocketIDs);
+        if (membersSocket.length > 0) {
+            io.to(membersSocket).emit(REFETCH_CHATS, {});
+        }
+
         return res.status(200).json({ message: "Group name changed succesfully" });
     } catch (error) {
         const err = new Error("cannot rename chat, plz try later");
