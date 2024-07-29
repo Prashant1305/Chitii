@@ -212,6 +212,7 @@ const addMembers = async (req, res, next) => {
 const removeMembers = async (req, res, next) => { // incomplete
     try {
         const { userId, conversationId } = req.body;
+        console.log(userId, conversationId)
         if (!conversationId) {
             return res.status(400).json({ message: "ConversationId not found" });
         }
