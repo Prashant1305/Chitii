@@ -6,8 +6,8 @@ import { MyToggleUiValues } from '../context/ToggleUi';
 import { Link } from '../components/styles/StyledComponent';
 import AvatarCard from '../components/shared/AvatarCard';
 import { sampleChats, sampleUsers } from '../components/constants/sampleData';
-import ConfirmDeleteDialog from '../components/Dialogs/ConfirmDeleteDialog';
-import AddMemberDialog from '../components/Dialogs/AddMemberDialog';
+import ConfirmDeleteDialog from '../components/Dialogs/groups/ConfirmDeleteDialog';
+import AddMemberDialog from '../components/Dialogs/groups/AddMemberDialog';
 import UserItem from '../components/shared/UserItem';
 import { v4 as uuid } from "uuid";
 import { chat_details, get_group_chat_list_api, rename_chat_api } from '../utils/ApiUtils';
@@ -15,6 +15,7 @@ import { toast } from 'react-toastify';
 import { REFETCH_CHATS } from '../components/constants/events';
 import { GetSocket } from '../utils/Socket';
 import { useSocketEvent } from '../hooks/socket_hooks';
+import RemoveMemberConfirmationDialog from '../components/Dialogs/groups/RemoveMemberConfirmationDialog';
 
 function Groups() {
     const navigate = useNavigate();
@@ -24,6 +25,11 @@ function Groups() {
     const [groupList, setGroupList] = useState([]);
     const [groupListIsLoading, setGroupListIsLoading] = useState(false);
     const [groupNameIsLoading, setGroupNameIsLoading] = useState(false);
+    const [removeMemberDialog, setRemoveMemberDialog] = useState({
+        user: {},
+        isDialogOpen: false,
+        chatId
+    });
 
 
     const [isEdit, setIsEdit] = useState(false);
@@ -45,9 +51,6 @@ function Groups() {
 
     useSocketEvent(socket, eventHandler);
 
-    const removerMemberHandler = (id) => {
-        console.log("remove member handler got clicked")
-    }
 
     const updateGroupNameHandle = () => {
         setIsEdit(false);
@@ -115,25 +118,27 @@ function Groups() {
         }
     }, [])
 
-    useEffect(() => {
-        const getGroupDetails = async () => {
-            setGroupDetails((prev) => ({ ...prev, isLoading: true }))
+    const getGroupDetails = async () => {
+        setGroupDetails((prev) => ({ ...prev, isLoading: true }))
 
-            try {
-                const res = await chat_details(chatId, true);
-                if (res.status === 200) {
-                    setGroupDetails(prev => ({ ...prev, ...res.data.message }));
-                    setGroupNameUpdatedValue(res.data.message.name)
-                }
-            } catch (error) {
-                console.log(error)
-                toast.error(error.response.data.message || "failed to fetch group details")
+        try {
+            const res = await chat_details(chatId, true);
+            if (res.status === 200) {
+                setGroupDetails(prev => ({ ...prev, ...res.data.message }));
+                setGroupNameUpdatedValue(res.data.message.name)
             }
-            finally {
-                setGroupDetails((prev) => ({ ...prev, isLoading: false }))
-            }
-
+        } catch (error) {
+            console.log(error)
+            toast.error(error.response.data.message || "failed to fetch group details")
         }
+        finally {
+            setGroupDetails((prev) => ({ ...prev, isLoading: false }))
+        }
+
+    }
+
+    useEffect(() => {
+
         if (chatId) {
             getGroupDetails();
         }
@@ -297,7 +302,9 @@ function Groups() {
                                             padding: "1rem",
                                             borderRadius: "1rem",
                                         }}
-                                        handler={removerMemberHandler}
+                                        handler={() => {
+                                            setRemoveMemberDialog((prev) => ({ user: i, isDialogOpen: true, chatId }))
+                                        }}
                                     />
                                 ))
                             }
@@ -308,7 +315,9 @@ function Groups() {
 
             <ConfirmDeleteDialog open={confirmDeleteDialogOpen} handleClose={closeConfirmDeleteHandler} deleteHandler={confirmRemoveMember} />
 
-            <AddMemberDialog chatId={chatId} setGroupDetails={setGroupDetails} />
+            <AddMemberDialog chatId={chatId} setGroupDetails={setGroupDetails} getGroupDetails={getGroupDetails} />
+
+            <RemoveMemberConfirmationDialog removeMemberDialog={removeMemberDialog} setRemoveMemberDialog={setRemoveMemberDialog} setGroupDetails={setGroupDetails} />
 
             <Drawer
                 PaperProps={{

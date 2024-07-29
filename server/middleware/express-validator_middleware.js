@@ -49,7 +49,7 @@ const newGroupChatValidator = () => [
 const removeMembersValidator = () => [
     body("conversationId", "please provide chat id").notEmpty(),
     body("userId", "plz provide user Id").notEmpty()
-        .isArray({ min: 1 })
+        .isArray({ min: 0 })
         .withMessage("plz provide atleast one user id")
 ];
 

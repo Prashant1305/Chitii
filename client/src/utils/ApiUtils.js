@@ -141,10 +141,14 @@ export const rename_chat_api = async (data) => {
     return res;
 }
 
-export const remove_member_from_group_api = async (conversationId) => {
+export const remove_member_from_group_api = async (data) => {
     const url = `${baseUrl}/api/chat/removemember`;
-    const res = await axios.delete(url, { conversationId }, {
+    const res = await axios.delete(url, {
+        data,
         withCredentials: true,
+        headers: {
+            "Content-Type": "application/json",
+        }
     })
     return res;
 }
