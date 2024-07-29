@@ -3,7 +3,7 @@ import { Add as AddIcon, Remove as RemoveIcon } from "@mui/icons-material"
 import React from 'react'
 
 function UserItem({ user, handler, handlerIsLoading, isAdded = false, styling = {} }) {
-    const { name, _id, avatar_url } = user
+    const { name, _id, avatar_url, user_name } = user
     return (
         <ListItem >
             <Stack
@@ -26,7 +26,7 @@ function UserItem({ user, handler, handlerIsLoading, isAdded = false, styling = 
                         textOverflow: "ellipsis",
                         width: "100%"
                     }}>
-                    {name}
+                    {name || user_name}
                 </Typography>
 
                 <IconButton
@@ -41,9 +41,11 @@ function UserItem({ user, handler, handlerIsLoading, isAdded = false, styling = 
 
                     disabled={handlerIsLoading}
                 >
-                    {isAdded ? <RemoveIcon onClick={() => {
+                    {isAdded ? <RemoveIcon onClick={(e) => {
+                        e.preventDefault()
                         handler(_id)
-                    }} /> : <AddIcon onClick={() => {
+                    }} /> : <AddIcon onClick={(e) => {
+                        e.preventDefault()
                         handler(_id)
                     }} />}
                 </IconButton>
