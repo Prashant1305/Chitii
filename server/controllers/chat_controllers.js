@@ -297,33 +297,38 @@ const sendMessage = async (req, res, next) => {
             return res.status(400).json({ message: "Chat not found" })
         }
 
+        if (chat.members.some((member) => (member + "" === req.clientAuthData._id + ""))) {
+            const responsePromiseArray = req.files.map((file) => uploadOnCloudinary(file.path))
+            const fileUrlArray = await Promise.all(responsePromiseArray);
 
-        const responsePromiseArray = req.files.map((file) => uploadOnCloudinary(file.path))
-        const fileUrlArray = await Promise.all(responsePromiseArray);
+            const attachments = fileUrlArray.map((file) => {
+                return {
+                    public_id: file.public_id,
+                    url: file.secure_url
+                }
+            })
 
-        const attachments = fileUrlArray.map((file) => {
-            return {
-                public_id: file.public_id,
-                url: file.secure_url
+            const messageForDb = { sender: req.clientAuthData._id, conversation: conversationId, text_content, attachments }
+
+            const dbMessageSaved = await Message.create(messageForDb);
+
+            const messageNotification = { sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name }, conversation: conversationId, text_content, attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt }
+
+            const io = req.app.get('socketio'); // Retrieve io instance from app
+            const membersSocket = getSockets(chat.members, activeUserSocketIDs);
+            if (membersSocket.length > 0) {
+                io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
             }
-        })
 
-        const messageForDb = { sender: req.clientAuthData._id, conversation: conversationId, text_content, attachments }
-
-        const dbMessageSaved = await Message.create(messageForDb);
-
-        const messageNotification = { sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name }, conversation: conversationId, text_content, attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt }
-
-        const io = req.app.get('socketio'); // Retrieve io instance from app
-        const membersSocket = getSockets(chat.members, activeUserSocketIDs);
-        if (membersSocket.length > 0) {
-            io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
+            res.status(200).json({ message: "received send message", text_data: req.body, attachments })
+        } else {
+            res.status(400).json({ message: "you are not allowed to send text message here" })
         }
 
-        res.status(269).json({ message: "received send message", text_data: req.body, attachments })
+
     } catch (error) {
         const err = new Error("cannot send message, plz try later");
-        err.status = 400;
+        err.status = 500;
         err.extraDetails = "from sendeMessage function inside chat_controller";
         next(err);
     }

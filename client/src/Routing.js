@@ -46,14 +46,33 @@ function Routing() {
 
   useEffect(() => {
     const fetchingUserData = async () => {
+      const toastId = toast.loading("fetching user data...")
       try {
         const res = await fetch_user_data();
         if (res.status === 200) {
           dispatch(userExist(res?.data?.message));
+          toast.update(toastId, {
+            render: "user data fetched Successfully",
+            type: "success",
+            isLoading: false,
+            autoClose: 1000,
+          })
+        } else {
+          toast.update(toastId, {
+            render: res.data.message,
+            type: "info",
+            isLoading: false,
+            autoClose: 1000,
+          })
         }
       } catch (error) {
         console.log(error);
-        toast.error(error.response.data.message || "something went wrong in getting user details");
+        toast.update(toastId, {
+          render: error.response.data.message || "something went wrong in getting user details",
+          type: "error",
+          isLoading: false,
+          autoClose: 1000,
+        })
         dispatch(userNotExist());
       }
     }

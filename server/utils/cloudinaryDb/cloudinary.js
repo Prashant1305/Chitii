@@ -17,6 +17,7 @@ const uploadOnCloudinary = async (localFilePath) => {
         }
         // upload file on cloud
         const response = await cloudinary.uploader.upload(localFilePath, {
+            folder: 'chitii', // Specify your desired folder name, optional
             resource_type: "auto" // file type can be anything
         })
         // file has been uploaded successfully

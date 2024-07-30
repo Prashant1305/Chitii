@@ -56,19 +56,35 @@ function Groups() {
         setIsEdit(false);
         const changeNameOfChat = async () => {
             setGroupNameIsLoading(true)
+            const toastId = toast.loading("updating name...")
             try {
                 const res = await rename_chat_api({ conversationId: chatId, conversationName: groupNameUpdatedValue })
 
                 if (res.status === 200) {
-                    toast.success("Group name updated successfully");
                     setGroupDetails({ ...groupDetails, name: groupNameUpdatedValue })
+                    toast.update(toastId, {
+                        render: "Group name updated Successfully",
+                        type: "success",
+                        isLoading: false,
+                        autoClose: 1000,
+                    })
                 }
                 else {
-                    toast.info(res.data.message);
+                    toast.update(toastId, {
+                        render: res.data.message,
+                        type: "info",
+                        isLoading: false,
+                        autoClose: 1000,
+                    })
                 }
             } catch (error) {
                 console.log(error)
-                toast.error(error.response);
+                toast.update(toastId, {
+                    render: error?.response?.data?.message || "failed to update name",
+                    type: "error",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
             }
             finally {
                 setGroupNameIsLoading(false);

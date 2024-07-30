@@ -26,10 +26,11 @@ function SignUp() {
   const handlesubmit = async (e) => {
     e.preventDefault();
     // console.log(userData);
+    const toastId = toast.loading("Creating user...")
     try {
       if (userData.password.length > 0 && userData.password === userData.passwordAgain) {
         const form_data = new FormData();
-        if (avatar.file) { form_data.append("avatar_url", avatar.file); }
+        if (avatar.file) { form_data.append("avatar", avatar.file); }
         form_data.append("full_name", userData.full_name);
         form_data.append("user_name", userData.user_name);
         form_data.append("mobile_number", userData.mobile_number);
@@ -38,16 +39,37 @@ function SignUp() {
         form_data.append("password", userData.password);
         const res = await signup_api(form_data);
         if (res.status === 200) {
+          toast.update(toastId, {
+            render: "User Created Successfully",
+            type: "success",
+            isLoading: false,
+            autoClose: 1000,
+          })
           navigate("../signin")
+        } else {
+          toast.update(toastId, {
+            render: res.data.message,
+            type: "info",
+            isLoading: false,
+            autoClose: 1000,
+          })
         }
-
-
       } else {
-        toast.warning("password did not match");
+        toast.update(toastId, {
+          render: "password did not match",
+          type: "warning",
+          isLoading: false,
+          autoClose: 1000,
+        })
         setUserData({ ...userData, password: "", passwordAgain: "" });
       }
     } catch (error) {
-      toast.error(error.response.data.message || "something went unexpected")
+      toast.update(toastId, {
+        render: error?.response?.data?.message || "failed to update name",
+        type: "error",
+        isLoading: false,
+        autoClose: 1000,
+      })
       console.log(error)
     }
   };
