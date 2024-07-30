@@ -13,16 +13,34 @@ function SignOut() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        const toastId = toast.loading("Singing out...")
         try {
             const res = await logout();
             if (res.status === 200) {
                 dispatch(userNotExist());
-                toast.success("Logout Successful");
+                toast.update(toastId, {
+                    render: "SingOut Successfull",
+                    type: "success",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
+            } else {
+                toast.update(toastId, {
+                    render: res.data.message || "oops! failed to signOut",
+                    type: "info",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
             }
+
         } catch (error) {
             console.log(error);
-            toast.error(error.response.data.message || "logout Failed")
+            toast.update(toastId, {
+                render: error?.response?.data?.message || "logout Failed",
+                type: "error",
+                isLoading: false,
+                autoClose: 1000,
+            })
         }
     }
     return (

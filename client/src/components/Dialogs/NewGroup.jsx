@@ -26,17 +26,34 @@ function NewGroup() {
     // console.log(groupName)
     const submitHandler = async (e) => {
         e.preventDefault()
+        const toastId = toast.loading("Creating Group...")
         try {
             const res = await new_group_chat_api({ name: groupName, members: selectedMembers });
             if (res.status === 200) {
-                toast.success(res.data.message);
+                toast.update(toastId, {
+                    render: res.data.message || "Group created successfully",
+                    type: "success",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
                 setUiState(prev => ({ ...prev, isNewGroup: false }))
             } else {
                 toast.info(res.data.message);
+                toast.update(toastId, {
+                    render: res.data.message || "oops you missed some options",
+                    type: "info",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
             }
         } catch (error) {
             console.log(error)
-            toast.error(error.response.data.message || "Failed to create group");
+            toast.update(toastId, {
+                render: error?.response?.data?.message || "Failed to create group",
+                type: "error",
+                isLoading: false,
+                autoClose: 1000,
+            })
         }
     }
     const closeHandler = () => {
@@ -45,18 +62,36 @@ function NewGroup() {
     useEffect(() => {
         const getAllFriends = async () => {
             setIsLoading(true);
+            const toastId = toast.loading("getting your friends...")
+
             try {
                 const res = await get_my_friends_api();
                 if (res.status === 200) {
-                    setAllFriends(res.data.message)
+                    setAllFriends(res.data.message);
+                    toast.update(toastId, {
+                        render: "friends list fetched successfully",
+                        type: "success",
+                        isLoading: false,
+                        autoClose: 1000,
+                    })
                 }
                 else {
-                    toast.info(res.data.message)
+                    toast.update(toastId, {
+                        render: res.data.message || "could not find friends",
+                        type: "info",
+                        isLoading: false,
+                        autoClose: 1000,
+                    })
                 }
 
             } catch (error) {
                 console.log(error);
-                toast.error(error.response.data.message)
+                toast.update(toastId, {
+                    render: error?.response?.data?.message || "failed to fetch friend listt",
+                    type: "error",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
             }
             finally {
                 setIsLoading(false)

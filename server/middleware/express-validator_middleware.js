@@ -38,7 +38,7 @@ const addMemberValidator = () => [
 ];
 
 const newGroupChatValidator = () => [
-    body("name", "please enter name of group"),
+    body("name", "please enter name of group").notEmpty(),
     body("members")
         .notEmpty()
         .withMessage("Please Enter Members")

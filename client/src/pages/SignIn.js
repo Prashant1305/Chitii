@@ -16,21 +16,36 @@ function SignIn() {
     const navigate = useNavigate();
     const handlesubmit = async (e) => {
         e.preventDefault();
+        const toastId = toast.loading("verifying...")
         try {
-
             const res = await login_api({ emailOrUsername: userData.email, password: userData.password });
             if (res.status === 200) {
                 // user details will be stored from Routing section
                 dispatch(userExist(res.data.user));
-                toast.success("Login Succesfull");
+                toast.update(toastId, {
+                    render: "Login Succesfull",
+                    type: "success",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
                 navigate("/");
             } else {
                 dispatch(userNotExist());
-                toast.error("Invalid Credentials");
+                toast.update(toastId, {
+                    render: res?.data?.message || "Invalid Credentials",
+                    type: "info",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
             }
 
         } catch (error) {
-            toast.error(error.response.data.message || "something went wrong");
+            toast.update(toastId, {
+                render: error?.response?.data?.message || "Invalid Credentials",
+                type: "error",
+                isLoading: false,
+                autoClose: 1000,
+            })
             dispatch(userNotExist())
             console.log(error);
         }
