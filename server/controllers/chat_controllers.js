@@ -188,17 +188,35 @@ const addMembers = async (req, res, next) => {
             return res.status(400).json({ message: "Only group creator can add members" });
         }
 
-        const allNewMembersPromise = members.map((i) => User.findById(i, "name"));
+        const allNewMembersPromise = members.map((i) => User.findById(i, "user_name"));
         const allNewMembers = await Promise.all(allNewMembersPromise);
         const uniqueMembers = allNewMembers.filter((i) => !chat.members.includes(i._id.toString()))
         chat.members.push(...uniqueMembers.map((i) => i._id));
 
         await chat.save();
 
-        const allUsersName = allNewMembers.map((i) => i.name).join(",");
+        const allUsersName = allNewMembers.map((i) => i.user_name).join(",");
 
-        emitEvent(req, ALERT, chat.members, `new member has been added to ${chat.name} by ${req.clientAuthData.user_name}`)
-        emitEvent(req, REFETCH_CHATS, chat.members);
+
+        const messageForDb = { sender: req.clientAuthData._id, conversation: conversationId, text_content: ` ${req.clientAuthData.user_name} added ${allUsersName}`, attachments: [] }
+
+        const dbMessageSaved = await Message.create(messageForDb);
+
+        const messageNotification = {
+            sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name },
+            conversation: messageForDb.conversation, text_content: messageForDb.text_content, attachments: messageForDb.attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt
+        }
+
+        const allMembers = chat.members.filter((member) => (member + "" !== req.clientAuthData._id + ""))
+
+        const io = req.app.get('socketio'); // Retrieve io instance from app
+        const modifiedAllMember = allMembers.map((member) => ({ _id: member }))
+        const membersSocket = getSockets(modifiedAllMember, activeUserSocketIDs);
+        if (membersSocket.length > 0) {
+            io.to(membersSocket).emit(REFETCH_CHATS, {});
+            io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
+        }
+
         res.status(200).json({ message: "members added successfully" });
 
     } catch (error) {
@@ -212,7 +230,6 @@ const addMembers = async (req, res, next) => {
 const removeMembers = async (req, res, next) => { // incomplete
     try {
         const { userId, conversationId } = req.body;
-        console.log(userId, conversationId)
         if (!conversationId) {
             return res.status(400).json({ message: "ConversationId not found" });
         }
@@ -240,10 +257,28 @@ const removeMembers = async (req, res, next) => { // incomplete
         }
 
         chat.save();
-        emitEvent(req, REFETCH_CHATS, chat.members);
+
+        const removedUser = await User.findById(userId).select({ user_name: 1 });
+
+        const messageForDb = { sender: req.clientAuthData._id, conversation: conversationId, text_content: ` ${req.clientAuthData.user_name} removed ${removedUser.user_name}`, attachments: [] }
+
+        const dbMessageSaved = await Message.create(messageForDb);
+
+        const messageNotification = {
+            sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name },
+            conversation: messageForDb.conversation, text_content: messageForDb.text_content, attachments: messageForDb.attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt
+        }
+
+        const allMembers = modifiedMember.filter((member) => (member + "" !== req.clientAuthData._id + ""))
+        const io = req.app.get('socketio'); // Retrieve io instance from app
+        const modifiedAllMember = allMembers.map((member) => ({ _id: member }))
+        const membersSocket = getSockets(modifiedAllMember, activeUserSocketIDs);
+        if (membersSocket.length > 0) {
+            io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
+            io.to(membersSocket).emit(REFETCH_CHATS, {});
+        }
+
         res.status(200).json({ message: "members removed successfully" });
-
-
     } catch (error) {
         const err = new Error("cannot remove members, plz try later");
         err.status = 400;
