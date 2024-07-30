@@ -13,11 +13,18 @@ const startTypingFeature = (socket, io) => {
         console.log("startTyping", data)
         try {
             const { members } = await Conversation.findById(data.chatId)?.select({ members: 1 })?.lean();
-            const otherMemberOfChats = members.filter((member) => (member.toString() != socket.clientAuthData._id.toString()))
-            // console.log("otherMemberOfChats", otherMemberOfChats);
-            const activeChatMembersInSockets = getSockets(otherMemberOfChats, activeUserSocketIDs);
-            // console.log("activeChatMembersInSockets", activeChatMembersInSockets);
-            io.to(activeChatMembersInSockets).emit(START_TYPING, { chatId: data.chatId, user: { user_name: socket.clientAuthData.user_name, _id: socket.clientAuthData._id } });
+            if (members.some((member) => (member.toString() === socket.clientAuthData._id.toString()))) {
+
+                const otherMemberOfChats = members.filter((member) => (member.toString() != socket.clientAuthData._id.toString()))
+
+                const activeChatMembersInSockets = getSockets(otherMemberOfChats, activeUserSocketIDs);
+
+                io.to(activeChatMembersInSockets).emit(START_TYPING, { chatId: data.chatId, user: { user_name: socket.clientAuthData.user_name, _id: socket.clientAuthData._id } });
+            }
+            else {
+                console.log(`user ${socket.clientAuthData.user_name} is not a member of the chat`)
+                return;
+            }
         } catch (error) {
             console.log("failed to get members of chat")
         }
