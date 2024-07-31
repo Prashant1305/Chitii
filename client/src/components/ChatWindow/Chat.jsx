@@ -16,6 +16,7 @@ import { useSocketEvent } from '../../hooks/socket_hooks';
 import { MyToggleUiValues } from '../../context/ToggleUi';
 import { v4 as uuid } from 'uuid';
 import { popMessageAlert } from '../../redux/reducers/chat';
+import { useNavigate } from 'react-router-dom';
 
 
 function Chat({ chatId }) {
@@ -42,6 +43,7 @@ function Chat({ chatId }) {
 
     const [iAmTyping, setIAmTyping] = useState(false);
     const typingTimeout = useRef(null);
+    const navigate = useNavigate();
 
     const submitHandler = async (e) => {
         e.preventDefault()
@@ -115,31 +117,70 @@ function Chat({ chatId }) {
         dispatch(popMessageAlert(chatId));
         const fetchChatData = async (chatId) => {
             setMessageIsLoading(true);
+            const toastId = toast.loading("fetching first page message");
             try {
                 const res = await all_messages_of_chat(chatId, page);
                 if (res.status === 200) {
-                    toast.success("Messages fetched successfully");
+                    toast.update(toastId, {
+                        render: "Messages fetched successfully",
+                        type: "success",
+                        isLoading: false,
+                        autoClose: 1000,
+                    })
                     page++;
                     setOldMessages(res.data.messages)
                     totalPageOfChat = res.data.totalPages;
                     oldMessageFetchDetails = "";
                 }
+                else {
+                    toast.update(toastId, {
+                        render: res.data.message || "oops",
+                        type: "info",
+                        isLoading: false,
+                        autoClose: 1000,
+                    })
+                }
             } catch (error) {
                 console.log(error);
-                toast.error(error.response.data.message || "failed to retrive messages, plz try later")
+                toast.update(toastId, {
+                    render: error?.response?.data?.message || "failed to retrive messages, plz try later",
+                    type: "error",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
             } finally {
                 setMessageIsLoading(false);
             }
         }
         const fetchChatDetails = async (chatId) => {
             setMessageIsLoading(true);
+            const toastId = toast.loading("fetching chat details...")
             try {
                 const res = await chat_details(chatId);
                 if (res.status === 200) {
                     setMember(res.data.message.members);
+                    toast.update(toastId, {
+                        render: "chat fetched Successfully",
+                        type: "success",
+                        isLoading: false,
+                        autoClose: 1000,
+                    })
+                } else {
+                    toast.update(toastId, {
+                        render: res.data.message || "feels you are accessing, your are not supposed to",
+                        type: "info",
+                        isLoading: false,
+                        autoClose: 1000,
+                    })
+                    navigate("/chat");
                 }
             } catch (error) {
-                toast.error(error.response.data.message || "Error fetching chat details")
+                toast.update(toastId, {
+                    render: error?.response?.data?.message || "failed to fetch chat details",
+                    type: "error",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
             } finally {
                 setMessageIsLoading(false);
             }

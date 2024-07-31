@@ -7,7 +7,7 @@ import { MyToggleUiValues } from '../../../context/ToggleUi';
 import { toast } from 'react-toastify';
 import { add_member_in_group_api, get_my_friends_api } from '../../../utils/ApiUtils';
 
-function AddMemberDialog({ setGroupDetails, getGroupDetails, chatId }) {
+function AddMemberDialog({ groupDetails, setGroupDetails, getGroupDetails, chatId }) {
     const [members, setMembers] = useState([]);
     const [selectedMembers, setSelectedMembers] = useState([]);
     const { uiState, setUiState } = MyToggleUiValues();
@@ -69,7 +69,7 @@ function AddMemberDialog({ setGroupDetails, getGroupDetails, chatId }) {
         return () => {
             setMembers([])
         }
-    }, [chatId])
+    }, [chatId, groupDetails])
 
     return (
         <Dialog open={uiState.isAddMember} onClose={closeHandler}>
