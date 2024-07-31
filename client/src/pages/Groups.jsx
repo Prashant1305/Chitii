@@ -93,12 +93,6 @@ function Groups() {
         changeNameOfChat();
     }
 
-
-    const confirmDeleteHandler = () => {
-        console.log("confirm delete got clicked");
-        setConfirmDeleteDialogOpen(true);
-    }
-
     const confirmRemoveMember = () => {
         console.log("confirmRemoveMember")
     }
@@ -239,7 +233,9 @@ function Groups() {
             sm: "1rem",
             md: "1rem 4rem",
         }}>
-        <Button size='large' color='error' variant='outlined' startIcon={<DeleteIcon />} onClick={confirmDeleteHandler}>Delete Group</Button>
+        <Button size='large' color='error' variant='outlined' startIcon={<DeleteIcon />} onClick={() => {
+            setConfirmDeleteDialogOpen(true);
+        }}>Delete Group</Button>
         <Button size='large' variant='contained' startIcon={<AddIcon />} onClick={() => { setUiState({ ...uiState, isAddMember: true }) }}>Add Member</Button>
     </Stack>
     return (
@@ -275,63 +271,72 @@ function Groups() {
                 height: "100%",
                 overflow: "auto"
             }}>
-                {IconBtns}
+                {chatId ?
+                    (<>
+                        {IconBtns}
+                        {
+                            groupDetails &&
+                                groupDetails.isLoading ? <Skeleton
+                                animation="wave"
+                                variant="rectangular"
+                                width={"90%"} height={"90%"}
+                                sx={{
+                                    margin: "auto",
 
-                {groupDetails &&
-                    groupDetails.isLoading ? <Skeleton
-                    animation="wave"
-                    variant="rectangular"
-                    width={"90%"} height={"90%"}
-                    sx={{
-                        margin: "auto",
-
-                        mt: "2rem",
-                    }}
-
-                /> :
-                    <>
-                        {GroupName}
-                        <Typography variant='h4'>Members</Typography>
-                        <Stack
-                            maxWidth={"45rem"}
-                            width={"100%"}
-                            boxSizing={"border-box"}
-                            padding={{
-                                sm: "1rem",
-                                xs: "0",
-                                md: "1rem 4rem",
-                            }}
-                            spacing={"2rem"}
-                            // bgcolor={"bisque"}
-                            border={"1px solid white"}
-                            borderRadius={"1rem"}
-                            height={"50vh"}
-                            overflow={"auto"}>
-                            {
-                                groupDetails?.members.map((i) => (
-                                    <UserItem
-                                        key={uuid()}
-                                        user={i}
-                                        isAdded
-                                        styling={{
-                                            boxShadow: "0 0 0.5rem rgba(0,0,0,0.2)",
-                                            padding: "1rem",
-                                            borderRadius: "1rem",
+                                    mt: "2rem",
+                                }} /> :
+                                <>
+                                    {GroupName}
+                                    <Typography variant='h4'>Members</Typography>
+                                    <Stack
+                                        maxWidth={"45rem"}
+                                        width={"100%"}
+                                        boxSizing={"border-box"}
+                                        padding={{
+                                            sm: "1rem",
+                                            xs: "0",
+                                            md: "1rem 4rem",
                                         }}
-                                        handler={() => {
-                                            setRemoveMemberDialog((prev) => ({ user: i, isDialogOpen: true, chatId }))
-                                        }}
-                                    />
-                                ))
-                            }
-                        </Stack>
-                        {ButtonGroup}
-                    </>}
+                                        spacing={"2rem"}
+                                        // bgcolor={"bisque"}
+                                        border={"1px solid white"}
+                                        borderRadius={"1rem"}
+                                        height={"50vh"}
+                                        overflow={"auto"}>
+                                        {
+                                            groupDetails?.members.map((i) => (
+                                                <UserItem
+                                                    key={uuid()}
+                                                    user={i}
+                                                    isAdded
+                                                    styling={{
+                                                        boxShadow: "0 0 0.5rem rgba(0,0,0,0.2)",
+                                                        padding: "1rem",
+                                                        borderRadius: "1rem",
+                                                    }}
+                                                    handler={() => {
+                                                        setRemoveMemberDialog((prev) => ({ user: i, isDialogOpen: true, chatId }))
+                                                    }}
+                                                />
+                                            ))
+                                        }
+                                    </Stack>
+                                    {ButtonGroup}
+                                </>
+                        }
+                    </>) : <Box height={"100%"}>
+                        <Typography
+                            p={"2rem"}
+                            variant='h4'
+                            textAlign={"center"}>
+                            Select Group to manage
+                        </Typography>
+                    </Box>}
             </Grid>
 
             <ConfirmDeleteDialog open={confirmDeleteDialogOpen} handleClose={closeConfirmDeleteHandler} deleteHandler={confirmRemoveMember} />
 
-            <AddMemberDialog chatId={chatId} setGroupDetails={setGroupDetails} getGroupDetails={getGroupDetails} />
+            <AddMemberDialog chatId={chatId} groupDetails={groupDetails} setGroupDetails={setGroupDetails} getGroupDetails={getGroupDetails} />
 
             <RemoveMemberConfirmationDialog removeMemberDialog={removeMemberDialog} setRemoveMemberDialog={setRemoveMemberDialog} setGroupDetails={setGroupDetails} />
 

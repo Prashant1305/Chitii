@@ -211,9 +211,11 @@ const addMembers = async (req, res, next) => {
 
         const io = req.app.get('socketio'); // Retrieve io instance from app
         const modifiedAllMember = allMembers.map((member) => ({ _id: member }))
+        const modifiedRefetchChatMemeber = members.map((member) => ({ _id: member }))
+        const refetch_chat_member_socket = getSockets(modifiedRefetchChatMemeber, activeUserSocketIDs);
         const membersSocket = getSockets(modifiedAllMember, activeUserSocketIDs);
         if (membersSocket.length > 0) {
-            io.to(membersSocket).emit(REFETCH_CHATS, {});
+            io.to(refetch_chat_member_socket).emit(REFETCH_CHATS, {});
             io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
         }
 
@@ -273,9 +275,13 @@ const removeMembers = async (req, res, next) => { // incomplete
         const io = req.app.get('socketio'); // Retrieve io instance from app
         const modifiedAllMember = allMembers.map((member) => ({ _id: member }))
         const membersSocket = getSockets(modifiedAllMember, activeUserSocketIDs);
+        const removedMemberSocket = getSockets([{ _id: userId }], activeUserSocketIDs)
+
         if (membersSocket.length > 0) {
             io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
-            io.to(membersSocket).emit(REFETCH_CHATS, {});
+        }
+        if (removedMemberSocket) {
+            io.to(removedMemberSocket).emit(REFETCH_CHATS, {});
         }
 
         res.status(200).json({ message: "members removed successfully" });
@@ -377,7 +383,7 @@ const getChatDetails = async (req, res, next) => {
             if (!chat) {
                 return res.status(400).json({ message: "Conversation not found" });
             } else if (!chat.members.some(((member) => member._id + "" === req.clientAuthData._id + ""), req.clientAuthData._id)) {
-                return res.status(400).json({ message: "you are not allowed to see other chats" });
+                return res.status(269).json({ message: "you are not member of this group" });
             }
             return res.status(200).json({ message: chat });
 
@@ -387,7 +393,7 @@ const getChatDetails = async (req, res, next) => {
             if (!chat) {
                 return res.status(400).json({ message: "Conversation not found" });
             } else if (!chat.members.some(((member) => member._id + "" === req.clientAuthData._id + ""), req.clientAuthData._id)) {
-                return res.status(400).json({ message: "you are not allowed to see others chats" });
+                return res.status(269).json({ message: "you are not member of this group" });
             }
             return res.status(200).json({ message: chat });
         }
@@ -453,7 +459,15 @@ const deleteChat = async (req, res, next) => {
             }
             await Message.deleteOne({ _id: message._id })
         })
-        emitEvent(req, REFETCH_CHATS, chat.members);
+        await Conversation.deleteOne({ _id: conversationId })
+
+        const io = req.app.get('socketio'); // Retrieve io instance from app
+        const modifiedAllMember = chat.members.map((member) => ({ _id: member }))
+        const membersSocket = getSockets(modifiedAllMember, activeUserSocketIDs);
+        if (membersSocket.length > 0) {
+            io.to(membersSocket).emit(REFETCH_CHATS, {});
+        }
+        // emitEvent(req, REFETCH_CHATS, chat.members);
         return res.status(200).json({ message: "Chat deleted succesfully" });
 
     } catch (error) {
@@ -467,6 +481,11 @@ const deleteChat = async (req, res, next) => {
 const getMessages = async (req, res, next) => {
     try {
         const chatId = req.params.id;
+
+        const wantedChat = await Conversation.findById(chatId);
+        if (!wantedChat?.members.some((member) => (member + "" !== req.clientAuthData._id + ""))) {
+            return res.status(400).json({ message: "you are not allowed to access the chat" });
+        }
         const { page = 1 } = req.query;
 
         const limit = 20; // no. of messages per page

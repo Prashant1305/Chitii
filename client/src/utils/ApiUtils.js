@@ -163,3 +163,15 @@ export const add_member_in_group_api = async (data) => {
     })
     return res;
 }
+
+export const delete_conversation_api = async (data) => {
+    const url = `${baseUrl}/api/chat/deletechat`
+    const res = await axios.delete(url, {
+        data,
+        withCredentials: true,
+        headers: {
+            "Content-Type": "application/json",
+        }
+    })
+    return res;
+}
