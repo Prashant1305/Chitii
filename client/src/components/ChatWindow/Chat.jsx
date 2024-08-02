@@ -31,7 +31,6 @@ function Chat({ chatId }) {
     const dispatch = useDispatch();
     const [oldMessages, setOldMessages] = useState([]);
     const [messageIsLoading, setMessageIsLoading] = useState(false);
-    const [member, setMember] = useState([]);
     const [messageAtEndOfMessages, setMessageAtEndOfMessages] = useState("");
     let oldMessageFetchDetails = "";
 
@@ -152,39 +151,6 @@ function Chat({ chatId }) {
                 setMessageIsLoading(false);
             }
         }
-        const fetchChatDetails = async (chatId) => {
-            setMessageIsLoading(true);
-            const toastId = toast.loading("fetching chat details...")
-            try {
-                const res = await chat_details(chatId);
-                if (res.status === 200) {
-                    setMember(res.data.message.members);
-                    toast.update(toastId, {
-                        render: "chat fetched Successfully",
-                        type: "success",
-                        isLoading: false,
-                        autoClose: 1000,
-                    })
-                } else {
-                    toast.update(toastId, {
-                        render: res.data.message || "feels you are accessing, your are not supposed to",
-                        type: "info",
-                        isLoading: false,
-                        autoClose: 1000,
-                    })
-                    navigate("/chat");
-                }
-            } catch (error) {
-                toast.update(toastId, {
-                    render: error?.response?.data?.message || "failed to fetch chat details",
-                    type: "error",
-                    isLoading: false,
-                    autoClose: 1000,
-                })
-            } finally {
-                setMessageIsLoading(false);
-            }
-        }
 
         // infinite scroll starts
         const fetchOldmessage = async (chatId) => {
@@ -228,9 +194,9 @@ function Chat({ chatId }) {
         }
         containerRef?.current.addEventListener("scroll", infiniteScroll)
         // infinite scroll ends
-
-        fetchChatDetails(chatId);
-        fetchChatData(chatId, page);
+        if (chatId) {
+            fetchChatData(chatId, page);
+        }
         return (() => {
             setSendMessage({ attachments: [], conversationId: chatId, text_content: "" });
             setOldMessages([]);

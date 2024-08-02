@@ -43,7 +43,7 @@ const chatSlice = createSlice({
         popMessageAlert: (state, action) => {
             const index = state.newMessageAlert.findIndex((item) => item.chatId === action.payload)
             if (index === -1) {
-                toast.error("chatId not found in notification")
+                // toast.error("chatId not found in notification")
             }
             else {
                 state.newMessageAlert.splice(index, 1) // Remove 1 element at index 

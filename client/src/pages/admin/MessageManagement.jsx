@@ -1,5 +1,5 @@
 import { useFetchData } from "6pp";
-import { Avatar, Box, Stack } from "@mui/material";
+import { Avatar, Box, Container, Skeleton, Stack } from "@mui/material";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../../components/layout/AdminLayout";
@@ -8,6 +8,8 @@ import Table from "../../components/shared/Table";
 // import { server } from "../../constants/config";
 // import { useErrors } from "../../hooks/hook";
 import { fileFormat, transformImage } from "../../components/lib/features";
+import { toast } from "react-toastify";
+import { all_messages_api } from "../../utils/ApiUtils";
 
 const columns = [
     {
@@ -49,7 +51,7 @@ const columns = [
     },
 
     {
-        field: "content",
+        field: "text_content",
         headerName: "Content",
         headerClassName: "table-header",
         width: 400,
@@ -60,9 +62,9 @@ const columns = [
         headerClassName: "table-header",
         width: 200,
         renderCell: (params) => (
-            <Stack direction={"row"} spacing={"1rem"} alignItems={"center"}>
-                <Avatar alt={params.row.sender.name} src={params.row.sender.avatar} />
-                <span>{params.row.sender.name}</span>
+            <Stack direction={"row"} spacing={"1rem"} alignItems={"center"} >
+                <Avatar alt={params.row.sender.user_name} src={params.row.sender.avatar_url} />
+                <span>{params.row.sender.user_name}</span>
             </Stack>
         ),
     },
@@ -73,7 +75,7 @@ const columns = [
         width: 220,
     },
     {
-        field: "groupChat",
+        field: "group_chat",
         headerName: "Group Chat",
         headerClassName: "table-header",
         width: 100,
@@ -87,49 +89,45 @@ const columns = [
 ];
 
 const MessageManagement = () => {
-    //   const { loading, data, error } = useFetchData(
-    //     `${server}/api/v1/admin/messages`,
-    //     "dashboard-messages"
-    //   );
-
-    //   useErrors([
-    //     {
-    //       isError: error,
-    //       error: error,
-    //     },
-    //   ]);
 
     const [rows, setRows] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    // useEffect(() => {
-    //     if (data) {
-    //         setRows(
-    //             data.messages.map((i) => ({
-    //                 ...i,
-    //                 id: i._id,
-    //                 sender: {
-    //                     name: i.sender.name,
-    //                     avatar: transformImage(i.sender.avatar, 50),
-    //                 },
-    //                 createdAt: moment(i.createdAt).format("MMMM Do YYYY, h:mm:ss a"),
-    //             }))
-    //         );
-    //     }
-    // }, [data]);
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const res = await all_messages_api();
+                if (res.status === 200) {
+                    setRows(res.data.messages.map((i) => ({
+                        ...i,
+                        id: i._id,
+                        group_chat: i.chat.group_chat,
+                        chat: i.chat.name
+                    })));
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.log(error);
+                toast.error("failed to fetch data");
+            }
+        }
+        fetchData();
+    }, []);
 
     return (
-        <>
-            {/* {loading ? (
+        <Container>
+            {loading ? (
                 <Skeleton height={"100vh"} />
-            ) : ( */}
-            <Table
-                heading={"All Messages"}
-                columns={columns}
-                rows={rows}
-                rowHeight={200}
-            />
-            {/* )} */}
-        </>
+            ) : (
+                <Table
+                    heading={"All Messages"}
+                    columns={columns}
+                    rows={rows}
+                    rowHeight={100}
+                />
+            )}
+        </Container>
     );
 };
 

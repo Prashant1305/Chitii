@@ -14,6 +14,7 @@ const allUsers = async (req, res, next) => {
                     Conversation.countDocuments({ members: _id, group_chat: false })
                 ])
                 return ({
+                    _id,
                     groups: groups,
                     friends: friends,
                     avatar_url,
@@ -50,14 +51,14 @@ const allMessages = async (req, res, next) => {
     try {
         const messages = await Message.find({})
             .populate("sender", "user_name avatar_url")
-            .populate("conversation", "groupChat name");
+            .populate("conversation", "group_chat name");
 
         const transformedMessages = messages.map(({ _id, attachments, text_content, sender, conversation, createdAt }) => {
             return ({
                 _id,
                 attachments,
                 text_content,
-                sentby: sender,
+                sender,
                 chat: conversation,
                 createdAt
             })

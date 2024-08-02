@@ -98,7 +98,7 @@ const login = async (req, res, next) => {
                     gender: user.gender,
                     avatar_url: user.avatar_url,
                     createdAt: user.createdAt,
-                    admin: user.admin
+                    isAdmin: user.isAdmin
                 }
             });
     } catch (error) {

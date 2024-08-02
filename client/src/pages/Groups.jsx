@@ -1,4 +1,4 @@
-import { Box, Button, Drawer, Grid, IconButton, Skeleton, Stack, TextField, Tooltip, Typography } from '@mui/material'
+import { Avatar, AvatarGroup, Box, Button, Drawer, Grid, IconButton, Skeleton, Stack, TextField, Tooltip, Typography } from '@mui/material'
 import React, { Suspense, lazy, memo, useCallback, useEffect, useState } from 'react'
 import { KeyboardBackspace as KeyboardBackspaceIcon, Menu as MenuIcon, Edit as EditIcon, Done as DoneIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material"
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -98,7 +98,6 @@ function Groups() {
     }
 
     const closeConfirmDeleteHandler = () => {
-        console.log("closeConfirmDeleteHandle")
         setConfirmDeleteDialogOpen(false);
     }
     const getGroupList = async () => {
@@ -387,7 +386,15 @@ const GroupListItem = memo(({ group, chatId }) => {
         }
     }}>
         <Stack direction={"row"} alignItems={"center"} width={"100%"}>
-            <AvatarCard avatar={avatar_urls} />
+            <AvatarGroup max={3} sx={{
+                marginRight: "1rem"
+            }}>
+                {(
+                    avatar_urls.map((i, index) => (
+                        <Avatar key={index} src={i} />
+                    ))
+                )}
+            </AvatarGroup>
             <Typography>{name}</Typography>
         </Stack>
     </Link >)

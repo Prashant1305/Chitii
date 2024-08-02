@@ -8,8 +8,6 @@ const store = configureStore({
         [authSlice.name]: authSlice.reducer,
         [chatSlice.name]: chatSlice.reducer,
         [typingSlice.name]: typingSlice.reducer
-
-
     }
 });
 

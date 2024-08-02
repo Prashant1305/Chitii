@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Drawer, Grid, Skeleton } from '@mui/material'
 import ChatList from '../components/chatList/ChatList'
@@ -13,6 +13,7 @@ import { useSocketEvent } from '../hooks/socket_hooks'
 import { REFETCH_CHATS, START_TYPING, STOP_TYPING } from '../components/constants/events'
 import { GetSocket } from '../utils/Socket'
 import { popInTypingArray, pushInTypingArray } from '../redux/reducers/typing'
+import DeleteChatMenu from '../components/Dialogs/DeleteChatMenu'
 
 function ChatWindow() {
     const params = useParams();
@@ -20,9 +21,14 @@ function ChatWindow() {
     const [chatIsLoading, setChatIsLoading] = useState(false);
     const { uiState, setUiState } = MyToggleUiValues()
     const [chats, setChats] = useState([])
-    const handleDeleteChat = (e, _id, groupChat) => {
+    const deleteMenuAnchor = useRef(null)
+    const [deleteChat, setDeleteChat] = useState({});
+
+    const handleDeleteChat = (e, _id, group_chat) => {
         e.preventDefault();
-        console.log("delete chat", _id, groupChat)
+        setDeleteChat({ _id, group_chat });
+        deleteMenuAnchor.current = e.currentTarget;
+        // try
     }
     const chatNotification = useSelector(state => state.chat);
     const socket = GetSocket();
@@ -90,6 +96,7 @@ function ChatWindow() {
                     backgroundImage: "linear-gradient(#A9FF99, rgb(217, 234, 237))",
                     border: "1px solid white"
                 }} height={"100%"} >
+                <DeleteChatMenu deleteMenuAnchor={deleteMenuAnchor} deleteChat={deleteChat} setDeleteChat={setDeleteChat} />
                 {
                     chatIsLoading ? <Skeleton
                         animation="wave"
@@ -142,7 +149,6 @@ function ChatWindow() {
                     }
                 }}
                 open={uiState.isMobileOpen} onClose={() => {
-                    console.log("clicked")
                     setUiState({ ...uiState, isMobileOpen: false })
                 }}>
                 {chatIsLoading ? <Skeleton
@@ -154,10 +160,7 @@ function ChatWindow() {
                     <ChatList
                         chats={chats}
                         chatId={chatId}
-                        newMessagesAlert={[{
-                            chatId,
-                            count: 4
-                        }]}
+                        newMessagesAlert={chatNotification.newMessageAlert}
                         handleDeleteChat={handleDeleteChat}
                         onlineUsers={["1", "2"]} />}
             </Drawer>
