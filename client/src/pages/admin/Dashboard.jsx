@@ -1,11 +1,32 @@
 import { AdminPanelSettings as AdminPanelSettingsIcon, Message as MessageIcon, Group as GroupIcon, Person as PersonIcon, } from '@mui/icons-material'
 import { Box, Container, Paper, Stack, Typography } from '@mui/material'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import moment from 'moment'
 import { CurveButton, SearchField } from '../../components/styles/StyledComponent'
 import { DoughnutChart, LineChart } from '../../components/specific/Charts'
+import { dashboard_stats_api } from '../../utils/ApiUtils'
 
 function Dashboard() {
+    const [data, setData] = useState({});
+    const [loading, setLoading] = useState(false);
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const response = await dashboard_stats_api();
+                if (response.status === 200) {
+                    setData(response.data.message);
+                    setLoading(false);
+                } else {
+                    console.log(response.data.message);
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        fetchData();
+    }, [])
+
     const Appbar = (
         <Paper
             elevation={3}
@@ -38,9 +59,9 @@ function Dashboard() {
             alignItems={"center"}
             margin={"2rem 0"}
         >
-            <Widget title={"Users"} Icon={<PersonIcon />} />
-            <Widget title={"Chats"} Icon={<GroupIcon />} />
-            <Widget title={"Messages"} Icon={<MessageIcon />} />
+            <Widget title={"Users"} Icon={<PersonIcon />} value={data?.usersCount} />
+            <Widget title={"Chats"} Icon={<GroupIcon />} value={data?.groupChatCount} />
+            <Widget title={"Messages"} Icon={<MessageIcon />} value={data?.messageCount} />
         </Stack>
     );
     return (
@@ -59,7 +80,7 @@ function Dashboard() {
                         maxWidth: "45rem"
                     }}>
                         <Typography>Last Messages</Typography>
-                        <LineChart value={[3, 4, 9, 6, 2, 7, 8]} />
+                        <LineChart value={data.messageCountofLastSevenDays} />
                     </Paper >
 
                     <Paper elevation={3}
@@ -73,7 +94,7 @@ function Dashboard() {
                             position: "relative",
                             maxWidth: "25rem",
                         }}>
-                        <DoughnutChart labels={['single chat', 'Group chats']} value={[23, 66]} />
+                        <DoughnutChart labels={['single chat', 'Group chats']} value={[data?.privateChatCount, data?.groupChatCount]} />
                         <Stack
                             position={"absolute"}
                             direction={"row"}

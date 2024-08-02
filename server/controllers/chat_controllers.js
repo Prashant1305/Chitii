@@ -316,7 +316,29 @@ const leaveGroup = async (req, res, next) => {
             chat.creator = chat.members[0];
         }
         chat.save();
-        emitEvent(req, ALERT, chat.members, `${req.clientAuthData.user_name} has leaved ${chat.name}`)
+
+        const messageForDb = { sender: req.clientAuthData._id, conversation: chatId, text_content: ` ${req.clientAuthData.user_name} left this group`, attachments: [] }
+
+        const dbMessageSaved = await Message.create(messageForDb);
+
+        const messageNotification = {
+            sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name },
+            conversation: messageForDb.conversation, text_content: messageForDb.text_content, attachments: messageForDb.attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt
+        }
+
+        const allMembers = chat.members.filter((member) => (member + "" !== req.clientAuthData._id + ""))
+        const io = req.app.get('socketio'); // Retrieve io instance from app
+        const modifiedAllMember = allMembers.map((member) => ({ _id: member }))
+        const membersSocket = getSockets(modifiedAllMember, activeUserSocketIDs);
+        const removedMemberSocket = getSockets([{ _id: req.clientAuthData._id }], activeUserSocketIDs)
+
+        if (membersSocket.length > 0) {
+            io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
+        }
+        if (removedMemberSocket) {
+            io.to(removedMemberSocket).emit(REFETCH_CHATS, {});
+        }
+
         res.status(200).json({ message: "Group leaved successfully" });
 
     } catch (error) {
@@ -467,7 +489,7 @@ const deleteChat = async (req, res, next) => {
         if (membersSocket.length > 0) {
             io.to(membersSocket).emit(REFETCH_CHATS, {});
         }
-        // emitEvent(req, REFETCH_CHATS, chat.members);
+
         return res.status(200).json({ message: "Chat deleted succesfully" });
 
     } catch (error) {

@@ -11,6 +11,7 @@ import { GetSocket } from '../../utils/Socket'
 import { useDispatch } from 'react-redux'
 import { incrementNotificationCount, setNewMessagesAlert } from '../../redux/reducers/chat'
 import { toast } from 'react-toastify'
+import { LayoutLoader } from './Loders'
 
 function PublicLayout() {
     const params = useParams();
@@ -23,8 +24,6 @@ function PublicLayout() {
     }
 
     const newMessageHandler = useCallback((data) => {
-        console.log("newMessageHandler event triggereed and sensed at client", data);
-
         dispatch(setNewMessagesAlert(data));
 
     }, []);

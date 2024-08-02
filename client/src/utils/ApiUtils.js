@@ -175,3 +175,43 @@ export const delete_conversation_api = async (data) => {
     })
     return res;
 }
+
+export const leave_group_api = async (id) => {
+    const url = `${baseUrl}/api/chat/leave/${id}`
+    const res = await axios.delete(url, {
+        withCredentials: true,
+    })
+    return res;
+}
+
+export const admin_alluser_api = async () => {
+    const url = `${baseUrl}/api/admin/allusers`
+    const res = await axios.get(url, {
+        withCredentials: true,
+    })
+    return res;
+}
+
+export const dashboard_stats_api = async () => {
+    const url = `${baseUrl}/api/admin/dashboardstats`
+    const res = await axios.get(url, {
+        withCredentials: true,
+    })
+    return res;
+}
+
+export const all_chats_api = async () => {
+    const url = `${baseUrl}/api/admin/allchats`;
+    const res = await axios.get(url, {
+        withCredentials: true,
+    })
+    return res;
+}
+
+export const all_messages_api = async () => {
+    const url = `${baseUrl}/api/admin/allmessages`
+    const res = await axios.get(url, {
+        withCredentials: true,
+    })
+    return res;
+}

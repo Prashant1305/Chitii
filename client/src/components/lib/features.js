@@ -32,7 +32,7 @@ const getLast7Days = () => {
 }
 
 const transformImage = (url = "", width = 200) => {
-    const newUrl = url.replace("upload/", `upload/dpr_auto/w_${width}/`);
+    const newUrl = url?.replace("upload/", `upload/dpr_auto/w_${width}/`);
 
     return newUrl;
 };

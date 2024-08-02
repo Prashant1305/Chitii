@@ -5,6 +5,8 @@ import AdminLayout from "../../components/layout/AdminLayout";
 import Table from "../../components/shared/Table";
 
 import { transformImage } from "../../components/lib/features";
+import { toast } from "react-toastify";
+import { admin_alluser_api } from "../../utils/ApiUtils";
 
 const columns = [
     {
@@ -14,23 +16,23 @@ const columns = [
         width: 200,
     },
     {
-        field: "avatar",
+        field: "avatar_url",
         headerName: "Avatar",
         headerClassName: "table-header",
         width: 150,
         renderCell: (params) => (
-            <Avatar alt={params.row.name} src={params.row.avatar} />
+            <Avatar alt={params.row.name} src={params.row.avatar_url} />
         ),
     },
 
     {
-        field: "name",
+        field: "full_name",
         headerName: "Name",
         headerClassName: "table-header",
         width: 200,
     },
     {
-        field: "username",
+        field: "user_name",
         headerName: "Username",
         headerClassName: "table-header",
         width: 200,
@@ -52,26 +54,38 @@ const UserManagement = () => {
 
 
     const [rows, setRows] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
-    // useEffect(() => {
-    //     if (data) {
-    //         setRows(
-    //             data.users.map((i) => ({
-    //                 ...i,
-    //                 id: i._id,
-    //                 avatar: transformImage(i.avatar, 50),
-    //             }))
-    //         );
-    //     }
-    // }, [data]);
+    useEffect(() => {
+        const fetchUsers = async () => {
+            setIsLoading(true);
+            try {
+                const res = await admin_alluser_api();
+                if (res.status = 200) {
+                    setRows(
+                        res.data.message.map((i) => ({
+                            ...i,
+                            id: i._id,
+
+                        })))
+                    setIsLoading(false);
+                }
+            } catch (error) {
+                console.log(error)
+                toast.error(error?.response?.data?.message || "failed to retrive All users, plz try later");
+            }
+        }
+        fetchUsers();
+
+    }, []);
 
     return (
         <Container>
-            {/* {loading ? (
+            {isLoading ? (
                 <Skeleton height={"100vh"} />
-            ) : ( */}
-            <Table heading={"All Users"} columns={columns} rows={rows} />
-            {/* )} */}
+            ) : (
+                <Table heading={"All Users"} columns={columns} rows={rows} />
+            )}
         </Container>
     );
 };

@@ -1,5 +1,5 @@
 import { Stack } from '@mui/material'
-import React from 'react'
+import React, { memo } from 'react'
 import ChatItem from './ChatItem'
 import { useSelector } from 'react-redux';
 
@@ -18,8 +18,7 @@ function ChatList({
         <Stack width={w} direction={"column"} overflow={"auto"} height={"100%"}>
             {
                 chats?.map((data, index) => {
-                    const { avatar_url, _id, name, groupChat, members } = data;
-                    // console.log(_id)
+                    const { avatar_url, _id, name, group_chat, members } = data;
                     const newMessageAlert = newMessagesAlert.find((alert) => alert.chatId === _id);
                     const isOnline = members.some((member) => onlineUsers.includes(_id))
                     return (
@@ -31,10 +30,10 @@ function ChatList({
                                 return member.avatar_url;
                             })}
 
-                            name={groupChat ? name : name.replace("-", "").replace(user.user_name, "")}
+                            name={group_chat ? name : name.replace("-", "").replace(user.user_name, "")}
                             _id={_id}
                             key={_id}
-                            groupChat={groupChat}
+                            group_chat={group_chat}
                             sameSender={chatId === _id}
                             handleDeleteChat={handleDeleteChat}
                         />
@@ -45,4 +44,4 @@ function ChatList({
     )
 }
 
-export default ChatList
+export default memo(ChatList);

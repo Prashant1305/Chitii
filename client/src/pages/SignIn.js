@@ -14,9 +14,11 @@ function SignIn() {
     const [btnActive, setbtnActive] = useState(false);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [loginLoading, setLoginLoading] = useState(false)
     const handlesubmit = async (e) => {
         e.preventDefault();
         const toastId = toast.loading("verifying...")
+        setLoginLoading(true)
         try {
             const res = await login_api({ emailOrUsername: userData.email, password: userData.password });
             if (res.status === 200) {
@@ -49,6 +51,9 @@ function SignIn() {
             dispatch(userNotExist())
             console.log(error);
         }
+        finally {
+            setLoginLoading(false)
+        }
     }
     const handleChange = (e) => {
         setUserData({ ...userData, [e.target.id]: e.target.value });
@@ -80,7 +85,7 @@ function SignIn() {
                                 <input type='password' name="password" id="password" placeholder='At least 6 character' onChange={(e) => { handleChange(e) }} value={userData.password} />
                             </div>
 
-                            {btnActive && <button className='signin_btn' onClick={(e) => {
+                            {btnActive && <button className='signin_btn' disabled={loginLoading} onClick={(e) => {
                                 handlesubmit(e);
                             }}>Submit</button >}
 
