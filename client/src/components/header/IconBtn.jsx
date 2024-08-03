@@ -11,7 +11,9 @@ function IconBtn({ title, icon, value, handleClick = () => { }, pathname }) {
             borderBottom: currUrl.pathname === pathname ? "2px solid cyan" : "none",
         }}  >
             <Tooltip title={title} onClick={() => {
-                navigate(pathname);
+                if (pathname) {
+                    navigate(pathname);
+                }
                 handleClick();
             }}>
                 <IconButton color='inherit' >
