@@ -85,7 +85,6 @@ const ChatManagement = () => {
                         id: i._id,
                         totalMembers: i.members.length,
                         members_dp: i.members.map((member) => member.avatar_url),
-                        totalMessages: "99",
                     })));
                 }
             } catch (error) {

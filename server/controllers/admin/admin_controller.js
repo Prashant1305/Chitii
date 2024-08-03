@@ -36,9 +36,13 @@ const allChats = async (req, res, next) => {
     try {
         const chats = await Conversation.find({})
             .populate("members", "user_name avatar_url")
-            .populate("creator", "user_name avatar_url");
+            .populate("creator", "user_name avatar_url").lean();
 
-        res.status(200).json({ message: chats })
+        const modifiedChats = await Promise.all(chats.map(async (chat) => {
+            const totalMessages = await Message.countDocuments({ conversation: chat._id }).lean()
+            return { ...chat, totalMessages }
+        }))
+        res.status(200).json({ message: modifiedChats })
     } catch (error) {
         const err = new Error("unable to get whole chat list, plz try later");
         err.status = 501;
