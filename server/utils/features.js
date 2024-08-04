@@ -70,36 +70,41 @@ const comingOnlineFeature = (socket, io) => {
         const friendSocketIds = getSockets([...onlineFriends, { _id: userId }], activeUserSocketIDs); // adding userId so that he can receive online users
 
         if (friendSocketIds.length > 0) {
-            io.to(friendSocketIds).emit(ONLINE_USERS, { users: [...onlineFriends.map((friend) => friend._id), userId] })
+            io.to(friendSocketIds).emit(ONLINE_USERS, { users: Array.from(onlineUsersIds) })
         }
     })
 }
+
+const functionCalledForGoingOffline = async (socket, io) => {
+    const userId = socket.clientAuthData._id
+    onlineUsersIds.delete(userId.toString());
+
+    // finding friend
+    const chats = await Conversation.find({ members: userId, group_chat: false }).lean()
+
+    const friendsIds = [];
+    chats.forEach((chat) => {
+        if (chat.members[0] + "" === userId + "") {
+            friendsIds.push({ _id: chat.members[1] })
+
+        } else {
+            friendsIds.push({ _id: chat.members[0] })
+        }
+    })
+
+    const onlineFriends = friendsIds.filter((friend) => onlineUsersIds.has(friend._id + ""))
+    const friendSocketIds = getSockets(onlineFriends, activeUserSocketIDs);
+
+    if (friendSocketIds.length > 0) {
+        io.to(friendSocketIds).emit(ONLINE_USERS, { users: Array.from(onlineUsersIds) })
+    }
+}
+
 const goingOfflineFeature = (socket, io) => {
     socket.on(CHAT_LEFT, async () => {
 
-        const userId = socket.clientAuthData._id
-        onlineUsersIds.delete(userId.toString());
-
-        // finding friend
-        const chats = await Conversation.find({ members: userId, group_chat: false }).lean()
-
-        const friendsIds = [];
-        chats.forEach((chat) => {
-            if (chat.members[0] + "" === userId + "") {
-                friendsIds.push({ _id: chat.members[1] })
-
-            } else {
-                friendsIds.push({ _id: chat.members[0] })
-            }
-        })
-
-        const onlineFriends = friendsIds.filter((friend) => onlineUsersIds.has(friend._id + ""))
-        const friendSocketIds = getSockets(onlineFriends, activeUserSocketIDs);
-
-        if (friendSocketIds.length > 0) {
-            io.to(friendSocketIds).emit(ONLINE_USERS, { users: onlineFriends.map((friend) => friend._id) })
-        }
+        await functionCalledForGoingOffline(socket, io)
     })
 }
 
-module.exports = { emitEvent, startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature };
+module.exports = { emitEvent, startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature, functionCalledForGoingOffline };
