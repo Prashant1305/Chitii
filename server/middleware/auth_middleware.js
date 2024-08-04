@@ -41,7 +41,7 @@ const socketAuthenticator = async (err, socket, next) => {
             return next(err)
         }
         const accessToken = socket.request.cookies.accessToken;
-        console.log("from socket auth middleware", accessToken)
+        // console.log("from socket auth middleware", accessToken)
 
         if (!accessToken) {
             return next(new Error("no access token found"));
@@ -51,6 +51,7 @@ const socketAuthenticator = async (err, socket, next) => {
         const clientAuthData = await User.findOne({ "email": decodedData.email }).select({ password: 0 })
         // console.log(clientAuthData)
         if (!clientAuthData) {
+            socket.disconnect(true); // Forcefully disconnect
             return next(new Error("token did not match any data"));
         }
         socket.clientAuthData = clientAuthData;
@@ -64,4 +65,5 @@ const socketAuthenticator = async (err, socket, next) => {
         return next()
     }
 }
+
 module.exports = { verifyJwt, socketAuthenticator };

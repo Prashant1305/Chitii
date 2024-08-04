@@ -7,7 +7,7 @@ import FileMenu from '../Dialogs/FileMenu';
 import { sampleMessage } from '../constants/sampleData';
 import MessageComponent from '../shared/MessageComponent';
 import { GetSocket } from '../../utils/Socket';
-import { NEW_MESSAGE, START_TYPING, STOP_TYPING } from '../constants/events';
+import { CHAT_JOINED, NEW_MESSAGE, START_TYPING, STOP_TYPING } from '../constants/events';
 import { all_messages_of_chat, chat_details, send_message_api } from '../../utils/ApiUtils';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
@@ -23,7 +23,6 @@ function Chat({ chatId }) {
     const containerRef = useRef(null)
     const containerRef1 = useRef(null)
     const bottomScrollRef = useRef(null)
-
 
     const socket = GetSocket()
     const [sendMessage, setSendMessage] = useState({ attachments: undefined, conversationId: chatId, text_content: "" });

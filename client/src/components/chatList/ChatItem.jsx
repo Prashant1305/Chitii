@@ -59,7 +59,7 @@ function ChatItem({
                 </AvatarGroup>
 
                 <Stack >
-                    <Typography variant="h5">{name}</Typography>
+                    <Typography variant="h5" >{name}</Typography>
                     {newMessageAlert && (
                         <Typography variant="body2">{newMessageAlert.count} New Message</Typography>
                     )}
@@ -71,11 +71,12 @@ function ChatItem({
                             width: "10px",
                             height: "10px",
                             borderRadius: "50%",
-                            backgroundColor: "rgb(0, 200, 200)",
+                            backgroundColor: "cyan",
                             position: "absolute",
-                            top: "50%",
+                            top: "30%",
                             right: "1rem",
-                            transform: "translateY(-50%)"
+                            transform: "translateY(-50%)",
+                            border: "1px solid rgb(46, 99, 91)"
                         }}>
                         </Box>
                     )

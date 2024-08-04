@@ -375,7 +375,7 @@ const sendMessage = async (req, res, next) => {
 
             const dbMessageSaved = await Message.create(messageForDb);
 
-            const messageNotification = { sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name }, conversation: conversationId, text_content, attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt }
+            const messageNotification = { sender: { _id: req.clientAuthData._id, user_name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url }, conversation: conversationId, text_content, attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt }
 
             const io = req.app.get('socketio'); // Retrieve io instance from app
             const membersSocket = getSockets(chat.members, activeUserSocketIDs);
