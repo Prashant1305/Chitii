@@ -18,8 +18,8 @@ const { getSockets } = require("./utils/helper");
 const Conversation = require("./models/conversation_model");
 const Message = require("./models/message_model");
 const { socketAuthenticator } = require("./middleware/auth_middleware");
-const { activeUserSocketIDs } = require("./utils/activeUsersInSockets");
-const { startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature } = require("./utils/features");
+const { activeUserSocketIDs, onlineUsersIds } = require("./utils/activeUsersInSockets");
+const { startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature, functionCalledForGoingOffline } = require("./utils/features");
 
 const PORT = process.env.PORT || 3012;
 const app = express();
@@ -142,6 +142,13 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         // console.log("user disconnected");
         activeUserSocketIDs.delete(user?._id.toString());
+        console.log("befor", onlineUsersIds)
+        if (socket?.clientAuthData?._id.toString()) {
+            onlineUsersIds.delete(socket.clientAuthData._id.toString());
+            functionCalledForGoingOffline(socket, io);
+            console.log("after", onlineUsersIds)
+        }
+        //stop typing event to firends
     });
 });
 
