@@ -1,14 +1,14 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { Outlet, useParams } from 'react-router-dom'
 import Header from '../header/Header'
 import { Grid } from '@mui/material'
 import ChatList from '../chatList/ChatList'
 import { sampledChats } from '../constants/sampleData'
 import Profile from '../profile.jsx/Profile'
-import { NEW_MESSAGE, NEW_MESSAGE_ALERTS, NEW_REQUEST } from '../constants/events'
+import { CHAT_JOINED, CHAT_LEFT, NEW_MESSAGE, NEW_MESSAGE_ALERTS, NEW_REQUEST } from '../constants/events'
 import { useSocketEvent } from '../../hooks/socket_hooks'
 import { GetSocket } from '../../utils/Socket'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { incrementNotificationCount, setNewMessagesAlert } from '../../redux/reducers/chat'
 import { toast } from 'react-toastify'
 import { LayoutLoader } from './Loders'
@@ -18,10 +18,8 @@ function PublicLayout() {
     const chatId = params.chatId;
     const socket = GetSocket();
     const dispatch = useDispatch();
-    const handleDeleteChat = (e, _id, groupChat) => {
-        e.preventDefault();
-        console.log("delete chat", _id, groupChat)
-    }
+
+    const { user } = useSelector(state => state.auth);
 
     const newMessageHandler = useCallback((data) => {
         dispatch(setNewMessagesAlert(data));
@@ -39,9 +37,20 @@ function PublicLayout() {
     }
     useSocketEvent(socket, eventHandlers);
 
+    useEffect(() => {
+        if (user) {
+            socket.emit(CHAT_JOINED, {})
+        } else {
+            socket.emit(CHAT_LEFT, {})
+        }
+        return (() => {
+            // if user leaves public section of application, then he will be offline
+            socket.emit(CHAT_LEFT, {});
+        })
+    }, [user])
+
     return (
         <>
-
             <Header />
             <Grid container height={"calc(100vh - 4rem)"}>
                 {/* <Grid item

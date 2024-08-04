@@ -1,5 +1,5 @@
 import { AdminPanelSettings as AdminPanelSettingsIcon, Message as MessageIcon, Group as GroupIcon, Person as PersonIcon, } from '@mui/icons-material'
-import { Box, Container, Paper, Stack, Typography } from '@mui/material'
+import { Box, Container, Paper, Skeleton, Stack, Typography } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import moment from 'moment'
 import { CurveButton, SearchField } from '../../components/styles/StyledComponent'
@@ -65,53 +65,55 @@ function Dashboard() {
         </Stack>
     );
     return (
-        <>
-            <Container component={"main"}>
-                {Appbar}
-                <Stack direction={{ xs: "column", lg: "row" }} flexWrap={"wrap"} justifyContent={'center'} alignItems={{
-                    xs: "center",
-                    lg: "flex-start",
-                }}
-                    sx={{ gap: "2rem" }}>
-                    <Paper elevation={3} sx={{
-                        padding: "2rem 3.5rem",
-                        borderRadius: "1rem",
-                        width: "100%",
-                        maxWidth: "45rem"
-                    }}>
-                        <Typography>Last Messages</Typography>
-                        <LineChart value={data.messageCountofLastSevenDays} />
-                    </Paper >
-
-                    <Paper elevation={3}
-                        sx={{
-                            padding: "1rem ",
+        <Container component={"main"}>
+            {loading ? <Skeleton height={"90vh"} /> :
+                <>
+                    {Appbar}
+                    <Stack direction={{ xs: "column", lg: "row" }} flexWrap={"wrap"} justifyContent={'center'} alignItems={{
+                        xs: "center",
+                        lg: "flex-start",
+                    }}
+                        sx={{ gap: "2rem" }}>
+                        <Paper elevation={3} sx={{
+                            padding: "2rem 3.5rem",
                             borderRadius: "1rem",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            width: { xs: "100%", sm: "50%" },
-                            position: "relative",
-                            maxWidth: "25rem",
+                            width: "100%",
+                            maxWidth: "45rem"
                         }}>
-                        <DoughnutChart labels={['single chat', 'Group chats']} value={[data?.privateChatCount, data?.groupChatCount]} />
-                        <Stack
-                            position={"absolute"}
-                            direction={"row"}
-                            justifyContent={"center"}
-                            alignItems={"center"}
-                            spacing={"0.5rem"}
-                            width={"100%"}
-                            height={"100%"}
-                        >
-                            <GroupIcon /> <Typography>Vs </Typography>
-                            <PersonIcon />
-                        </Stack>
-                    </Paper>
-                </Stack>
-                {Widgets}
-            </Container>
-        </>
+                            <Typography>Last Messages</Typography>
+                            <LineChart value={data.messageCountofLastSevenDays} />
+                        </Paper >
+
+                        <Paper elevation={3}
+                            sx={{
+                                padding: "1rem ",
+                                borderRadius: "1rem",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                width: { xs: "100%", sm: "50%" },
+                                position: "relative",
+                                maxWidth: "25rem",
+                            }}>
+                            <DoughnutChart labels={['single chat', 'Group chats']} value={[data?.privateChatCount, data?.groupChatCount]} />
+                            <Stack
+                                position={"absolute"}
+                                direction={"row"}
+                                justifyContent={"center"}
+                                alignItems={"center"}
+                                spacing={"0.5rem"}
+                                width={"100%"}
+                                height={"100%"}
+                            >
+                                <GroupIcon /> <Typography>Vs </Typography>
+                                <PersonIcon />
+                            </Stack>
+                        </Paper>
+                    </Stack>
+                    {Widgets}
+                </>
+            }
+        </Container>
     )
 }
 

@@ -19,15 +19,32 @@ function Search() {
     const [isLoadingSendFriendRequest, setIsLoadingSendFriendRequest] = useState([]);
     const addFriendHandler = async (id) => {
         setIsLoadingSendFriendRequest([...isLoadingSendFriendRequest, id]);
-        toast.info("loading");
+        const toastId = toast.loading("sending friend request...");
         try {
             const res = await send_friend_request(id);
             if (res.status === 200) {
-                toast.success("Friend Request Sent Successfully");
+                toast.update(toastId, {
+                    render: "friend request sent successfully",
+                    type: "success",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
+            } else {
+                toast.update(toastId, {
+                    render: res.data.message || "oops",
+                    type: "info",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
             }
         } catch (error) {
             console.log(error)
-            toast.error(error.response.data.message || "failed to send request, plz try later")
+            toast.update(toastId, {
+                render: error?.response?.data?.message || "failed to send request, plz try later",
+                type: "error",
+                isLoading: false,
+                autoClose: 1000,
+            })
         }
         finally {
             setIsLoadingSendFriendRequest(isLoadingSendFriendRequest.filter((item) => item !== id));

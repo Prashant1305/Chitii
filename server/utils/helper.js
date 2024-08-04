@@ -1,6 +1,6 @@
 // const { activeUserSocketIDs } = require("../app")
 
-const getSockets = (users = [], activeUserSocketIDs) => {
+const getSockets = (users = [], activeUserSocketIDs) => {// user [{_id:"qwrr"},{_id:"qansf"}]
     // console.log(users)
     console.log(activeUserSocketIDs)
     const sockets = users.map((user) => {

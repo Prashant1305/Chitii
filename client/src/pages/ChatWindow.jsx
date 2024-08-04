@@ -10,7 +10,7 @@ import { toast } from 'react-toastify'
 import { get_my_chats } from '../utils/ApiUtils'
 import { useDispatch, useSelector } from 'react-redux'
 import { useSocketEvent } from '../hooks/socket_hooks'
-import { REFETCH_CHATS, START_TYPING, STOP_TYPING } from '../components/constants/events'
+import { CHAT_JOINED, ONLINE_USERS, REFETCH_CHATS, START_TYPING, STOP_TYPING } from '../components/constants/events'
 import { GetSocket } from '../utils/Socket'
 import { popInTypingArray, pushInTypingArray } from '../redux/reducers/typing'
 import DeleteChatMenu from '../components/Dialogs/DeleteChatMenu'
@@ -23,6 +23,7 @@ function ChatWindow() {
     const [chats, setChats] = useState([])
     const deleteMenuAnchor = useRef(null)
     const [deleteChat, setDeleteChat] = useState({});
+    const [onlineUsers, setOnlineUsers] = useState([]);
 
     const handleDeleteChat = (e, _id, group_chat) => {
         e.preventDefault();
@@ -73,14 +74,19 @@ function ChatWindow() {
         dispatch(popInTypingArray(data))
     }, [])
 
-    const eventHandler = { [START_TYPING]: startTypingListner, [STOP_TYPING]: stopTypingListener, [REFETCH_CHATS]: refetchChatsListner }
+    const onlineListner = useCallback((data) => {
+        console.log("onlineListner", data)
+        setOnlineUsers(data.users);
+    }, [])
+
+    const eventHandler = { [START_TYPING]: startTypingListner, [STOP_TYPING]: stopTypingListener, [REFETCH_CHATS]: refetchChatsListner, [ONLINE_USERS]: onlineListner }
 
     useSocketEvent(socket, eventHandler);
 
     useEffect(() => {
         my_chats();
         setUiState((prev) => ({ ...prev, mobileBtnExist: true }))
-
+        socket.emit(CHAT_JOINED, {})// firing to get online users
         return () => {
             setUiState((prev) => ({ ...prev, mobileBtnExist: false }))
         };
@@ -111,7 +117,7 @@ function ChatWindow() {
                         chatId={chatId}
                         newMessagesAlert={chatNotification.newMessageAlert}
                         handleDeleteChat={handleDeleteChat}
-                        onlineUsers={["1", "2"]} />
+                        onlineUsers={onlineUsers} />
                 }
                 {/* <ChatList
                     chats={chats}
@@ -162,7 +168,7 @@ function ChatWindow() {
                         chatId={chatId}
                         newMessagesAlert={chatNotification.newMessageAlert}
                         handleDeleteChat={handleDeleteChat}
-                        onlineUsers={["1", "2"]} />}
+                        onlineUsers={onlineUsers} />}
             </Drawer>
             )}
         </Grid>

@@ -19,7 +19,7 @@ const Conversation = require("./models/conversation_model");
 const Message = require("./models/message_model");
 const { socketAuthenticator } = require("./middleware/auth_middleware");
 const { activeUserSocketIDs } = require("./utils/activeUsersInSockets");
-const { startTypingFeature, stopTypingFeature } = require("./utils/features");
+const { startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature } = require("./utils/features");
 
 const PORT = process.env.PORT || 3012;
 const app = express();
@@ -58,6 +58,8 @@ io.use((socket, next) => {
         return await socketAuthenticator(err, socket, next);
     });
 });
+
+// io.use(socketAuthenticator);
 
 // checking connection
 app.get('/check', (req, res) => {
@@ -134,9 +136,11 @@ io.on("connection", (socket) => {
 
     startTypingFeature(socket, io);
     stopTypingFeature(socket, io);
+    comingOnlineFeature(socket, io);
+    goingOfflineFeature(socket, io);
 
     socket.on("disconnect", () => {
-        console.log("user disconnected");
+        // console.log("user disconnected");
         activeUserSocketIDs.delete(user?._id.toString());
     });
 });
