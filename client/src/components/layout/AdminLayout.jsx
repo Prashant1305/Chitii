@@ -1,16 +1,15 @@
 import { Chat as ChatIcon, Dashboard as DashboardIcon, Home as HomeIcon, KeyboardBackspace as KeyboardBackspaceIcon, ManageAccounts as ManageAccountsIcon } from "@mui/icons-material";
 import { Drawer, IconButton, Stack, Tooltip, Typography, styled } from '@mui/material';
 import { React, useEffect } from 'react';
-import { Link as LinkCopmenent, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link as LinkCopmenent, Outlet, useNavigate } from 'react-router-dom';
 import { MyToggleUiValues } from '../../context/ToggleUi';
 import AdminHeader from '../header/AdminHeader';
 
 function AdminLayout() {
-    const { isMobileOpen, setIsmobileOpen, mobileBtnExist, setMobileBtnExist } = MyToggleUiValues();
+    const { isMobileOpen, setIsmobileOpen } = MyToggleUiValues();
     const { uiState, setUiState } = MyToggleUiValues();
 
     const navigate = useNavigate();
-    const location = useLocation();
 
     const backBtn = <Tooltip title="back">
         <IconButton sx={{
@@ -95,7 +94,6 @@ function AdminLayout() {
                     alignItems: "center",
                     position: "relative",
                     padding: "1rem 3rem",
-                    height: "100%",
                     overflow: "auto",
                     height: "calc(100vh - 4rem)"
                 }}>

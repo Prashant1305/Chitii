@@ -1,10 +1,8 @@
 
 import { Avatar, Container, Skeleton } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import AdminLayout from "../../components/layout/AdminLayout";
 import Table from "../../components/shared/Table";
 
-import { transformImage } from "../../components/lib/features";
 import { toast } from "react-toastify";
 import { admin_alluser_api } from "../../utils/ApiUtils";
 
@@ -61,7 +59,7 @@ const UserManagement = () => {
             setIsLoading(true);
             try {
                 const res = await admin_alluser_api();
-                if (res.status = 200) {
+                if (res.status === 200) {
                     setRows(
                         res.data.message.map((i) => ({
                             ...i,

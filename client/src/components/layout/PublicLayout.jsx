@@ -1,21 +1,16 @@
-import React, { useCallback, useEffect } from 'react'
-import { Outlet, useParams } from 'react-router-dom'
-import Header from '../header/Header'
 import { Grid } from '@mui/material'
-import ChatList from '../chatList/ChatList'
-import { sampledChats } from '../constants/sampleData'
-import Profile from '../profile.jsx/Profile'
-import { CHAT_JOINED, CHAT_LEFT, NEW_MESSAGE, NEW_MESSAGE_ALERTS, NEW_REQUEST } from '../constants/events'
-import { useSocketEvent } from '../../hooks/socket_hooks'
-import { GetSocket } from '../../utils/Socket'
+import React, { useCallback, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { incrementNotificationCount, setNewMessagesAlert } from '../../redux/reducers/chat'
+import { Outlet } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { LayoutLoader } from './Loders'
+import { useSocketEvent } from '../../hooks/socket_hooks'
+import { incrementNotificationCount, setNewMessagesAlert } from '../../redux/reducers/chat'
+import { GetSocket } from '../../utils/Socket'
+import { CHAT_JOINED, CHAT_LEFT, NEW_MESSAGE, NEW_REQUEST } from '../constants/events'
+import Header from '../header/Header'
+import Profile from '../profile.jsx/Profile'
 
 function PublicLayout() {
-    const params = useParams();
-    const chatId = params.chatId;
     const socket = GetSocket();
     const dispatch = useDispatch();
 

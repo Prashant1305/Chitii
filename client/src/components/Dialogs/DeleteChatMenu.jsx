@@ -43,7 +43,7 @@ function DeleteChatMenu({ deleteMenuAnchor, setDeleteChat, deleteChat }) {
         const toastId = toast.loading("Removing friend...")
         try {
             const res = await delete_conversation_api({ conversationId: deleteChat._id })
-            if (res.status = 200) {
+            if (res.status === 200) {
                 toast.update(toastId, {
                     render: "friend removed successfully",
                     type: "success",

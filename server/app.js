@@ -10,13 +10,7 @@ const user_routes = require("./routes/user_routes");
 const admin_routes = require("./routes/admin/admin_routes");
 const { Server } = require("socket.io");
 const { createServer } = require('http');
-const { v4 } = require("uuid");
-
 const bodyParser = require('body-parser');
-const { NEW_MESSAGE, START_TYPING } = require("./Constants/events");
-const { getSockets } = require("./utils/helper");
-const Conversation = require("./models/conversation_model");
-const Message = require("./models/message_model");
 const { socketAuthenticator } = require("./middleware/auth_middleware");
 const { activeUserSocketIDs, onlineUsersIds } = require("./utils/activeUsersInSockets");
 const { startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature, functionCalledForGoingOffline } = require("./utils/features");
@@ -27,7 +21,7 @@ const app = express();
 const allowedOrigins = [
     'http://www.example.com',
     `${process.env.CORS_ORIGIN}`,
-    'https://jq4m0xhj-3000.inc1.devtunnels.ms/'
+    'https://jq4m0xhj-3000.inc1.devtunnels.ms'
 ]
 
 var corsOptions = {
@@ -59,8 +53,6 @@ io.use((socket, next) => {
     });
 });
 
-// io.use(socketAuthenticator);
-
 // checking connection
 app.get('/check', (req, res) => {
     res.status(200).json({
@@ -88,12 +80,6 @@ app.use('/api/user', user_routes);
 app.use('/api/admin', admin_routes);
 
 
-
-// app.get('/api/event', (req, res, next) => {
-//     // console.dir(next)
-//     sendMessage(req, res, next, io)
-// })
-
 io.on("connection", (socket) => {
     const user = socket.clientAuthData;
     // user = {
@@ -101,7 +87,7 @@ io.on("connection", (socket) => {
     //     name: "lavda lassan"
     // }
     activeUserSocketIDs.set(user?._id.toString(), socket.id);
-    console.log(activeUserSocketIDs)
+    // console.log(activeUserSocketIDs)
 
     // socket.on(NEW_MESSAGE, async ({ chatId, message }) => {
     //     const messageForRealTime = {
@@ -142,11 +128,10 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         // console.log("user disconnected");
         activeUserSocketIDs.delete(user?._id.toString());
-        console.log("befor", onlineUsersIds)
+
         if (socket?.clientAuthData?._id.toString()) {
             onlineUsersIds.delete(socket.clientAuthData._id.toString());
             functionCalledForGoingOffline(socket, io);
-            console.log("after", onlineUsersIds)
         }
         //stop typing event to firends
     });

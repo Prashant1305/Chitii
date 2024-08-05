@@ -10,8 +10,6 @@ function Search() {
     const [searchText, setSearchText] = useState("");
     const { uiState, setUiState } = MyToggleUiValues();
     const [users, setUsers] = useState([])
-    const [friendRequestSent, setFriendRequestSent] = useState([]);
-
 
     const changeHandler = (e) => {
         setSearchText(`${e.currentTarget.value}`)

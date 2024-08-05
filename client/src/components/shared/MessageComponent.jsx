@@ -1,9 +1,9 @@
-import { Box, Stack, Typography } from '@mui/material';
-import React, { memo } from 'react';
+import { Box, Typography } from '@mui/material';
+import { motion } from 'framer-motion';
 import moment from "moment";
-import { fileFormat, transformImage } from "../lib/features"
+import React, { memo } from 'react';
+import { fileFormat, transformImage } from "../lib/features";
 import RenderAttachment from './RenderAttachment';
-import { motion } from 'framer-motion'
 
 function MessageComponent({ message, user }) {
     const { sender, text_content, attachments = [], createdAt } = message;
@@ -41,7 +41,6 @@ function MessageComponent({ message, user }) {
                     return <Box key={attachment?.public_id} sx={{
                         display: 'flex',
                         margin: "2px",
-                        // border: "2px solid green",
                         justifyContent: "center"
                     }}>
                         <a
@@ -59,8 +58,7 @@ function MessageComponent({ message, user }) {
             </Box>
             <Typography style={{
                 alignSelf: "flex-end",
-                fontSize: "0.7rem",
-                alignSelf: "flex-end"
+                fontSize: "0.7rem"
             }} variant='caption' color={"text.secondary"}>{timeAgo}</Typography>
         </motion.div>
     )
