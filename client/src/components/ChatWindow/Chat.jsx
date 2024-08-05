@@ -1,22 +1,18 @@
-import { Skeleton, Stack, Typography } from '@mui/material'
-import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
-import { IconButton } from '@mui/material';
-import { AttachFile as AttachFileIcon, Send as SendIcon } from '@mui/icons-material'
-import { InputBox } from '../styles/StyledComponent';
-import FileMenu from '../Dialogs/FileMenu';
-import { sampleMessage } from '../constants/sampleData';
-import MessageComponent from '../shared/MessageComponent';
-import { GetSocket } from '../../utils/Socket';
-import { CHAT_JOINED, NEW_MESSAGE, START_TYPING, STOP_TYPING } from '../constants/events';
-import { all_messages_of_chat, chat_details, send_message_api } from '../../utils/ApiUtils';
-import { toast } from 'react-toastify';
+import { AttachFile as AttachFileIcon, Send as SendIcon } from '@mui/icons-material';
+import { IconButton, Skeleton, Stack, Typography } from '@mui/material';
+import React, { Fragment, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSocketEvent } from '../../hooks/socket_hooks';
+import { toast } from 'react-toastify';
+import { all_messages_of_chat, send_message_api } from '../../utils/ApiUtils';
+import { GetSocket } from '../../utils/Socket';
+import FileMenu from '../Dialogs/FileMenu';
+import { START_TYPING, STOP_TYPING } from '../constants/events';
+import MessageComponent from '../shared/MessageComponent';
+import { InputBox } from '../styles/StyledComponent';
 
-import { MyToggleUiValues } from '../../context/ToggleUi';
 import { v4 as uuid } from 'uuid';
+import { MyToggleUiValues } from '../../context/ToggleUi';
 import { popMessageAlert } from '../../redux/reducers/chat';
-import { useNavigate } from 'react-router-dom';
 
 
 function Chat({ chatId }) {
@@ -41,7 +37,6 @@ function Chat({ chatId }) {
 
     const [iAmTyping, setIAmTyping] = useState(false);
     const typingTimeout = useRef(null);
-    const navigate = useNavigate();
 
     const submitHandler = async (e) => {
         e.preventDefault()
@@ -56,14 +51,24 @@ function Chat({ chatId }) {
         form_data.append("text_content", sendMessage.text_content);
 
         if (!sendMessage?.text_content.trim() || files.length > 0) return;
-
+        const toastId = toast.loading("sending message...")
         try {
             const res = await send_message_api(form_data);
-            if (res.status = 200) {
-                toast.success("message sent succesfully");
+            if (res.status === 200) {
+                toast.update(toastId, {
+                    render: res?.data?.message || "message sent succesfully",
+                    type: "success",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
             }
         } catch (error) {
-            toast.error(error.response.data.message || "failed to send message");
+            toast.update(toastId, {
+                render: error?.response?.data?.message || "failed to send message",
+                type: "error",
+                isLoading: false,
+                autoClose: 1000,
+            })
             console.log(error);
         } finally {
             setSendMessage({ attachments: [], conversationId: chatId, text_content: "" });
@@ -77,6 +82,7 @@ function Chat({ chatId }) {
     }
 
     const handleInputMessageChange = (e) => {
+        e.preventDefault();
         setSendMessage({ ...sendMessage, text_content: e.target.value })
         if (!iAmTyping) {
             socket.emit(START_TYPING, { chatId });
@@ -109,9 +115,8 @@ function Chat({ chatId }) {
         }
     }, [chatNotification])
 
-
-
     useEffect(() => {
+        setSendMessage({ attachments: [], conversationId: chatId, text_content: "" });
         dispatch(popMessageAlert(chatId));
         const fetchChatData = async (chatId) => {
             setMessageIsLoading(true);

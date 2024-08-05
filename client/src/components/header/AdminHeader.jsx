@@ -1,18 +1,14 @@
 import { Chat as ChatIcon, Close as CloseIcon, Dashboard as DashboardIcon, Groups as GroupsIcon, Home as HomeIcon, ManageAccounts as ManageAccountsIcon, Menu as MenuIcon } from "@mui/icons-material";
 import { AppBar, Box, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
-import React, { lazy } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MyToggleUiValues } from '../../context/ToggleUi';
 import IconBtn from "./IconBtn";
-const Search = lazy(() => import("../Dialogs/Search"));
-const Notifications = lazy(() => import("../Dialogs/Notifications"));
-const NewGroup = lazy(() => import("../Dialogs/NewGroup"));
-
 
 function AdminHeader() {
     const navigate = useNavigate()
 
-    const { isMobileOpen, setIsmobileOpen, isSearch, setIsSearch, isNewGroup, setIsNewGroup, isNotification, setIsNotification, mobileBtnExist } = MyToggleUiValues();
+    const { isMobileOpen, setIsmobileOpen, mobileBtnExist } = MyToggleUiValues();
 
     const handleMobile = () => {
         console.log("mobile");

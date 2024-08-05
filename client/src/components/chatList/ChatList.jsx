@@ -1,7 +1,7 @@
-import { Stack } from '@mui/material'
-import React, { memo } from 'react'
-import ChatItem from './ChatItem'
+import { Stack } from '@mui/material';
+import React, { memo } from 'react';
 import { useSelector } from 'react-redux';
+import ChatItem from './ChatItem';
 
 function ChatList({
     w = "100%",
@@ -13,7 +13,7 @@ function ChatList({
     ],
     handleDeleteChat, }) {
 
-    const { user, isLoading } = useSelector(state => state.auth);
+    const { user } = useSelector(state => state.auth);
     return (
         <Stack width={w} direction={"column"} overflow={"auto"} height={"100%"}>
             {
@@ -27,7 +27,7 @@ function ChatList({
                             index={index}
                             newMessageAlert={newMessageAlert}
                             isOnline={isOnline}
-                            avatar={avatar_url || members.filter((member) => (member._id != user._id)).map((member) => {
+                            avatar={avatar_url || members.filter((member) => (member._id !== user._id)).map((member) => {
                                 return member.avatar_url;
                             })}
 

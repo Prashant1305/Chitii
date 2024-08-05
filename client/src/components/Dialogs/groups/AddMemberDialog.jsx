@@ -1,11 +1,10 @@
-import { Button, Dialog, DialogTitle, Skeleton, Stack, Typography } from '@mui/material'
-import React, { useEffect, useState } from 'react'
-import { sampleUsers } from '../../constants/sampleData'
-import UserItem from '../../shared/UserItem'
+import { Button, Dialog, DialogTitle, Skeleton, Stack, Typography } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { v4 as uuid } from "uuid";
 import { MyToggleUiValues } from '../../../context/ToggleUi';
-import { toast } from 'react-toastify';
 import { add_member_in_group_api, get_my_friends_api } from '../../../utils/ApiUtils';
+import UserItem from '../../shared/UserItem';
 
 function AddMemberDialog({ groupDetails, setGroupDetails, getGroupDetails, chatId }) {
     const [members, setMembers] = useState([]);
@@ -24,16 +23,28 @@ function AddMemberDialog({ groupDetails, setGroupDetails, getGroupDetails, chatI
 
             const addMemberInGroup = async () => {
                 setAddMemberIsLoading(true);
+                const toastId = toast.loading("fetching first page message");
                 try {
                     const res = await add_member_in_group_api({ conversationId: chatId, members: selectedMembers });
 
-                    if (res.status = 200) {
-                        toast.success("Member added successfully");
+                    if (res.status === 200) {
+                        toast.update(toastId, {
+                            render: "Member added successfully",
+                            type: "success",
+                            isLoading: false,
+                            autoClose: 1000,
+                        })
                         getGroupDetails()
                     }
                 } catch (error) {
                     console.log(error)
                     toast.error(error.response.data)
+                    toast.update(toastId, {
+                        render: error?.response?.data?.message || "adding member failed, plz try later",
+                        type: "error",
+                        isLoading: false,
+                        autoClose: 1000,
+                    })
                 }
                 finally {
                     setAddMemberIsLoading(false)

@@ -1,21 +1,20 @@
-import { Avatar, AvatarGroup, Box, Button, Drawer, Grid, IconButton, Skeleton, Stack, TextField, Tooltip, Typography } from '@mui/material'
-import React, { Suspense, lazy, memo, useCallback, useEffect, useState } from 'react'
-import { KeyboardBackspace as KeyboardBackspaceIcon, Menu as MenuIcon, Edit as EditIcon, Done as DoneIcon, Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material"
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { MyToggleUiValues } from '../context/ToggleUi';
-import { Link } from '../components/styles/StyledComponent';
-import AvatarCard from '../components/shared/AvatarCard';
-import { sampleChats, sampleUsers } from '../components/constants/sampleData';
-import ConfirmDeleteDialog from '../components/Dialogs/groups/ConfirmDeleteDialog';
-import AddMemberDialog from '../components/Dialogs/groups/AddMemberDialog';
-import UserItem from '../components/shared/UserItem';
-import { v4 as uuid } from "uuid";
-import { chat_details, get_group_chat_list_api, rename_chat_api } from '../utils/ApiUtils';
+import { Add as AddIcon, Delete as DeleteIcon, Done as DoneIcon, Edit as EditIcon, KeyboardBackspace as KeyboardBackspaceIcon } from "@mui/icons-material";
+import { Avatar, AvatarGroup, Box, Button, Drawer, Grid, IconButton, Skeleton, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import { motion } from 'framer-motion';
+import React, { memo, useCallback, useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { v4 as uuid } from "uuid";
 import { REFETCH_CHATS } from '../components/constants/events';
-import { GetSocket } from '../utils/Socket';
-import { useSocketEvent } from '../hooks/socket_hooks';
+import AddMemberDialog from '../components/Dialogs/groups/AddMemberDialog';
+import ConfirmDeleteDialog from '../components/Dialogs/groups/ConfirmDeleteDialog';
 import RemoveMemberConfirmationDialog from '../components/Dialogs/groups/RemoveMemberConfirmationDialog';
+import UserItem from '../components/shared/UserItem';
+import { Link } from '../components/styles/StyledComponent';
+import { MyToggleUiValues } from '../context/ToggleUi';
+import { useSocketEvent } from '../hooks/socket_hooks';
+import { chat_details, get_group_chat_list_api, rename_chat_api } from '../utils/ApiUtils';
+import { GetSocket } from '../utils/Socket';
 
 function Groups() {
     const navigate = useNavigate();
@@ -163,9 +162,6 @@ function Groups() {
         }
     }, [chatId])
 
-    const handleMobile = () => {
-        setUiState({ ...uiState, isMobileOpen: !uiState.isMobileOpen })
-    }
     const IconBtns = <>
         {/* <Box sx={{
             display: {
@@ -366,7 +362,7 @@ const GroupList = ({ w = "100%", myGroups = [], chatId }) => (
     <Stack width={w} overflow={"auto"} height={"100%"}>
         {
             myGroups.length > 0 ? (
-                myGroups.map((group, chatId) => <GroupListItem group={group} chatId={chatId} key={group._id} />)
+                myGroups.map((group, index) => <GroupListItem group={group} chatId={chatId} key={group._id} index={index} />)
             ) : (
                 <Typography textAlign={"center"} padding={"1rem"}>No Groups</Typography>
             )
@@ -374,30 +370,38 @@ const GroupList = ({ w = "100%", myGroups = [], chatId }) => (
     </Stack>
 )
 
-const GroupListItem = memo(({ group, chatId }) => {
+const GroupListItem = memo(({ group, chatId, index }) => {
     const { name, members, _id } = group;
     const avatar_urls = members.map((member) => member.avatar_url);
-    return (<Link to={`?group=${_id}`} sx={{
-        borderBottom: "1px solid white",
-        // width: "100%"
-    }} onClick={e => {
-        if (chatId === _id) {
-            e.preventDefault();
-        }
-    }}>
-        <Stack direction={"row"} alignItems={"center"} width={"100%"}>
-            <AvatarGroup max={3} sx={{
-                marginRight: "1rem"
-            }}>
-                {(
-                    avatar_urls.map((i, index) => (
-                        <Avatar key={index} src={i} />
-                    ))
-                )}
-            </AvatarGroup>
-            <Typography>{name}</Typography>
-        </Stack>
-    </Link >)
+    return (
+        <Link to={`?group=${_id}`} sx={{
+            borderBottom: "1px solid white",
+            // width: "100%"
+        }} onClick={e => {
+            if (chatId === _id) {
+                e.preventDefault();
+            }
+        }}>
+            <motion.div
+                initial={{ opacity: 0, y: "-100%" }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+            >
+
+                <Stack direction={"row"} alignItems={"center"} width={"100%"}>
+                    <AvatarGroup max={3} sx={{
+                        marginRight: "1rem"
+                    }}>
+                        {(
+                            avatar_urls.map((i, index) => (
+                                <Avatar key={index} src={i} />
+                            ))
+                        )}
+                    </AvatarGroup>
+                    <Typography>{name}</Typography>
+                </Stack>
+            </motion.div >
+        </Link >)
 })
 
 export default Groups

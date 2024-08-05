@@ -1,10 +1,9 @@
-import { IconButton, Typography, Menu, MenuItem, MenuList, Tooltip } from '@mui/material'
-import React, { useRef } from 'react'
 import { AudioFile as AudioFileIcon, Image as ImageIcon, UploadFile as UploadFileIcon, VideoFile as VideoFileIcon } from "@mui/icons-material";
+import { IconButton, Menu, MenuItem, MenuList, Tooltip, Typography } from '@mui/material';
+import React from 'react';
 import { MyToggleUiValues } from '../../context/ToggleUi';
 
 function FileMenu({ anchor, files, setFiles }) {
-    const allAttachments = [];
     const { uiState, setUiState } = MyToggleUiValues();
 
     const fileChangeHandler = (e) => {

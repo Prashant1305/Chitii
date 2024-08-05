@@ -9,8 +9,6 @@ const emitEvent = (req, event, users, data) => {
 
 const startTypingFeature = (socket, io) => {
     socket.on(START_TYPING, async (data) => {
-
-        console.log("startTyping", data)
         try {
             const { members } = await Conversation.findById(data.chatId)?.select({ members: 1 })?.lean();
             if (members.some((member) => (member.toString() === socket.clientAuthData._id.toString()))) {
@@ -34,7 +32,6 @@ const startTypingFeature = (socket, io) => {
 const stopTypingFeature = (socket, io) => {
     socket.on(STOP_TYPING, async (data) => {
 
-        console.log("stopTyping", data)
         try {
             const { members } = await Conversation.findById(data.chatId)?.select({ members: 1 })?.lean();
             const otherMemberOfChats = members.filter((member) => (member.toString() != socket.clientAuthData._id.toString()))

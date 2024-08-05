@@ -1,11 +1,10 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom';
-import "./Sign.css"
-// import { MyLoginValues } from '../Context/AuthContext';
-import { toast } from 'react-toastify';
+import React from 'react';
 import { useDispatch } from 'react-redux';
-import { userExist, userNotExist } from '../redux/reducers/Auth';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { userNotExist } from '../redux/reducers/Auth';
 import { logout } from '../utils/ApiUtils';
+import "./Sign.css";
 
 function SignOut() {
     const navigate = useNavigate();

@@ -1,19 +1,18 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
 import { Drawer, Grid, Skeleton } from '@mui/material'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import ChatList from '../components/chatList/ChatList'
-import { sampleChats } from '../components/constants/sampleData'
 import Chat from '../components/ChatWindow/Chat'
 import SelectChat from '../components/ChatWindow/SelectChat'
-import { MyToggleUiValues } from '../context/ToggleUi'
-import { toast } from 'react-toastify'
-import { get_my_chats } from '../utils/ApiUtils'
-import { useDispatch, useSelector } from 'react-redux'
-import { useSocketEvent } from '../hooks/socket_hooks'
 import { CHAT_JOINED, ONLINE_USERS, REFETCH_CHATS, START_TYPING, STOP_TYPING } from '../components/constants/events'
-import { GetSocket } from '../utils/Socket'
-import { popInTypingArray, pushInTypingArray } from '../redux/reducers/typing'
 import DeleteChatMenu from '../components/Dialogs/DeleteChatMenu'
+import { MyToggleUiValues } from '../context/ToggleUi'
+import { useSocketEvent } from '../hooks/socket_hooks'
+import { popInTypingArray, pushInTypingArray } from '../redux/reducers/typing'
+import { get_my_chats } from '../utils/ApiUtils'
+import { GetSocket } from '../utils/Socket'
 
 function ChatWindow() {
     const params = useParams();
@@ -119,15 +118,6 @@ function ChatWindow() {
                         handleDeleteChat={handleDeleteChat}
                         onlineUsers={onlineUsers} />
                 }
-                {/* <ChatList
-                    chats={chats}
-                    chatId={chatId}
-                    newMessagesAlert={[{
-                        chatId,
-                        count: 4
-                    }]}
-                    handleDeleteChat={handleDeleteChat}
-                    onlineUsers={["1", "2"]} /> */}
             </Grid>
 
             <Grid item

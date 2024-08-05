@@ -1,12 +1,11 @@
-import { Avatar, Button, Dialog, DialogTitle, Divider, ListItem, Skeleton, Stack, Typography } from '@mui/material'
-import React, { memo, useEffect, useState } from 'react'
-import { sampleNotifications } from "../constants/sampleData"
-import { MyToggleUiValues } from '../../context/ToggleUi';
-import { accept_friend_request, my_notification } from '../../utils/ApiUtils';
-import { toast } from 'react-toastify';
+import { Avatar, Button, Dialog, DialogTitle, Divider, ListItem, Skeleton, Stack, Typography } from '@mui/material';
+import React, { memo, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { resetNotificationCount } from '../../redux/reducers/chat';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { MyToggleUiValues } from '../../context/ToggleUi';
+import { resetNotificationCount } from '../../redux/reducers/chat';
+import { accept_friend_request, my_notification } from '../../utils/ApiUtils';
 
 
 function Notifications() {
@@ -84,7 +83,7 @@ function Notifications() {
                                     type={"NewMessageNotification"}
                                     messageData={i.messageData}
                                 />
-                                {(index < notificationData.length - 1) && <Divider />}
+                                {(index < newMessageAlert.length - 1) && <Divider />}
                             </>)
                         })
                     )
@@ -170,6 +169,8 @@ const NotificationItem = memo(({ sender, _id, handler, type, messageData }) => {
                     </Stack>
                 </ListItem>
             )
+        default:
+            return <Typography>ERROR IN NOTIFICATION ITEM</Typography>
 
     }
 }

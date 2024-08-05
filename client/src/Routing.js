@@ -1,4 +1,5 @@
 import React, { lazy, Suspense, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -14,9 +15,8 @@ import Dashboard from "./pages/admin/Dashboard";
 import MessageManagement from "./pages/admin/MessageManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import ChatWindow from "./pages/ChatWindow";
-import { fetch_user_data } from "./utils/ApiUtils";
-import { useDispatch, useSelector } from "react-redux";
 import { userExist, userNotExist } from "./redux/reducers/Auth";
+import { fetch_user_data } from "./utils/ApiUtils";
 
 
 // import ErrorRoute from "./pages/ErrorRoute";
@@ -25,8 +25,8 @@ import { userExist, userNotExist } from "./redux/reducers/Auth";
 // import Home from "./pages/Home";
 // import SignOut from "./pages/SignOut";
 // import Error from "./pages/Error";
-import RootLayout from "./components/layout/RootLayout";
 import { toast } from "react-toastify";
+import RootLayout from "./components/layout/RootLayout";
 import SocketProvider from "./utils/Socket";
 // import Groups from "./pages/Groups";
 // import Chat from "./pages/Chat";
