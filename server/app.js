@@ -26,7 +26,7 @@ const allowedOrigins = [
 
 var corsOptions = {
     origin: function (origin, callback) {
-        // console.log("req is from ", origin);
+        console.log("req is from ", origin);
         if (allowedOrigins.includes(origin) || !origin) {
             callback(null, true); // Allow the request
         } else {
