@@ -6,7 +6,7 @@ const cookieOptions = {
     maxAge: 15 * 24 * 60 * 60 * 1000,
     httpOnly: true,
     secure: process.env.NODE_ENV !== "development",
-    sameSite: "strict"
+    sameSite: "none"
 }
 
 const signup = async (req, res, next) => {
