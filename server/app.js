@@ -22,7 +22,8 @@ const allowedOrigins = [
     'http://www.example.com',
     `${process.env.CORS_ORIGIN}`,
     'https://jq4m0xhj-3000.inc1.devtunnels.ms',
-    'https://chitii.vercel.app'
+    'https://chitii.vercel.app',
+    'https://chitii.netlify.app/'
 ]
 
 var corsOptions = {
