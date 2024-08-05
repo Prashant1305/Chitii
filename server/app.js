@@ -89,37 +89,6 @@ io.on("connection", (socket) => {
     activeUserSocketIDs.set(user?._id.toString(), socket.id);
     // console.log(activeUserSocketIDs)
 
-    // socket.on(NEW_MESSAGE, async ({ chatId, message }) => {
-    //     const messageForRealTime = {
-    //         text_content: message,
-    //         _id: v4(),
-    //         sender: {
-    //             _id: user._id,
-    //             name: user.name
-    //         },
-    //         chat: chatId,
-    //         createdAt: new Date().toISOString(),
-    //     };
-    //     console.log(messageForRealTime)
-
-    //     const messageForDb = {
-    //         text_content: message,
-    //         sender: user._id,
-    //         conversation: chatId,
-    //         attachments: []
-    //     }
-    //     try {
-    //         const { members } = await Conversation.findById(chatId)?.select({ members: 1 })?.lean();
-
-    //         const membersSocket = getSockets(members, activeUserSocketIDs); // active members that will receive this message
-    //         io.to(membersSocket).emit("NEW_MESSAGE", { conversationId: chatId, message: messageForRealTime });
-    //         await Message.create(messageForDb);
-    //     } catch (error) {
-    //         console.log("failed to get members of chat")
-    //     }
-
-    // })
-
     startTypingFeature(socket, io);
     stopTypingFeature(socket, io);
     comingOnlineFeature(socket, io);
