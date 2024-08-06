@@ -40,9 +40,8 @@ function Chat({ chatId }) {
 
     const submitHandler = async (e) => {
         e.preventDefault()
-
         const form_data = new FormData();
-        if (files) {
+        if (files?.length > 0) {
             files?.forEach(file => {
                 form_data.append("attachments", file);
             });
@@ -50,7 +49,7 @@ function Chat({ chatId }) {
         form_data.append("conversationId", sendMessage.conversationId);
         form_data.append("text_content", sendMessage.text_content);
 
-        if (!sendMessage?.text_content.trim() || files.length > 0) return;
+        if (!sendMessage?.text_content.trim() && files.length === 0) return;
         const toastId = toast.loading("sending message...")
         try {
             const res = await send_message_api(form_data);
