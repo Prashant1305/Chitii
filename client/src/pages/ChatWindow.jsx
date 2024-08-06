@@ -68,13 +68,10 @@ function ChatWindow() {
     }, [])
 
     const stopTypingListener = useCallback((data) => {
-        console.log("form stop typing listner", data)
-
         dispatch(popInTypingArray(data))
     }, [])
 
     const onlineListner = useCallback((data) => {
-        console.log("onlineListner", data)
         setOnlineUsers(data.users);
     }, [])
 
