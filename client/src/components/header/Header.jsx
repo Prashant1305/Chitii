@@ -1,4 +1,4 @@
-import { Add as AddIcon, AdminPanelSettings as AdminPanelSettingsIcon, Chat as ChatIcon, Group as GroupIcon, Home as HomeIcon, Logout as LogoutIcon, Menu as MenuIcon, Notifications as NotificationIcon, Search as SearchIcon } from "@mui/icons-material";
+import { Add as AddIcon, AdminPanelSettings as AdminPanelSettingsIcon, Chat as ChatIcon, Group as GroupIcon, Home as HomeIcon, Logout as LogoutIcon, Menu as MenuIcon, Notifications as NotificationIcon, Search as SearchIcon, Call as CallIcon } from "@mui/icons-material";
 import CloseIcon from '@mui/icons-material/Close';
 import { AppBar, Backdrop, Box, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
 import React, { Suspense, lazy } from 'react';
@@ -40,8 +40,8 @@ function Header() {
         // console.log("mobile");
         // setIsNotification(!isNotification);
         setUiState((prev) => ({ ...prev, isNotification: !prev.isNotification }));
-
     }
+
     return (
         <>
             <Box sx={{
@@ -100,11 +100,12 @@ function Header() {
                             flexDirection={"row"}>
                             <IconBtn title={"Home"} icon={<HomeIcon />} pathname={"/"} />
                             {user.isAdmin && <IconBtn title={"Admin Services"} icon={<AdminPanelSettingsIcon />} pathname={"/admin"} />}
-                            <IconBtn title={"Search"} icon={<ChatIcon />} pathname={"/chat"} />
+                            <IconBtn title={"Chats"} icon={<ChatIcon />} pathname={"/chat"} />
                             <IconBtn title={"Search"} icon={<SearchIcon />} handleClick={openSearchDialog} />
                             <IconBtn title={"New Group"} icon={<AddIcon />} handleClick={openNewGroup} />
                             <IconBtn title={"Manage Groups"} icon={<GroupIcon />} pathname={"/groups"} />
                             <IconBtn title={"Notification"} icon={< NotificationIcon />} value={notificationCount + newMessageAlert.length} handleClick={openNotification} />
+                            <IconBtn title={'Call'} icon={<CallIcon />} pathname={"/call"} />
 
                             <IconBtn title={"Logout"} icon={<LogoutIcon />} pathname={"/signout"} />
 

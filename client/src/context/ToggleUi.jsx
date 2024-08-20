@@ -17,7 +17,8 @@ function ToggleUi({ children }) {
         selectedDeleteChat: {
             chatId: "",
             groupChat: false
-        }
+        },
+        isProfileSectionOn: true
     })
     return (
         <ToggleContext.Provider value={{ uiState, setUiState }}>{children}</ToggleContext.Provider>

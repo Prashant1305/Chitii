@@ -39,6 +39,7 @@ const SignOut = lazy(() => import("./pages/SignOut"));
 const Error = lazy(() => import("./pages/Error"));
 const Groups = lazy(() => import("./pages/Groups"));
 const Chat = lazy(() => import("./components/ChatWindow/Chat"));
+const Call = lazy(() => import('./pages/Call'));
 
 function Routing() {
   const { user, isLoading } = useSelector(state => state.auth);
@@ -87,8 +88,13 @@ function Routing() {
             <Route element={<PublicLayout />}>
               <Route index element={<Suspense fallback={<LayoutLoader />}><Home /></Suspense>} />
               <Route path="groups" element={<Suspense fallback={<LayoutLoader />}><Groups /></Suspense>} />
+
               <Route path="chat" element={<Suspense fallback={<LayoutLoader />}><ChatWindow /></Suspense>} />
               <Route path="chat/:chatId" element={<Suspense fallback={<LayoutLoader />}><ChatWindow /></Suspense>} />
+
+              <Route path="call" element={<Suspense fallback={<LayoutLoader />}><Call /></Suspense>} />
+              <Route path="call/:callId" element={<Suspense fallback={<LayoutLoader />}><Call /></Suspense>} />
+
               <Route path="signout" element={<Suspense fallback={<LayoutLoader />}><SignOut /></Suspense>} />
             </Route>
 

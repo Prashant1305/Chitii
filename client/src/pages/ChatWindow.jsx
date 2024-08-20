@@ -22,13 +22,12 @@ function ChatWindow() {
     const [chats, setChats] = useState([])
     const deleteMenuAnchor = useRef(null)
     const [deleteChat, setDeleteChat] = useState({});
-    const [onlineUsers, setOnlineUsers] = useState([]);
+
 
     const handleDeleteChat = (e, _id, group_chat) => {
         e.preventDefault();
         setDeleteChat({ _id, group_chat });
         deleteMenuAnchor.current = e.currentTarget;
-        // try
     }
     const chatNotification = useSelector(state => state.chat);
     const socket = GetSocket();
@@ -42,7 +41,7 @@ function ChatWindow() {
             setChats(res?.data?.message)
         } catch (error) {
             console.log(error);
-            toast.error(error.response.data.message || "failed to retrive chats, plz try later")
+            toast.error(error?.response?.data?.message || "failed to retrive chats, plz try later")
         }
         finally {
             setChatIsLoading(false)
@@ -71,11 +70,8 @@ function ChatWindow() {
         dispatch(popInTypingArray(data))
     }, [])
 
-    const onlineListner = useCallback((data) => {
-        setOnlineUsers(data.users);
-    }, [])
 
-    const eventHandler = { [START_TYPING]: startTypingListner, [STOP_TYPING]: stopTypingListener, [REFETCH_CHATS]: refetchChatsListner, [ONLINE_USERS]: onlineListner }
+    const eventHandler = { [START_TYPING]: startTypingListner, [STOP_TYPING]: stopTypingListener, [REFETCH_CHATS]: refetchChatsListner, }
 
     useSocketEvent(socket, eventHandler);
 
@@ -112,8 +108,7 @@ function ChatWindow() {
                         chats={chats}
                         chatId={chatId}
                         newMessagesAlert={chatNotification.newMessageAlert}
-                        handleDeleteChat={handleDeleteChat}
-                        onlineUsers={onlineUsers} />
+                        handleDeleteChat={handleDeleteChat} />
                 }
             </Grid>
 
@@ -155,7 +150,7 @@ function ChatWindow() {
                         chatId={chatId}
                         newMessagesAlert={chatNotification.newMessageAlert}
                         handleDeleteChat={handleDeleteChat}
-                        onlineUsers={onlineUsers} />}
+                    />}
             </Drawer>
             )}
         </Grid>
