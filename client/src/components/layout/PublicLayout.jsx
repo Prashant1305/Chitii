@@ -6,15 +6,21 @@ import { toast } from 'react-toastify'
 import { useSocketEvent } from '../../hooks/socket_hooks'
 import { incrementNotificationCount, setNewMessagesAlert } from '../../redux/reducers/chat'
 import { GetSocket } from '../../utils/Socket'
-import { CHAT_JOINED, CHAT_LEFT, NEW_MESSAGE, NEW_REQUEST } from '../constants/events'
+import { CHAT_JOINED, CHAT_LEFT, NEW_MESSAGE, NEW_REQUEST, ONLINE_USERS } from '../constants/events'
 import Header from '../header/Header'
 import Profile from '../profile.jsx/Profile'
+import { MyToggleUiValues } from '../../context/ToggleUi'
+import { setOnlineUsersArray } from '../../redux/reducers/online'
+
 
 function PublicLayout() {
     const socket = GetSocket();
     const dispatch = useDispatch();
+    const { uiState, setUiState } = MyToggleUiValues()
 
     const { user } = useSelector(state => state.auth);
+    const { onlineUsersArray } = useSelector(state => state.onlineUsersArray)
+
 
     const newMessageHandler = useCallback((data) => {
         dispatch(setNewMessagesAlert(data));
@@ -26,9 +32,15 @@ function PublicLayout() {
         dispatch(incrementNotificationCount())
     }, []);
 
+
+    const onlineListner = useCallback((data) => {
+        dispatch(setOnlineUsersArray(data.users))
+
+    }, [])
+
     const eventHandlers = {
         [NEW_MESSAGE]: newMessageHandler,
-        [NEW_REQUEST]: newRequestHandler
+        [NEW_REQUEST]: newRequestHandler, [ONLINE_USERS]: onlineListner
     }
     useSocketEvent(socket, eventHandlers);
 
@@ -83,7 +95,7 @@ function PublicLayout() {
                     xs={12}
                     sm={12}
                     md={8}
-                    lg={9}
+                    lg={uiState.isProfileSectionOn ? 9 : 12}
                     height={"100%"}
                     sx={{
                         backgroundImage: "linear-gradient(#A9FF99, rgb(217, 234, 237))",
@@ -91,8 +103,8 @@ function PublicLayout() {
                     <Outlet />
                 </Grid>
 
-                <Grid item md={4} lg={3} sx={{
-                    display: { xs: "none", md: "block" },
+                <Grid item md={4} lg={uiState.isProfileSectionOn ? 3 : 0} sx={{
+                    display: { xs: "none", md: "block", lg: uiState.isProfileSectionOn },
                     padding: "2rem",
                     bgcolor: "rgba(0,0,0,0.85)"
                 }} height={"100%"} >

@@ -7,21 +7,21 @@ function ChatList({
     w = "100%",
     chats = [],
     chatId,
-    onlineUsers = [],
     newMessagesAlert = [
         { chatId: "", count: 0 },
     ],
     handleDeleteChat, }) {
 
     const { user } = useSelector(state => state.auth);
+    const { onlineUsersArray } = useSelector(state => state.onlineUsersArray);
     return (
         <Stack width={w} direction={"column"} overflow={"auto"} height={"100%"}>
             {
                 chats?.map((data, index) => {
                     const { avatar_url, _id, name, group_chat, members } = data;
-                    // console.log(members)
+                    console.log(members)
                     const newMessageAlert = newMessagesAlert.find((alert) => alert.chatId === _id);
-                    let isOnline = members.some((member) => (onlineUsers.includes(member._id)))
+                    let isOnline = members.some((member) => (onlineUsersArray.includes(member._id + "")))
                     return (
                         <ChatItem
                             index={index}
