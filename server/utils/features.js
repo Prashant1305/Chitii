@@ -1,6 +1,6 @@
 const { START_TYPING, STOP_TYPING, CHAT_JOINED, CHAT_LEFT, ONLINE_USERS } = require("../Constants/events")
 const Conversation = require("../models/conversation_model")
-const { activeUserSocketIDs, onlineUsersIds } = require("./activeUsersInSockets")
+const { activeUserSocketIDs, onlineUsersIds } = require("./infoOfActiveSession")
 const { getSockets } = require("./helper")
 
 const emitEvent = (req, event, users, data) => {

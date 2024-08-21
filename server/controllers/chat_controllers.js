@@ -6,7 +6,7 @@ const { emitEvent } = require("../utils/features");
 const { ALERT, REFETCH_CHATS, NEW_MESSAGE_ALERTS, NEW_MESSAGE } = require("../Constants/events");
 const { ObjectId } = require('mongodb');
 const { uploadOnCloudinary, deleteFromCloudinary } = require("../utils/cloudinaryDb/cloudinary");
-const { activeUserSocketIDs } = require("../utils/activeUsersInSockets");
+const { activeUserSocketIDs } = require("../utils/infoOfActiveSession");
 const { getSockets } = require("../utils/helper");
 
 // const sendMessage = async (req, res, next) => {
