@@ -1,25 +1,27 @@
-import { Grid } from '@mui/material'
-import React, { useCallback, useEffect } from 'react'
+import { Backdrop, Grid } from '@mui/material'
+import React, { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Outlet } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useSocketEvent } from '../../hooks/socket_hooks'
 import { incrementNotificationCount, setNewMessagesAlert } from '../../redux/reducers/chat'
 import { GetSocket } from '../../utils/Socket'
-import { CHAT_JOINED, CHAT_LEFT, NEW_MESSAGE, NEW_REQUEST, ONLINE_USERS } from '../constants/events'
+import { CALL_INCOMING, CHAT_JOINED, CHAT_LEFT, NEW_MESSAGE, NEW_REQUEST, ONLINE_USERS } from '../constants/events'
 import Header from '../header/Header'
 import Profile from '../profile.jsx/Profile'
 import { MyToggleUiValues } from '../../context/ToggleUi'
 import { setOnlineUsersArray } from '../../redux/reducers/online'
+import IncomingCallDialog from '../Dialogs/call/IncomingCallDialog'
+const Search = lazy(() => import("../Dialogs/call/IncomingCallDialog"));
 
 
 function PublicLayout() {
     const socket = GetSocket();
     const dispatch = useDispatch();
     const { uiState, setUiState } = MyToggleUiValues()
+    const [incomingCallUserData, setIncomingCallUserData] = useState({});
 
     const { user } = useSelector(state => state.auth);
-    const { onlineUsersArray } = useSelector(state => state.onlineUsersArray)
 
 
     const newMessageHandler = useCallback((data) => {
@@ -38,9 +40,18 @@ function PublicLayout() {
 
     }, [])
 
+    const callIncomingHandler = useCallback((data) => { // data={user:{username,avatar_url},roomId}
+        console.log(data)
+        console.log("callIcoming")
+        setIncomingCallUserData(data);
+        setUiState({ ...uiState, isIncomingCallDialogOpen: true })
+    }, []);
+
     const eventHandlers = {
         [NEW_MESSAGE]: newMessageHandler,
-        [NEW_REQUEST]: newRequestHandler, [ONLINE_USERS]: onlineListner
+        [NEW_REQUEST]: newRequestHandler,
+        [ONLINE_USERS]: onlineListner,
+        [CALL_INCOMING]: callIncomingHandler
     }
     useSocketEvent(socket, eventHandlers);
 
@@ -111,6 +122,9 @@ function PublicLayout() {
                     <Profile />
                 </Grid>
             </Grid>
+            {
+                uiState?.isIncomingCallDialogOpen && <Suspense fallback={<Backdrop open />}><IncomingCallDialog incomingCallUserData={incomingCallUserData} /></Suspense>
+            }
 
         </>
 

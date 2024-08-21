@@ -4,7 +4,7 @@ const Request = require("../models/request_model");
 const { emitEvent } = require("../utils/features");
 const { NEW_REQUEST, REFETCH_CHATS } = require("../Constants/events");
 const { getSockets } = require("../utils/helper");
-const { activeUserSocketIDs } = require("../utils/activeUsersInSockets");
+const { activeUserSocketIDs } = require("../utils/infoOfActiveSession");
 
 
 // const getUserForSidebar = async (req, res, next) => {

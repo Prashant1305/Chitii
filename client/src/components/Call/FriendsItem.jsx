@@ -5,7 +5,7 @@ import { Link } from '../styles/StyledComponent';
 
 
 function FriendsItem({
-    avatar = [],
+    avatar_url = [],
     user_name,
     _id,
     index = 0,
@@ -42,11 +42,9 @@ function FriendsItem({
                 <AvatarGroup max={3} sx={{
                     marginRight: "1rem"
                 }}>
-                    {(
-                        avatar.map((i, index) => (
-                            <Avatar key={index} src={i} />
-                        ))
-                    )}
+                    {
+                        <Avatar key={index} src={avatar_url} />
+                    }
                 </AvatarGroup>
 
                 <Stack >
