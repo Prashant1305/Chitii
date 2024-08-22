@@ -19,7 +19,7 @@ function ChatList({
             {
                 chats?.map((data, index) => {
                     const { avatar_url, _id, name, group_chat, members } = data;
-                    console.log(members)
+                    // console.log(members)
                     const newMessageAlert = newMessagesAlert.find((alert) => alert.chatId === _id);
                     let isOnline = members.some((member) => (onlineUsersArray.includes(member._id + "")))
                     return (

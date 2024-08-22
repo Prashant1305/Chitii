@@ -4,3 +4,5 @@ implement notification newMessageAlert notification at backened
 infinite calling are made when focused to bottom
 
 move socketContext from utils to context folder
+
+club all stoptyping features app.js

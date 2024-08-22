@@ -13,7 +13,7 @@ const onlineSlice = createSlice({
     initialState,
     reducers: {
         setOnlineUsersArray: (state, action) => {
-            console.log(action.payload)
+            // console.log(action.payload)
             state.onlineUsersArray = action.payload
         },
     }

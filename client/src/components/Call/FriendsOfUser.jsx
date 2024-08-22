@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 function FriendsOfUser({ friendsList, index }) {
     const { onlineUsersArray } = useSelector(state => state.onlineUsersArray);
     return (
-        <Stack width={"25vw"} direction={"column"} overflow={"auto"} height={"100%"}>
+        <Stack width={"100%"} direction={"column"} overflow={"auto"} height={"100%"}>
             {
                 friendsList.map((friend) => {
                     const { avatar_url, _id, user_name, } = friend;

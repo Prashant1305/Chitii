@@ -8,6 +8,7 @@ const cookieParser = require("cookie-parser");
 const chat_routes = require("./routes/chat_routes");
 const user_routes = require("./routes/user_routes");
 const admin_routes = require("./routes/admin/admin_routes");
+const call_routes = require("./routes/call_routes");
 const { Server } = require("socket.io");
 const { createServer } = require('http');
 const bodyParser = require('body-parser');
@@ -81,6 +82,8 @@ app.use('/api/auth', auth_routes);
 app.use('/api/chat', chat_routes);
 app.use('/api/user', user_routes);
 app.use('/api/admin', admin_routes);
+app.use('/api/call', call_routes);
+
 
 
 io.on("connection", (socket) => {
