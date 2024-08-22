@@ -215,3 +215,14 @@ export const all_messages_api = async () => {
     })
     return res;
 }
+
+export const incoming_call_api = async (receiverClientId) => {
+    const url = `${baseUrl}/api/call/calling`;
+    const res = await axios.post(url, { receiverClientId }, {
+        withCredentials: true,
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    return res;
+}
