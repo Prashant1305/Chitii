@@ -28,6 +28,7 @@ import { fetch_user_data } from "./utils/ApiUtils";
 import { toast } from "react-toastify";
 import RootLayout from "./components/layout/RootLayout";
 import SocketProvider from "./utils/Socket";
+import CallContext from "./context/CallContext";
 // import Groups from "./pages/Groups";
 // import Chat from "./pages/Chat";
 
@@ -60,7 +61,7 @@ function Routing() {
           })
         } else {
           toast.update(toastId, {
-            render: res.data.message,
+            render: res?.data?.message,
             type: "info",
             isLoading: false,
             autoClose: 1000,
@@ -69,7 +70,7 @@ function Routing() {
       } catch (error) {
         console.log(error);
         toast.update(toastId, {
-          render: error.response.data.message || "something went wrong in getting user details",
+          render: error?.response?.data?.message || error?.message || "something went wrong in getting user details",
           type: "error",
           isLoading: false,
           autoClose: 1000,
@@ -85,7 +86,7 @@ function Routing() {
       <Route>
         <Route element={<ProtectRoutes conditionValue={user && !user.isLoading} navigateTo={"/signin"} />}> {/*protecting inside routes*/}
           <Route path="/" element={<SocketProvider><RootLayout /></SocketProvider>} errorElement={<Error />}>
-            <Route element={<PublicLayout />}>
+            <Route element={<CallContext><PublicLayout /></CallContext>}>
               <Route index element={<Suspense fallback={<LayoutLoader />}><Home /></Suspense>} />
               <Route path="groups" element={<Suspense fallback={<LayoutLoader />}><Groups /></Suspense>} />
 

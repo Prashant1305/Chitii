@@ -50,6 +50,18 @@ class PeerService {
     //  Create Offer: Generates an SDP offer.
     //  Set Local Description: Sets the generated offer as the local description.
     //  Return Offer: Returns the generated offer to be sent to the remote peer.
+
+    // Method to disconnect the peer connection
+    disconnect() {
+        if (this.peer) {
+            // Close all media tracks
+            this.peer.getSenders().forEach(sender => sender.track.stop());
+
+            // Close the peer connection
+            this.peer.close();
+            this.peer = null;
+        }
+    }
 }
 
 export default new PeerService();
