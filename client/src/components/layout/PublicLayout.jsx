@@ -40,7 +40,7 @@ function PublicLayout() {
 
     }, [])
 
-    const callIncomingHandler = useCallback((data) => { // data={user:{username,avatar_url},roomId}
+    const callIncomingHandler = useCallback((data) => { // data={user:{username,avatar_url,_id:userId of sender},roomId}
         console.log(data)
         console.log("callIcoming")
         setIncomingCallUserData(data);

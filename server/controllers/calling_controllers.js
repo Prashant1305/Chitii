@@ -28,7 +28,6 @@ const incomingCall = async (req, res, next) => {
 
         // checking for user is on call or not
         roomIds.forEach((value, key) => {
-            console.log(value, key)
             if (value.length > 0) {
                 if (value.some((memberId) => memberId + "" === receiverClientId + "")) {
                     return res.status(203).json({ message: "user is on call" })
@@ -43,7 +42,7 @@ const incomingCall = async (req, res, next) => {
 
         if (userSocketIdsForSendingIncomingCallEvent.length > 0) {
             const io = req.app.get('socketio'); // Retrieve io instance from app
-            io.to(userSocketIdsForSendingIncomingCallEvent).emit(CALL_INCOMING, { user: { user_name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url }, roomId: chat._id + "" });
+            io.to(userSocketIdsForSendingIncomingCallEvent).emit(CALL_INCOMING, { user: { _id: req.clientAuthData._id, user_name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url }, roomId: chat._id + "" });
         }
 
         res.status(200).json({ message: "ringing..." })

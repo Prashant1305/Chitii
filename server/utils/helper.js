@@ -2,7 +2,7 @@
 
 const getSockets = (users = [], activeUserSocketIDs) => {// user [{_id:"qwrr"},{_id:"qansf"}]
     // console.log(users)
-    console.log(activeUserSocketIDs)
+    // console.log(activeUserSocketIDs)
     const sockets = users.map((user) => {
         const socket = activeUserSocketIDs.get(user._id.toString());
         return socket;
