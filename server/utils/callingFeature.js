@@ -9,7 +9,7 @@ const callingFeatures = (socket, io) => {
     socket.on(CALL_RECEIVED, (data) => { // data-{_id:userId of person who is calling}
 
         const callerUserSocketId = getSockets([{ _id: data._id }], activeUserSocketIDs)
-        const receiverSocketId = getSockets([{ _id: socket.clientAuthData._id }], activeUserSocketIDs)[0];
+        const receiverSocketId = socket.id
         io.to(callerUserSocketId).emit(INITIATE_P2P, { socketId: receiverSocketId });
         console.log("activeUserSocketIDs", activeUserSocketIDs);
     });
