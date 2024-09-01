@@ -3,26 +3,26 @@ import React from 'react'
 import { MyToggleUiValues } from '../../../context/ToggleUi'
 import CallReceivedIcon from '@mui/icons-material/CallReceived';
 import { GetSocket } from '../../../utils/Socket';
-import { CALL_RECEIVED } from '../../constants/events';
+import { CALL_RECEIVED_RESPONSE } from '../../constants/events';
 import { useNavigate } from 'react-router-dom';
 import { MyCallingValues } from '../../../context/CallContext';
 
 function IncomingCallDialog({ incomingCallUserData }) {
     const { uiState, setUiState } = MyToggleUiValues()
-    const { callingVariables, setCallingVariables } = MyCallingValues();
     const navigate = useNavigate()
     const socket = GetSocket()
     const handleAccept = (e) => {
         e.preventDefault();
         setUiState({ ...uiState, isIncomingCallDialogOpen: false });
-        console.log("data sent", { _id: incomingCallUserData.user._id });
-        socket.emit(CALL_RECEIVED, { _id: incomingCallUserData.user._id });
-        setCallingVariables({ ...callingVariables, callingButtonIsActive: false })
+        socket.emit(CALL_RECEIVED_RESPONSE, { _id: incomingCallUserData.user._id, status: "ACCEPTED" });
+        // socket.emit("myEvent", { _id: incomingCallUserData.user._id, status: "ACCEPTED" });
+
         navigate(`/call/${incomingCallUserData.roomId}?received=true`);
     }
     const handleDecline = () => {
-        // socket.emit([CALL_], { _id: incomingCallUserData.user._id })
-
+        setUiState({ ...uiState, isIncomingCallDialogOpen: false });
+        socket.emit(CALL_RECEIVED_RESPONSE, { _id: incomingCallUserData.user._id, status: "DECLINED" });
+        // socket.emit("myEvent", { _id: incomingCallUserData.user._id, status: "DECLINED" });
     }
     return (
         <Dialog open={uiState?.isIncomingCallDialogOpen} onClose={() => {

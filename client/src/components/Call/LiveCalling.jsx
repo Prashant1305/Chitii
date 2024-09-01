@@ -11,7 +11,6 @@ import { toast } from 'react-toastify';
 import { useSocketEvent } from '../../hooks/socket_hooks';
 import { CLIENT_CREATE_OFFER, END_CALL, HANDLE_ANSWERE, HANDLE_CREATED_ANSWERE, HANDLE_OFFER_CREATE_ANSWERE, INITIATE_P2P, NEGOTIATION_NEEDED, PEER_NEGO_DONE, PEER_NEGO_FINAL, PEER_NEGO_NEEDED } from '../constants/events';
 import peer from '../lib/peer';
-import { MyCallingValues } from '../../context/CallContext';
 import IconBtn from '../header/IconBtn';
 
 function LiveCalling({ callId }) {
@@ -28,7 +27,6 @@ function LiveCalling({ callId }) {
         disconnectButtonIsActive: false
     })
     const navigate = useNavigate()
-    const { callingVariables, setCallingVariables } = MyCallingValues();
 
     const initiateP2pHandler = useCallback(async (data) => { // data-{to:socketId of receiver / otherPerson}
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -74,7 +72,7 @@ function LiveCalling({ callId }) {
         setMyStream(stream);
         const ans = await peer.getAnswer(offer);
         socket.emit(HANDLE_CREATED_ANSWERE, { to: from, ans });
-        setUiOfLiveCalling({ ...uiOfLiveCalling, connectButtonIsActive: true, disconnectButtonIsActive: true })
+        setUiOfLiveCalling({ ...uiOfLiveCalling, connectButtonIsActive: true, disconnectButtonIsActive: true, dialButtonIsactive: false })
     }, [])
 
     const sendStreams = useCallback(() => {
@@ -84,26 +82,40 @@ function LiveCalling({ callId }) {
     }, [myStream]);
 
     const handleAnswerehandler = useCallback(({ from, ans }) => {
-        console.log("handleAnswerehandler called")
         peer.setLocalDescription(ans);
-        console.log("protocol completed!");
+
         setUiOfLiveCalling({ ...uiOfLiveCalling, disconnectButtonIsActive: true })
         sendStreams();
     }, [sendStreams]);
 
     const handleDialCall = async () => {
-        setIsConnecting(true);
+        const toastId = toast.loading("Calling...")
         try {
             const res = await incoming_call_api(callId);
             if (res.status === 200) {
-                console.log(res.data)
+                toast.update(toastId, {
+                    render: res?.data?.message || "Call connected succesfully",
+                    type: "success",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
                 setUiOfLiveCalling({ ...uiOfLiveCalling, dialButtonIsactive: false })
+            } else {
+                toast.update(toastId, {
+                    render: res?.data?.message || "OOPS",
+                    type: "info",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
             }
         } catch (error) {
             console.log(error)
-            toast.error(error?.response?.data?.message || "calling failed!")
-        } finally {
-            setIsConnecting(false);
+            toast.update(toastId, {
+                render: error?.response?.data?.message || "calling failed!",
+                type: "error",
+                isLoading: false,
+                autoClose: 1000,
+            })
         }
     }
 
@@ -161,7 +173,7 @@ function LiveCalling({ callId }) {
         });
     }, []);
 
-    const handleDisconnect = async () => {
+    const handleDisconnect = () => {
         handleEndCall()
         socket.emit(END_CALL, { to: remoteSocketId, roomId: callId })
     }
@@ -180,7 +192,7 @@ function LiveCalling({ callId }) {
         >
             {uiOfLiveCalling.dialButtonIsactive &&
                 <Stack>
-                    {callingVariables.callingButtonIsActive && <Button onClick={handleDialCall}>Dial</Button>}
+                    <Button onClick={handleDialCall}>Dial</Button>
                 </Stack>
             }
 
@@ -207,7 +219,7 @@ function LiveCalling({ callId }) {
             {uiOfLiveCalling.connectButtonIsActive && remoteStream && <Button onClick={() => {
                 setUiOfLiveCalling({ ...uiOfLiveCalling, connectButtonIsActive: false });
                 sendStreams()
-            }}>Connect...</Button>}
+            }}>Connect ...</Button>}
 
             {myStream && (
                 <Stack
@@ -226,12 +238,11 @@ function LiveCalling({ callId }) {
                         height="100%"
                         width="fit-content"
                         url={myStream}
+                        muted
                     />
                 </Stack>
             )}
             {uiOfLiveCalling.disconnectButtonIsActive && <IconBtn title='Disconnect call' icon={<PhoneDisabledIcon color='error' fontSize='large' />} handleClick={handleDisconnect} />}
-
-
         </Stack>
     )
 }

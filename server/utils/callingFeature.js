@@ -1,4 +1,4 @@
-const { CALL_RECEIVED, INITIATE_P2P, CLIENT_CREATE_OFFER, HANDLE_OFFER_CREATE_ANSWERE, HANDLE_CREATED_ANSWERE, HANDLE_ANSWERE, PEER_NEGO_NEEDED, PEER_NEGO_DONE, PEER_NEGO_FINAL, END_CALL } = require("../Constants/events")
+const { INITIATE_P2P, CLIENT_CREATE_OFFER, HANDLE_OFFER_CREATE_ANSWERE, HANDLE_CREATED_ANSWERE, HANDLE_ANSWERE, PEER_NEGO_NEEDED, PEER_NEGO_DONE, PEER_NEGO_FINAL, END_CALL, CALL_RECEIVED_RESPONSE } = require("../Constants/events")
 const Conversation = require("../models/conversation_model")
 const { getSockets } = require("./helper")
 const { roomIds, activeUserSocketIDs } = require("./infoOfActiveSession")
@@ -6,13 +6,6 @@ const { roomIds, activeUserSocketIDs } = require("./infoOfActiveSession")
 
 const callingFeatures = (socket, io) => {
 
-    socket.on(CALL_RECEIVED, (data) => { // data-{_id:userId of person who is calling}
-
-        const callerUserSocketId = getSockets([{ _id: data._id }], activeUserSocketIDs)
-        const receiverSocketId = socket.id
-        io.to(callerUserSocketId).emit(INITIATE_P2P, { socketId: receiverSocketId });
-        console.log("activeUserSocketIDs", activeUserSocketIDs);
-    });
     socket.on(CLIENT_CREATE_OFFER, async ({ to, offer }) => {
         io.to(to).emit(HANDLE_OFFER_CREATE_ANSWERE, { from: socket.id, offer: offer });
     })
