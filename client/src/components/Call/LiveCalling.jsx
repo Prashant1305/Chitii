@@ -74,22 +74,20 @@ function LiveCalling({ callId }) {
         setMyStream(stream);
         const ans = await peer.getAnswer(offer);
         socket.emit(HANDLE_CREATED_ANSWERE, { to: from, ans });
-        setUiOfLiveCalling({ ...uiOfLiveCalling, connectButtonIsActive: true })
-
+        setUiOfLiveCalling({ ...uiOfLiveCalling, connectButtonIsActive: true, disconnectButtonIsActive: true })
     }, [])
 
     const sendStreams = useCallback(() => {
         for (const track of myStream.getTracks()) {
             peer.peer.addTrack(track, myStream);
         }
-
-        setUiOfLiveCalling({ ...uiOfLiveCalling, connectButtonIsActive: false })
     }, [myStream]);
 
     const handleAnswerehandler = useCallback(({ from, ans }) => {
         console.log("handleAnswerehandler called")
         peer.setLocalDescription(ans);
         console.log("protocol completed!");
+        setUiOfLiveCalling({ ...uiOfLiveCalling, disconnectButtonIsActive: true })
         sendStreams();
     }, [sendStreams]);
 
@@ -99,7 +97,7 @@ function LiveCalling({ callId }) {
             const res = await incoming_call_api(callId);
             if (res.status === 200) {
                 console.log(res.data)
-                setUiOfLiveCalling({ ...uiOfLiveCalling, dialButtonIsactive: false, disconnectButtonIsActive: true })
+                setUiOfLiveCalling({ ...uiOfLiveCalling, dialButtonIsactive: false })
             }
         } catch (error) {
             console.log(error)
@@ -120,14 +118,17 @@ function LiveCalling({ callId }) {
         await peer.setLocalDescription(ans);
     }, []);
 
-    const handleEndCall = useCallback(() => {
+    const handleEndCall = () => {
+        setRemoteStream();
+        setUiOfLiveCalling({
+            ...uiOfLiveCalling, dialButtonIsactive: true,
+            disconnectButtonIsActive: false
+        })
         myStream?.getTracks().forEach(track => track.stop());
         remoteStream?.getTracks().forEach(track => track.stop());
-        setUiOfLiveCalling({ ...uiOfLiveCalling, disconnectButtonIsActive: false })
-
         toast.success("Call Ended!");
         navigate("/call");
-    }, [])
+    }
 
     const eventHandlers = {
         [INITIATE_P2P]: initiateP2pHandler,
@@ -161,13 +162,8 @@ function LiveCalling({ callId }) {
     }, []);
 
     const handleDisconnect = async () => {
-        setRemoteStream();
-        setUiOfLiveCalling({ ...uiOfLiveCalling, disconnectButtonIsActive: false })
-        myStream?.getTracks().forEach(track => track.stop());
-        remoteStream?.getTracks().forEach(track => track.stop());
-
+        handleEndCall()
         socket.emit(END_CALL, { to: remoteSocketId, roomId: callId })
-        navigate("/call");
     }
 
     return (
@@ -188,7 +184,7 @@ function LiveCalling({ callId }) {
                 </Stack>
             }
 
-            {remoteStream && !uiOfLiveCalling.connectButtonIsActive && (
+            {remoteStream && (
                 <Stack
                     sx={{
                         p: 2,
@@ -199,7 +195,6 @@ function LiveCalling({ callId }) {
                         alignItems: "center"
                     }}
                 >
-                    {/* <h1>My Stream</h1> */}
                     <ReactPlayer
                         playing
                         height="100%"
@@ -209,7 +204,10 @@ function LiveCalling({ callId }) {
                 </Stack>
             )}
 
-            {uiOfLiveCalling.connectButtonIsActive && <Button onClick={sendStreams}>Connect...</Button>}
+            {uiOfLiveCalling.connectButtonIsActive && remoteStream && <Button onClick={() => {
+                setUiOfLiveCalling({ ...uiOfLiveCalling, connectButtonIsActive: false });
+                sendStreams()
+            }}>Connect...</Button>}
 
             {myStream && (
                 <Stack
