@@ -6,7 +6,8 @@ import { useSelector } from 'react-redux';
 
 
 
-function FriendsOfUser({ friendsList, index }) {
+function FriendsOfUser({ friendsList, callId, index }) {
+    // console.log(friendsList)
     const { onlineUsersArray } = useSelector(state => state.onlineUsersArray);
     return (
         <Stack width={"100%"} direction={"column"} overflow={"auto"} height={"100%"}>
@@ -21,6 +22,7 @@ function FriendsOfUser({ friendsList, index }) {
                         user_name={user_name}
                         _id={_id}
                         key={_id}
+                        sameCaller={callId + "" === _id + ""}
                     />)
                 })
             }

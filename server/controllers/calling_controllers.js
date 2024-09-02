@@ -59,7 +59,7 @@ const incomingCall = async (req, res, next) => {
                 if (data.status === "ACCEPTED") {
                     resolve(data);
                 }
-                else {
+                else { // data.status === "DECLINED"
                     reject(data);
                 }
             });

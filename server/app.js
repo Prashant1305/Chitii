@@ -91,10 +91,9 @@ io.on("connection", (socket) => {
     const user = socket.clientAuthData;
     // user = {
     //     _id: "666b18ac26af93467acb91b2",
-    //     name: "lavda lassan"
+    //     name: "John Doe"
     // }
     activeUserSocketIDs.set(user?._id.toString(), socket.id);
-    // console.log(activeUserSocketIDs)
 
     startTypingFeature(socket, io);
     stopTypingFeature(socket, io);
@@ -103,7 +102,7 @@ io.on("connection", (socket) => {
     callingFeatures(socket, io);
 
     socket.on("disconnect", () => {
-        // console.log("user disconnected");
+        console.log("user disconnected");
         activeUserSocketIDs.delete(user?._id.toString());
 
         if (socket?.clientAuthData?._id.toString()) {
