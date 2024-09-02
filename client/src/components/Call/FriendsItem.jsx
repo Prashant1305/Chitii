@@ -48,7 +48,7 @@ function FriendsItem({
 
                 <Stack >
                     <Typography variant="h5" >{user_name}</Typography>
-                    {true && (
+                    {false && (
                         <Typography variant="body2"> is in call with you</Typography>
                     )}
                 </Stack>

@@ -16,7 +16,6 @@ import IconBtn from '../header/IconBtn';
 function LiveCalling({ callId }) {
     const socket = GetSocket()
     const { user } = useSelector(state => state.auth)
-    const [isConnecting, setIsConnecting] = useState(false);
     const [myStream, setMyStream] = useState()
     const [remoteStream, setRemoteStream] = useState()
     const [remoteSocketId, setRemoteSocketId] = useState();

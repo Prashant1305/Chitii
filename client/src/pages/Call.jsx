@@ -14,10 +14,10 @@ function Call() {
     const callId = params.callId;
     const { uiState, setUiState } = MyToggleUiValues()
     const [friendsList, setFriendsList] = useState([])
-    const [friendsListLoading, setFriendsListLoading] = useState(false)
+    const [friendsListIsLoading, setFriendsListIsLoading] = useState(false)
 
     const fetchFriendsOfUser = async () => {
-        setFriendsListLoading(true)
+        setFriendsListIsLoading(true)
         try {
             const res = await get_my_friends_api();
             setFriendsList(res.data.message);
@@ -27,12 +27,16 @@ function Call() {
             toast.error(err?.response?.data?.message || "failed to retrive messages")
         }
         finally {
-            setFriendsListLoading(false)
+            setFriendsListIsLoading(false)
         }
     }
 
     useEffect(() => {
+        setUiState((prev) => ({ ...prev, mobileBtnExist: true }))
         fetchFriendsOfUser();
+        return () => {
+            setUiState((prev) => ({ ...prev, mobileBtnExist: false }))
+        };
     }, [])
 
     return (
@@ -47,16 +51,16 @@ function Call() {
                     border: "1px solid white"
                 }} height={"100%"} >
                 {
-                    // chatIsLoading ? <Skeleton
-                    //     animation="wave"
-                    //     variant="rectangular"
-                    //     width={"90%"} height={"90%"}
-                    //     sx={{
-                    //         margin: "auto",
-                    //         mt: "2rem",
-                    //     }}
-                    // /> : 
-                    <FriendsOfUser friendsList={friendsList} />
+                    friendsListIsLoading ? <Skeleton
+                        animation="wave"
+                        variant="rectangular"
+                        width={"90%"} height={"90%"}
+                        sx={{
+                            margin: "auto",
+                            mt: "2rem",
+                        }}
+                    /> :
+                        <FriendsOfUser friendsList={friendsList} callId={callId} />
                 }
             </Grid>
 
@@ -95,13 +99,13 @@ function Call() {
                     setUiState({ ...uiState, isMobileOpen: false })
                 }}>
                 {
-                    // chatIsLoading ? <Skeleton
-                    //     animation="wave"
-                    //     variant="rectangular"
-                    //     height={"100%"}
-                    //     width={"100%"} />
-                    //     :
-                    <FriendsOfUser />
+                    friendsListIsLoading ? <Skeleton
+                        animation="wave"
+                        variant="rectangular"
+                        height={"100%"}
+                        width={"100%"} />
+                        :
+                        <FriendsOfUser friendsList={friendsList} callId={callId} />
                 }
             </Drawer>
             )}
