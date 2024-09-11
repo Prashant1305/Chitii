@@ -16,7 +16,8 @@ const { socketAuthenticator } = require("./middleware/auth_middleware");
 const { activeUserSocketIDs, onlineUsersIds } = require("./utils/infoOfActiveSession");
 const { startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature, functionCalledForGoingOffline } = require("./utils/features");
 const { callingFeatures } = require("./utils/callingFeature");
-const { CALL_RECEIVED } = require("./Constants/events");
+const { initializeSocket } = require("./utils/socketSetup");
+const { initializeRedis } = require("./utils/Redis");
 
 const PORT = process.env.PORT || 3012;
 const app = express();
@@ -46,17 +47,16 @@ app.use(express.json()); // to parse incoming requests with json payload and sto
 app.use(bodyParser.urlencoded({ extended: true })); // to parse incoming urlencoded data that contains only file
 app.use(cookieParser());
 
-// SOCKET
+// create server an attach io
 const server = createServer(app);
-const io = new Server(server, { cors: corsOptions })
+
+// Initialize Socket.IO
+const io = initializeSocket(server, corsOptions);
 
 app.set('socketio', io); // Store io instance in app
 
-io.use((socket, next) => {
-    cookieParser()(socket.request, socket.request.res, async (err) => { // cookieParser returns a middleware function which can be used like this
-        return await socketAuthenticator(err, socket, next);
-    });
-});
+// Initialize redis
+initializeRedis();
 
 // checking connection
 app.get('/check', (req, res) => {
@@ -78,7 +78,6 @@ app.get('/check', (req, res) => {
     });
 });
 
-
 app.use('/api/auth', auth_routes);
 app.use('/api/chat', chat_routes);
 app.use('/api/user', user_routes);
@@ -86,36 +85,8 @@ app.use('/api/admin', admin_routes);
 app.use('/api/call', call_routes);
 
 
-
-io.on("connection", (socket) => {
-    const user = socket.clientAuthData;
-    // user = {
-    //     _id: "666b18ac26af93467acb91b2",
-    //     name: "John Doe"
-    // }
-    activeUserSocketIDs.set(user?._id.toString(), socket.id);
-
-    startTypingFeature(socket, io);
-    stopTypingFeature(socket, io);
-    comingOnlineFeature(socket, io);
-    goingOfflineFeature(socket, io);
-    callingFeatures(socket, io);
-
-    socket.on("disconnect", () => {
-        console.log("user disconnected");
-        activeUserSocketIDs.delete(user?._id.toString());
-
-        if (socket?.clientAuthData?._id.toString()) {
-            onlineUsersIds.delete(socket.clientAuthData._id.toString());
-            functionCalledForGoingOffline(socket, io);
-        }
-        //stop typing event to firends
-    });
-});
-
 // error middleware
 app.use(errorMiddleware);
-
 
 // app.listen(PORT, () => {
 //     connectDb();
