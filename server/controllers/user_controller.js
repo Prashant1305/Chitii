@@ -4,7 +4,7 @@ const Request = require("../models/request_model");
 const { emitEvent } = require("../utils/features");
 const { NEW_REQUEST, REFETCH_CHATS } = require("../Constants/events");
 const { getSockets } = require("../utils/helper");
-const { activeUserSocketIDs } = require("../utils/infoOfActiveSession");
+const { InstanceActiveUserSocketIDs } = require("../utils/infoOfActiveSession");
 
 
 // const getUserForSidebar = async (req, res, next) => {
@@ -89,7 +89,7 @@ const sendFriendRequest = async (req, res, next) => {
         // emitEvent(req, NEW_REQUEST, [userId]);
 
         const io = req.app.get('socketio'); // Retrieve io instance from app
-        const memberSocket = activeUserSocketIDs.get(userId);
+        const memberSocket = InstanceActiveUserSocketIDs.get(userId);
         if (memberSocket.length > 0) {
             io.to(memberSocket).emit(NEW_REQUEST, { msg: `you received freind request from ${req.clientAuthData.user_name}` });
         }

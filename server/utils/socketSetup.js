@@ -1,8 +1,7 @@
-// socket.js
 const { Server } = require("socket.io");
 const cookieParser = require("cookie-parser");
 const { socketAuthenticator } = require("../middleware/auth_middleware");
-const { activeUserSocketIDs, onlineUsersIds } = require("./infoOfActiveSession");
+const { InstanceActiveUserSocketIDs, InstanceOnlineUsersIds } = require("./infoOfActiveSession");
 const { startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature, functionCalledForGoingOffline } = require("./features");
 const { callingFeatures } = require("./callingFeature");
 
@@ -19,7 +18,7 @@ function initializeSocket(server, corsOptions) {
 
     io.on("connection", (socket) => {
         const user = socket.clientAuthData;
-        activeUserSocketIDs.set(user?._id.toString(), socket.id);
+        InstanceActiveUserSocketIDs.set(user?._id.toString(), socket.id);
 
         startTypingFeature(socket, io);
         stopTypingFeature(socket, io);
@@ -29,10 +28,10 @@ function initializeSocket(server, corsOptions) {
 
         socket.on("disconnect", () => {
             console.log("user disconnected");
-            activeUserSocketIDs.delete(user?._id.toString());
+            InstanceActiveUserSocketIDs.delete(user?._id.toString());
 
             if (socket?.clientAuthData?._id.toString()) {
-                onlineUsersIds.delete(socket.clientAuthData._id.toString());
+                InstanceOnlineUsersIds.delete(socket.clientAuthData._id.toString());
                 functionCalledForGoingOffline(socket, io);
             }
         });
@@ -40,5 +39,11 @@ function initializeSocket(server, corsOptions) {
 
     return io;
 }
+const getIo = () => {
+    if (!io) {
+        throw new Error("Socket.io not initialized!");
+    }
+    return io;
+}
 
-module.exports = { initializeSocket, io };
+module.exports = { initializeSocket, getIo };
