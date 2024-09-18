@@ -2,10 +2,8 @@ const { START_TYPING, STOP_TYPING, CHAT_JOINED, CHAT_LEFT, ONLINE_USERS } = requ
 const Conversation = require("../models/conversation_model")
 const { InstanceActiveUserSocketIDs, InstanceOnlineUsersIds } = require("./infoOfActiveSession")
 const { getSockets } = require("./helper")
+const { redis, pub } = require("./redis/connectToRedis")
 
-const emitEvent = (req, event, users, data) => {
-    console.log("event emitted", event)
-}
 
 const startTypingFeature = (socket, io) => {
     socket.on(START_TYPING, async (data) => {
@@ -47,27 +45,43 @@ const stopTypingFeature = (socket, io) => {
 
 const comingOnlineFeature = (socket, io) => {
     socket.on(CHAT_JOINED, async () => {
-        const userId = socket.clientAuthData._id
-        InstanceOnlineUsersIds.add(userId.toString());
+        try {
+            const userId = socket.clientAuthData._id
+            InstanceOnlineUsersIds.add(userId.toString());
 
-        // finding friend
-        const chats = await Conversation.find({ members: userId, group_chat: false }).lean()
+            // Add members from set in redis
+            redis.sadd("onlineUsersMongoIds", userId + "").then().catch((err) => {
+                console.log("error in redis from comingOnlineFeatures", err)
+            })
 
-        const friendsIds = [];
-        chats.forEach((chat) => {
-            if (chat.members[0] + "" === userId + "") {
-                friendsIds.push({ _id: chat.members[1] })
+            // finding friend of new user joined
+            const chats = await Conversation.find({ members: userId, group_chat: false }).lean()
 
-            } else {
-                friendsIds.push({ _id: chat.members[0] })
-            }
-        })
+            let friendsIds = [];
+            const valuesToCheck = [];
+            chats.forEach((chat) => {
+                if (chat.members[0] + "" === userId + "") {
+                    // friendsIds.push({ _id: chat.members[1] })
+                    friendsIds.push(chat.members[1] + "")
 
-        const onlineFriends = friendsIds.filter((friend) => InstanceOnlineUsersIds.has(friend._id + ""))
-        const friendSocketIds = getSockets([...onlineFriends, { _id: userId }], InstanceActiveUserSocketIDs); // adding userId so that he can receive online users
+                } else {
+                    // friendsIds.push({ _id: chat.members[0] })
+                    friendsIds.push(chat.members[0] + "")
+                }
+            })
 
-        if (friendSocketIds.length > 0) {
-            io.to(friendSocketIds).emit(ONLINE_USERS, { users: Array.from(InstanceOnlineUsersIds) })
+            // checking online friends in friendIds
+            const onlineFriendsResponseArray = await redis.smismember("onlineUsersMongoIds", friendsIds)
+            const onlineFriendIds = [...friendsIds.filter((_, index) => {
+                return onlineFriendsResponseArray[index];
+            }), userId] //adding userId, so that he receives also recives online Ids
+
+            pub.publish(ONLINE_USERS, JSON.stringify({ onlineFriendIds }), () => {
+                console.log('Publisheing done')
+            })
+
+        } catch (error) {
+            console.log(error)
         }
     })
 }
@@ -76,25 +90,34 @@ const functionCalledForGoingOffline = async (socket, io) => {
     const userId = socket.clientAuthData._id
     InstanceOnlineUsersIds.delete(userId.toString());
 
+    // remove members from set in redis
+    redis.srem("onlineUsersMongoIds", userId + "").then().catch((err) => {
+        console.log("error in redis from functionCalledForGoingOffline", err)
+    })
+
     // finding friend
     const chats = await Conversation.find({ members: userId, group_chat: false }).lean()
 
     const friendsIds = [];
     chats.forEach((chat) => {
         if (chat.members[0] + "" === userId + "") {
-            friendsIds.push({ _id: chat.members[1] })
+            // friendsIds.push({ _id: chat.members[1] })
+            friendsIds.push(chat.members[1] + "")
 
         } else {
-            friendsIds.push({ _id: chat.members[0] })
+            // friendsIds.push({ _id: chat.members[0] })
+            friendsIds.push(chat.members[0] + "")
         }
     })
+    // checking online friends in friendIds
+    const onlineFriendsResponseArray = await redis.smismember("onlineUsersMongoIds", friendsIds)
+    const onlineFriendIds = friendsIds.filter((_, index) => {
+        return onlineFriendsResponseArray[index];
+    })
 
-    const onlineFriends = friendsIds.filter((friend) => InstanceOnlineUsersIds.has(friend._id + ""))
-    const friendSocketIds = getSockets(onlineFriends, InstanceActiveUserSocketIDs);
-
-    if (friendSocketIds.length > 0) {
-        io.to(friendSocketIds).emit(ONLINE_USERS, { users: Array.from(InstanceOnlineUsersIds) })
-    }
+    pub.publish(ONLINE_USERS, JSON.stringify({ onlineFriendIds }), () => {
+        console.log('Publisheing done')
+    })
 }
 
 const goingOfflineFeature = (socket, io) => {
@@ -104,4 +127,4 @@ const goingOfflineFeature = (socket, io) => {
     })
 }
 
-module.exports = { emitEvent, startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature, functionCalledForGoingOffline };
+module.exports = { startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature, functionCalledForGoingOffline };

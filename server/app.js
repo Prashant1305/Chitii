@@ -9,15 +9,11 @@ const chat_routes = require("./routes/chat_routes");
 const user_routes = require("./routes/user_routes");
 const admin_routes = require("./routes/admin/admin_routes");
 const call_routes = require("./routes/call_routes");
-const { Server } = require("socket.io");
 const { createServer } = require('http');
 const bodyParser = require('body-parser');
 const { socketAuthenticator } = require("./middleware/auth_middleware");
-const { InstanceActiveUserSocketIDs, InstanceOnlineUsersIds } = require("./utils/infoOfActiveSession");
-const { startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature, functionCalledForGoingOffline } = require("./utils/features");
-const { callingFeatures } = require("./utils/callingFeature");
-const { CALL_RECEIVED } = require("./Constants/events");
 const { initializeSocket } = require("./utils/socketSetup");
+const { initializeRedis } = require("./utils/redis/connectToRedis");
 
 const PORT = process.env.PORT || 3012;
 const app = express();
@@ -80,6 +76,8 @@ app.get('/check', (req, res) => {
     });
 });
 
+// initialize Redis
+initializeRedis();
 
 app.use('/api/auth', auth_routes);
 app.use('/api/chat', chat_routes);
@@ -87,13 +85,8 @@ app.use('/api/user', user_routes);
 app.use('/api/admin', admin_routes);
 app.use('/api/call', call_routes);
 
-
-
-
-
 // error middleware
 app.use(errorMiddleware);
-
 
 // app.listen(PORT, () => {
 //     connectDb();
