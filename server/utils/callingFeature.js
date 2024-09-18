@@ -1,7 +1,7 @@
 const { INITIATE_P2P, CLIENT_CREATE_OFFER, HANDLE_OFFER_CREATE_ANSWERE, HANDLE_CREATED_ANSWERE, HANDLE_ANSWERE, PEER_NEGO_NEEDED, PEER_NEGO_DONE, PEER_NEGO_FINAL, END_CALL, CALL_RECEIVED_RESPONSE } = require("../Constants/events")
 const Conversation = require("../models/conversation_model")
 const { getSockets } = require("./helper")
-const { roomIds, activeUserSocketIDs } = require("./infoOfActiveSession")
+const { roomIds, InstanceActiveUserSocketIDs } = require("./infoOfActiveSession")
 
 
 const callingFeatures = (socket, io) => {

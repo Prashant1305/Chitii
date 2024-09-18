@@ -13,11 +13,11 @@ const { Server } = require("socket.io");
 const { createServer } = require('http');
 const bodyParser = require('body-parser');
 const { socketAuthenticator } = require("./middleware/auth_middleware");
-const { activeUserSocketIDs, onlineUsersIds } = require("./utils/infoOfActiveSession");
+const { InstanceActiveUserSocketIDs, InstanceOnlineUsersIds } = require("./utils/infoOfActiveSession");
 const { startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature, functionCalledForGoingOffline } = require("./utils/features");
 const { callingFeatures } = require("./utils/callingFeature");
+const { CALL_RECEIVED } = require("./Constants/events");
 const { initializeSocket } = require("./utils/socketSetup");
-const { initializeRedis } = require("./utils/Redis");
 
 const PORT = process.env.PORT || 3012;
 const app = express();
@@ -27,7 +27,8 @@ const allowedOrigins = [
     `${process.env.CORS_ORIGIN}`,
     'https://jq4m0xhj-3000.inc1.devtunnels.ms',
     'https://chitii.vercel.app',
-    'https://chitii.netlify.app/'
+    'https://chitii.netlify.app/',
+    'http://localhost:3001'
 ]
 
 var corsOptions = {
@@ -47,16 +48,17 @@ app.use(express.json()); // to parse incoming requests with json payload and sto
 app.use(bodyParser.urlencoded({ extended: true })); // to parse incoming urlencoded data that contains only file
 app.use(cookieParser());
 
-// create server an attach io
+// SOCKET
 const server = createServer(app);
-
-// Initialize Socket.IO
-const io = initializeSocket(server, corsOptions);
+const io = initializeSocket(server, corsOptions)
 
 app.set('socketio', io); // Store io instance in app
 
-// Initialize redis
-initializeRedis();
+io.use((socket, next) => {
+    cookieParser()(socket.request, socket.request.res, async (err) => { // cookieParser returns a middleware function which can be used like this
+        return await socketAuthenticator(err, socket, next);
+    });
+});
 
 // checking connection
 app.get('/check', (req, res) => {
@@ -78,6 +80,7 @@ app.get('/check', (req, res) => {
     });
 });
 
+
 app.use('/api/auth', auth_routes);
 app.use('/api/chat', chat_routes);
 app.use('/api/user', user_routes);
@@ -85,8 +88,12 @@ app.use('/api/admin', admin_routes);
 app.use('/api/call', call_routes);
 
 
+
+
+
 // error middleware
 app.use(errorMiddleware);
+
 
 // app.listen(PORT, () => {
 //     connectDb();

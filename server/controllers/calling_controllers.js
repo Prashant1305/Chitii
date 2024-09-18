@@ -1,7 +1,7 @@
 const { CALL_INCOMING, CALL_RECEIVED_RESPONSE, INITIATE_P2P } = require("../Constants/events");
 const Conversation = require("../models/conversation_model");
 const { getSockets } = require("../utils/helper");
-const { roomIds, onlineUsersIds, activeUserSocketIDs } = require("../utils/infoOfActiveSession");
+const { roomIds, InstanceOnlineUsersIds, InstanceActiveUserSocketIDs } = require("../utils/infoOfActiveSession");
 
 const EventEmitter = require('events');
 
@@ -19,7 +19,7 @@ const incomingCall = async (req, res, next) => {
 
         // checking wether user is online or not
         let receiverUserIsOnline = false;
-        onlineUsersIds.forEach((value) => {
+        InstanceOnlineUsersIds.forEach((value) => {
             if (value === receiverClientId) {
                 receiverUserIsOnline = true;
             }
@@ -40,7 +40,7 @@ const incomingCall = async (req, res, next) => {
 
         const userIdsForSendingIncomingCallEvent = chat.members.filter((id) => id + "" !== req.clientAuthData._id + "")
 
-        const userSocketIdsForSendingIncomingCallEvent = getSockets(userIdsForSendingIncomingCallEvent, activeUserSocketIDs);
+        const userSocketIdsForSendingIncomingCallEvent = getSockets(userIdsForSendingIncomingCallEvent, InstanceActiveUserSocketIDs);
 
         const io = req.app.get('socketio'); // Retrieve io instance from app
 
@@ -68,7 +68,7 @@ const incomingCall = async (req, res, next) => {
 
         try {
             const recivedCallResponse = await responseOfReceiverPromise();
-            const callerUserSocketId = getSockets([{ _id: req.clientAuthData._id }], activeUserSocketIDs)
+            const callerUserSocketId = getSockets([{ _id: req.clientAuthData._id }], InstanceActiveUserSocketIDs)
             io.to(callerUserSocketId).emit(INITIATE_P2P, { socketId: userSocketIdsForSendingIncomingCallEvent[0] });
             return res.status(200).json({ message: "call Accepted" })
         } catch (error) {
