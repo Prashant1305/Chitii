@@ -1,5 +1,5 @@
 const Redis = require("ioredis");
-const { ONLINE_USERS } = require("../../Constants/events");
+const { ONLINE_USERS, START_TYPING, STOP_TYPING } = require("../../Constants/events");
 const { getSockets } = require("../helper");
 const { InstanceActiveUserSocketIDs, InstanceOnlineUsersIds } = require("../infoOfActiveSession");
 const { getIo } = require("../socket/io");
@@ -16,7 +16,7 @@ const sub = new Redis(userCredentials); // connection in subscriber mode for sub
 const pub = new Redis(userCredentials); // connection in publisher mode for publishing only
 const initializeRedis = () => {
 
-    const channels = ["MESSAGES", ONLINE_USERS];
+    const channels = ["MESSAGES", ONLINE_USERS, START_TYPING, STOP_TYPING];
     // Subscribe to multiple channels
     sub.subscribe(channels, (err, count) => {
         if (err) {
@@ -32,6 +32,7 @@ const initializeRedis = () => {
         switch (channel) {
 
             case ONLINE_USERS:
+
                 const modifiedOnlineFriendIds = data?.onlineFriendIds.map((friend) => ({ _id: friend }))
 
                 const instanceFriendSocketIds = getSockets(modifiedOnlineFriendIds, InstanceActiveUserSocketIDs); // adding userId so that he can receive online users
@@ -40,6 +41,25 @@ const initializeRedis = () => {
                     const allOnlineMembersOfAllInstance = await redis.smembers("onlineUsersMongoIds");
 
                     io.to(instanceFriendSocketIds).emit(ONLINE_USERS, { users: Array.from(allOnlineMembersOfAllInstance) })
+                }
+                break;
+
+            case START_TYPING:
+
+                const modifiedOtherMemberOfChats = data.otherMemberOfChats.map((id) => ({ _id: id }))
+                const activeChatMembersSocketIdsForStartTyping = getSockets(modifiedOtherMemberOfChats, InstanceActiveUserSocketIDs);
+                if (activeChatMembersSocketIdsForStartTyping.length > 0) {
+                    io.to(activeChatMembersSocketIdsForStartTyping).emit(START_TYPING, { chatId: data.chatId, user: data.user });
+                }
+                break;
+
+            case STOP_TYPING:
+
+                const modifiedOtherMemberOfChatsForStopTyping = data.otherMemberOfChats.map((id) => ({ _id: id }))
+                const activeChatMembersSocketIdssForStopTyping = getSockets(modifiedOtherMemberOfChatsForStopTyping, InstanceActiveUserSocketIDs);
+                // console.log("activeChatMembersSocketIdssForStopTyping", activeChatMembersSocketIdssForStopTyping);
+                if (activeChatMembersSocketIdssForStopTyping.length > 0) {
+                    io.to(activeChatMembersSocketIdssForStopTyping).emit(STOP_TYPING, { chatId: data.chatId, user: data.user });
                 }
                 break;
 

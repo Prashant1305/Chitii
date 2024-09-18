@@ -11,11 +11,12 @@ const startTypingFeature = (socket, io) => {
             const { members } = await Conversation.findById(data.chatId)?.select({ members: 1 })?.lean();
             if (members.some((member) => (member.toString() === socket.clientAuthData._id.toString()))) {
 
-                const otherMemberOfChats = members.filter((member) => (member.toString() != socket.clientAuthData._id.toString()))
-
-                const activeChatMembersInSockets = getSockets(otherMemberOfChats, InstanceActiveUserSocketIDs);
-
-                io.to(activeChatMembersInSockets).emit(START_TYPING, { chatId: data.chatId, user: { user_name: socket.clientAuthData.user_name, _id: socket.clientAuthData._id } });
+                const otherMemberOfChats = members.filter((member) => (member.toString() !== socket.clientAuthData._id.toString()))
+                pub.publish(START_TYPING, JSON.stringify({
+                    otherMemberOfChats,
+                    chatId: data.chatId,
+                    user: { user_name: socket.clientAuthData.user_name, _id: socket.clientAuthData._id }
+                }))
             }
             else {
                 console.log(`user ${socket.clientAuthData.user_name} is not a member of the chat`)
@@ -32,11 +33,13 @@ const stopTypingFeature = (socket, io) => {
 
         try {
             const { members } = await Conversation.findById(data.chatId)?.select({ members: 1 })?.lean();
-            const otherMemberOfChats = members.filter((member) => (member.toString() != socket.clientAuthData._id.toString()))
-            // console.log("otherMemberOfChats", otherMemberOfChats);
-            const activeChatMembersInSockets = getSockets(otherMemberOfChats, InstanceActiveUserSocketIDs);
-            // console.log("activeChatMembersInSockets", activeChatMembersInSockets);
-            io.to(activeChatMembersInSockets).emit(STOP_TYPING, { chatId: data.chatId, user: { user_name: socket.clientAuthData.user_name, _id: socket.clientAuthData._id } });
+            const otherMemberOfChats = members.filter((member) => (member.toString() !== socket.clientAuthData._id.toString()))
+
+            pub.publish(STOP_TYPING, JSON.stringify({
+                otherMemberOfChats,
+                chatId: data.chatId,
+                user: { user_name: socket.clientAuthData.user_name, _id: socket.clientAuthData._id }
+            }))
         } catch (error) {
             console.log("failed to get members of chat")
         }
@@ -77,7 +80,7 @@ const comingOnlineFeature = (socket, io) => {
             }), userId] //adding userId, so that he receives also recives online Ids
 
             pub.publish(ONLINE_USERS, JSON.stringify({ onlineFriendIds }), () => {
-                console.log('Publisheing done')
+                // console.log('Publisheing done')
             })
 
         } catch (error) {
@@ -116,7 +119,7 @@ const functionCalledForGoingOffline = async (socket, io) => {
     })
 
     pub.publish(ONLINE_USERS, JSON.stringify({ onlineFriendIds }), () => {
-        console.log('Publisheing done')
+        // console.log('Publisheing done')
     })
 }
 
