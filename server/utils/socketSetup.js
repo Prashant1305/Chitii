@@ -4,11 +4,12 @@ const { socketAuthenticator } = require("../middleware/auth_middleware");
 const { InstanceActiveUserSocketIDs, InstanceOnlineUsersIds } = require("./infoOfActiveSession");
 const { startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature, functionCalledForGoingOffline } = require("./features");
 const { callingFeatures } = require("./callingFeature");
-
-let io;
+const { getIo, setIo } = require("./socket/io")
 
 function initializeSocket(server, corsOptions) {
-    io = new Server(server, { cors: corsOptions });
+    setIo(new Server(server, { cors: corsOptions }));
+
+    const io = getIo();
 
     io.use((socket, next) => {
         cookieParser()(socket.request, socket.request.res, async (err) => {
@@ -39,11 +40,6 @@ function initializeSocket(server, corsOptions) {
 
     return io;
 }
-const getIo = () => {
-    if (!io) {
-        throw new Error("Socket.io not initialized!");
-    }
-    return io;
-}
 
-module.exports = { initializeSocket, getIo };
+
+module.exports = { initializeSocket };
