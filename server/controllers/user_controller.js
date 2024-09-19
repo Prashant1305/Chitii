@@ -5,6 +5,7 @@ const { emitEvent } = require("../utils/features");
 const { NEW_REQUEST, REFETCH_CHATS } = require("../Constants/events");
 const { getSockets } = require("../utils/helper");
 const { InstanceActiveUserSocketIDs } = require("../utils/infoOfActiveSession");
+const { pub } = require("../utils/redis/connectToRedis");
 
 
 // const getUserForSidebar = async (req, res, next) => {
@@ -78,7 +79,6 @@ const sendFriendRequest = async (req, res, next) => {
                 { sender: userId, receiver: req.clientAuthData._id }
             ]
         });
-        // console.log(request)
 
         if (request) {
             return res.status(400).json({ message: "request already sent" });
@@ -86,13 +86,7 @@ const sendFriendRequest = async (req, res, next) => {
 
         await Request.create({ sender: req.clientAuthData._id, receiver: userId });
 
-        // emitEvent(req, NEW_REQUEST, [userId]);
-
-        const io = req.app.get('socketio'); // Retrieve io instance from app
-        const memberSocket = InstanceActiveUserSocketIDs.get(userId);
-        if (memberSocket.length > 0) {
-            io.to(memberSocket).emit(NEW_REQUEST, { msg: `you received freind request from ${req.clientAuthData.user_name}` });
-        }
+        pub.publish(NEW_REQUEST, JSON.stringify({ members: [userId], user_name: req.clientAuthData.user_name }))
 
         return res.status(200).json({ message: "Friend request sent succesfully" });
 

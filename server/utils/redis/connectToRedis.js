@@ -1,5 +1,5 @@
 const Redis = require("ioredis");
-const { ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS } = require("../../Constants/events");
+const { ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS, NEW_REQUEST } = require("../../Constants/events");
 const { getSockets } = require("../helper");
 const { InstanceActiveUserSocketIDs, InstanceOnlineUsersIds } = require("../infoOfActiveSession");
 const { getIo } = require("../socket/io");
@@ -16,7 +16,7 @@ const sub = new Redis(userCredentials); // connection in subscriber mode for sub
 const pub = new Redis(userCredentials); // connection in publisher mode for publishing only
 const initializeRedis = () => {
 
-    const channels = ["MESSAGES", ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS];
+    const channels = ["MESSAGES", ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS, NEW_REQUEST];
     // Subscribe to multiple channels
     sub.subscribe(channels, (err, count) => {
         if (err) {
@@ -78,6 +78,14 @@ const initializeRedis = () => {
                 membersSocket = getSockets(modifiedMemberOfNewMessage, InstanceActiveUserSocketIDs);
                 if (membersSocket.length > 0) {
                     io.to(membersSocket).emit(NEW_MESSAGE, data.messageNotification);
+                }
+                break;
+
+            case NEW_REQUEST:
+                const modifiedMemberOfNewRequest = data.members.map((id) => ({ _id: id }));
+                membersSocket = getSockets(modifiedMemberOfNewRequest, InstanceActiveUserSocketIDs);
+                if (membersSocket.length > 0) {
+                    io.to(membersSocket).emit(NEW_REQUEST, { msg: `you received freind request from ${data.user_name}` });
                 }
                 break;
 

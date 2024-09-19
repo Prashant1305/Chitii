@@ -30,9 +30,10 @@ function initializeSocket(server, corsOptions) {
         socket.on("disconnect", () => {
             console.log("user disconnected");
             InstanceActiveUserSocketIDs.delete(user?._id.toString());
-
-            functionCalledForGoingOffline(socket, io);
-
+            InstanceOnlineUsersIds.delete(socket.clientAuthData._id.toString());
+            if (socket.clientAuthData) { // when client cookies are expired,
+                functionCalledForGoingOffline(socket, io);
+            }
         });
     });
 

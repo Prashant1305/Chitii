@@ -53,7 +53,7 @@ const comingOnlineFeature = (socket, io) => {
             InstanceOnlineUsersIds.add(userId.toString());
 
             // Add members from set in redis
-            redis.sadd("onlineUsersMongoIds", userId + "").then().catch((err) => {
+            redis.sadd("onlineUsersMongoIds", userId.toString()).then().catch((err) => {
                 console.log("error in redis from comingOnlineFeatures", err)
             })
 
@@ -73,15 +73,18 @@ const comingOnlineFeature = (socket, io) => {
                 }
             })
 
-            // checking online friends in friendIds
-            const onlineFriendsResponseArray = await redis.smismember("onlineUsersMongoIds", friendsIds)
-            const onlineFriendIds = [...friendsIds.filter((_, index) => {
-                return onlineFriendsResponseArray[index];
-            }), userId] //adding userId, so that he receives also recives online Ids
+            if (friendsIds.length > 0) {
+                // checking online friends in friendIds
+                const onlineFriendsResponseArray = await redis.smismember("onlineUsersMongoIds", friendsIds)
+                const onlineFriendIds = [...friendsIds.filter((_, index) => {
+                    return onlineFriendsResponseArray[index];
+                }), userId] //adding userId, so that he receives also recives online Ids
 
-            pub.publish(ONLINE_USERS, JSON.stringify({ onlineFriendIds }), () => {
-                // console.log('Publisheing done')
-            })
+                pub.publish(ONLINE_USERS, JSON.stringify({ onlineFriendIds }), () => {
+                    // console.log('Publisheing done')
+                })
+            }
+
 
         } catch (error) {
             console.log(error)
@@ -90,11 +93,11 @@ const comingOnlineFeature = (socket, io) => {
 }
 
 const functionCalledForGoingOffline = async (socket, io) => {
-    const userId = socket.clientAuthData._id
-    InstanceOnlineUsersIds.delete(userId.toString());
+
+    const userId = socket.clientAuthData._id;
 
     // remove members from set in redis
-    redis.srem("onlineUsersMongoIds", userId + "").then().catch((err) => {
+    redis.srem("onlineUsersMongoIds", userId.toString()).then().catch((err) => {
         console.log("error in redis from functionCalledForGoingOffline", err)
     })
 
@@ -112,15 +115,20 @@ const functionCalledForGoingOffline = async (socket, io) => {
             friendsIds.push(chat.members[0] + "")
         }
     })
-    // checking online friends in friendIds
-    const onlineFriendsResponseArray = await redis.smismember("onlineUsersMongoIds", friendsIds)
-    const onlineFriendIds = friendsIds.filter((_, index) => {
-        return onlineFriendsResponseArray[index];
-    })
 
-    pub.publish(ONLINE_USERS, JSON.stringify({ onlineFriendIds }), () => {
-        // console.log('Publisheing done')
-    })
+
+    if (friendsIds.length > 0) {
+        // checking online friends in friendIds
+        const onlineFriendsResponseArray = await redis.smismember("onlineUsersMongoIds", friendsIds)
+
+        const onlineFriendIds = friendsIds.filter((_, index) => {
+            return onlineFriendsResponseArray[index];
+        })
+
+        pub.publish(ONLINE_USERS, JSON.stringify({ onlineFriendIds }), () => {
+            // console.log('Publisheing done')
+        })
+    }
 }
 
 const goingOfflineFeature = (socket, io) => {
