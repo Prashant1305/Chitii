@@ -8,6 +8,7 @@ const { ObjectId } = require('mongodb');
 const { uploadOnCloudinary, deleteFromCloudinary } = require("../utils/cloudinaryDb/cloudinary");
 const { InstanceActiveUserSocketIDs } = require("../utils/infoOfActiveSession");
 const { getSockets } = require("../utils/helper");
+const { pub } = require("../utils/redis/connectToRedis");
 
 // const sendMessage = async (req, res, next) => {
 //     try {
@@ -100,15 +101,9 @@ const newGroupChat = async (req, res, next) => {
             sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name },
             conversation: messageForDb.conversation, text_content: messageForDb.text_content, attachments: messageForDb.attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt
         }
-        // console.log("messageNotification ", messageNotification);
 
-        const io = req.app.get('socketio'); // Retrieve io instance from app
-        const modifiedAllMember = allMembers.map((member) => ({ _id: member }))
-        const membersSocket = getSockets(modifiedAllMember, InstanceActiveUserSocketIDs);
-        if (membersSocket.length > 0) {
-            io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
-            io.to(membersSocket).emit(REFETCH_CHATS, {});
-        }
+        pub.publish(NEW_MESSAGE, JSON.stringify({ members: allMembers, messageNotification }));
+        pub.publish(REFETCH_CHATS, JSON.stringify({ members: allMembers }));
 
         return res.status(200).json({ message: "Grouop created successfully" });
 
@@ -208,16 +203,12 @@ const addMembers = async (req, res, next) => {
         }
 
         const allMembers = chat.members.filter((member) => (member + "" !== req.clientAuthData._id + ""))
+        const modifiedAllMember = allMembers.map((member) => (member.toString()));
 
-        const io = req.app.get('socketio'); // Retrieve io instance from app
-        const modifiedAllMember = allMembers.map((member) => ({ _id: member }))
-        const modifiedRefetchChatMemeber = members.map((member) => ({ _id: member }))
-        const refetch_chat_member_socket = getSockets(modifiedRefetchChatMemeber, InstanceActiveUserSocketIDs);
-        const membersSocket = getSockets(modifiedAllMember, InstanceActiveUserSocketIDs);
-        if (membersSocket.length > 0) {
-            io.to(refetch_chat_member_socket).emit(REFETCH_CHATS, {});
-            io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
-        }
+        // const io = req.app.get('socketio'); // Retrieve io instance from app
+
+        pub.publish(REFETCH_CHATS, JSON.stringify({ members }));
+        pub.publish(NEW_MESSAGE, JSON.stringify({ members: modifiedAllMember, messageNotification }))
 
         res.status(200).json({ message: "members added successfully" });
 
@@ -229,7 +220,7 @@ const addMembers = async (req, res, next) => {
     }
 }
 
-const removeMembers = async (req, res, next) => { // incomplete
+const removeMembers = async (req, res, next) => {
     try {
         const { userId, conversationId } = req.body;
         if (!conversationId) {
@@ -272,17 +263,9 @@ const removeMembers = async (req, res, next) => { // incomplete
         }
 
         const allMembers = modifiedMember.filter((member) => (member + "" !== req.clientAuthData._id + ""))
-        const io = req.app.get('socketio'); // Retrieve io instance from app
-        const modifiedAllMember = allMembers.map((member) => ({ _id: member }))
-        const membersSocket = getSockets(modifiedAllMember, InstanceActiveUserSocketIDs);
-        const removedMemberSocket = getSockets([{ _id: userId }], InstanceActiveUserSocketIDs)
 
-        if (membersSocket.length > 0) {
-            io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
-        }
-        if (removedMemberSocket) {
-            io.to(removedMemberSocket).emit(REFETCH_CHATS, {});
-        }
+        pub.publish(NEW_MESSAGE, JSON.stringify({ members: allMembers, messageNotification }));
+        pub.publish(REFETCH_CHATS, JSON.stringify({ members: [userId] }));
 
         res.status(200).json({ message: "members removed successfully" });
     } catch (error) {
@@ -327,17 +310,10 @@ const leaveGroup = async (req, res, next) => {
         }
 
         const allMembers = chat.members.filter((member) => (member + "" !== req.clientAuthData._id + ""))
-        const io = req.app.get('socketio'); // Retrieve io instance from app
-        const modifiedAllMember = allMembers.map((member) => ({ _id: member }))
-        const membersSocket = getSockets(modifiedAllMember, InstanceActiveUserSocketIDs);
-        const removedMemberSocket = getSockets([{ _id: req.clientAuthData._id }], InstanceActiveUserSocketIDs)
+        const modifiedAllMember = allMembers.map((id) => id.toString());
 
-        if (membersSocket.length > 0) {
-            io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
-        }
-        if (removedMemberSocket) {
-            io.to(removedMemberSocket).emit(REFETCH_CHATS, {});
-        }
+        await pub.publish(NEW_MESSAGE, JSON.stringify({ members: modifiedAllMember, messageNotification }))
+        await pub.publish(REFETCH_CHATS, JSON.stringify({ members: [req.clientAuthData._id.toString()] }))
 
         res.status(200).json({ message: "Group leaved successfully" });
 
@@ -377,11 +353,9 @@ const sendMessage = async (req, res, next) => {
 
             const messageNotification = { sender: { _id: req.clientAuthData._id, user_name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url }, conversation: conversationId, text_content, attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt }
 
-            const io = req.app.get('socketio'); // Retrieve io instance from app
-            const membersSocket = getSockets(chat.members, InstanceActiveUserSocketIDs);
-            if (membersSocket.length > 0) {
-                io.to(membersSocket).emit(NEW_MESSAGE, { ...messageNotification });
-            }
+            pub.publish(NEW_MESSAGE, JSON.stringify({ messageNotification, members: chat.members }));
+
+            // const io = req.app.get('socketio'); // if you want to Retrieve instance from app
 
             res.status(200).json({ message: "received send message", text_data: req.body, attachments })
         } else {
@@ -441,12 +415,9 @@ const renameConversation = async (req, res, next) => {
         chat.name = conversationName;
         await chat.save();
 
-        const io = req.app.get('socketio'); // Retrieve io instance from app
-        const membersSocket = getSockets(chat.members, InstanceActiveUserSocketIDs);
-        if (membersSocket.length > 0) {
-            io.to(membersSocket).emit(REFETCH_CHATS, {});
-        }
+        pub.publish(REFETCH_CHATS, JSON.stringify({ members: chat.members }))
 
+        // const io = req.app.get('socketio'); // Retrieve io instance from app
         return res.status(200).json({ message: "Group name changed succesfully" });
     } catch (error) {
         const err = new Error("cannot rename chat, plz try later");
@@ -483,12 +454,7 @@ const deleteChat = async (req, res, next) => {
         })
         await Conversation.deleteOne({ _id: conversationId })
 
-        const io = req.app.get('socketio'); // Retrieve io instance from app
-        const modifiedAllMember = chat.members.map((member) => ({ _id: member }))
-        const membersSocket = getSockets(modifiedAllMember, InstanceActiveUserSocketIDs);
-        if (membersSocket.length > 0) {
-            io.to(membersSocket).emit(REFETCH_CHATS, {});
-        }
+        pub.publish(REFETCH_CHATS, JSON.stringify({ members: chat.members }))
 
         return res.status(200).json({ message: "Chat deleted succesfully" });
 

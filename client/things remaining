@@ -10,3 +10,5 @@ club all stoptyping features app.js
 is in call with you from calling items remaining
 
 whole online usersList is sent to friends when user comes online
+
+refetch chat via event, triggered when accepting fiend request
