@@ -1,5 +1,5 @@
 const Redis = require("ioredis");
-const { ONLINE_USERS, START_TYPING, STOP_TYPING } = require("../../Constants/events");
+const { ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS } = require("../../Constants/events");
 const { getSockets } = require("../helper");
 const { InstanceActiveUserSocketIDs, InstanceOnlineUsersIds } = require("../infoOfActiveSession");
 const { getIo } = require("../socket/io");
@@ -16,7 +16,7 @@ const sub = new Redis(userCredentials); // connection in subscriber mode for sub
 const pub = new Redis(userCredentials); // connection in publisher mode for publishing only
 const initializeRedis = () => {
 
-    const channels = ["MESSAGES", ONLINE_USERS, START_TYPING, STOP_TYPING];
+    const channels = ["MESSAGES", ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS];
     // Subscribe to multiple channels
     sub.subscribe(channels, (err, count) => {
         if (err) {
@@ -28,6 +28,7 @@ const initializeRedis = () => {
 
     sub.on("message", async (channel, message) => {
         const data = JSON.parse(message)
+        let membersSocket;
         const io = getIo()
         switch (channel) {
 
@@ -35,31 +36,48 @@ const initializeRedis = () => {
 
                 const modifiedOnlineFriendIds = data?.onlineFriendIds.map((friend) => ({ _id: friend }))
 
-                const instanceFriendSocketIds = getSockets(modifiedOnlineFriendIds, InstanceActiveUserSocketIDs); // adding userId so that he can receive online users
+                membersSocket = getSockets(modifiedOnlineFriendIds, InstanceActiveUserSocketIDs); // adding userId so that he can receive online users
 
-                if (instanceFriendSocketIds.length > 0) {
+                if (membersSocket.length > 0) {
                     const allOnlineMembersOfAllInstance = await redis.smembers("onlineUsersMongoIds");
 
-                    io.to(instanceFriendSocketIds).emit(ONLINE_USERS, { users: Array.from(allOnlineMembersOfAllInstance) })
+                    io.to(membersSocket).emit(ONLINE_USERS, { users: Array.from(allOnlineMembersOfAllInstance) })
                 }
                 break;
 
             case START_TYPING:
 
                 const modifiedOtherMemberOfChats = data.otherMemberOfChats.map((id) => ({ _id: id }))
-                const activeChatMembersSocketIdsForStartTyping = getSockets(modifiedOtherMemberOfChats, InstanceActiveUserSocketIDs);
-                if (activeChatMembersSocketIdsForStartTyping.length > 0) {
-                    io.to(activeChatMembersSocketIdsForStartTyping).emit(START_TYPING, { chatId: data.chatId, user: data.user });
+                membersSocket = getSockets(modifiedOtherMemberOfChats, InstanceActiveUserSocketIDs);
+                if (membersSocket.length > 0) {
+                    io.to(membersSocket).emit(START_TYPING, { chatId: data.chatId, user: data.user });
                 }
                 break;
 
             case STOP_TYPING:
 
                 const modifiedOtherMemberOfChatsForStopTyping = data.otherMemberOfChats.map((id) => ({ _id: id }))
-                const activeChatMembersSocketIdssForStopTyping = getSockets(modifiedOtherMemberOfChatsForStopTyping, InstanceActiveUserSocketIDs);
-                // console.log("activeChatMembersSocketIdssForStopTyping", activeChatMembersSocketIdssForStopTyping);
-                if (activeChatMembersSocketIdssForStopTyping.length > 0) {
-                    io.to(activeChatMembersSocketIdssForStopTyping).emit(STOP_TYPING, { chatId: data.chatId, user: data.user });
+                membersSocket = getSockets(modifiedOtherMemberOfChatsForStopTyping, InstanceActiveUserSocketIDs);
+                if (membersSocket.length > 0) {
+                    io.to(membersSocket).emit(STOP_TYPING, { chatId: data.chatId, user: data.user });
+                }
+                break;
+
+            case REFETCH_CHATS:
+
+                const modifiedMemberOfRefetchChat = data.members.map((id) => ({ _id: id }))
+                membersSocket = getSockets(modifiedMemberOfRefetchChat, InstanceActiveUserSocketIDs);
+                if (membersSocket.length > 0) {
+                    io.to(membersSocket).emit(REFETCH_CHATS, {});
+                }
+                break;
+
+            case NEW_MESSAGE:
+
+                const modifiedMemberOfNewMessage = data.members.map((id) => ({ _id: id }));
+                membersSocket = getSockets(modifiedMemberOfNewMessage, InstanceActiveUserSocketIDs);
+                if (membersSocket.length > 0) {
+                    io.to(membersSocket).emit(NEW_MESSAGE, data.messageNotification);
                 }
                 break;
 

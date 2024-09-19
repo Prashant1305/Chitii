@@ -132,7 +132,7 @@ const acceptFriendRequest = async (req, res, next) => {
             })
         ])
 
-        emitEvent(req, REFETCH_CHATS, members);
+        // emitEvent(req, REFETCH_CHATS, members);
 
         await request.deleteOne();
         res.status(200).json({ message: `you are now friends with ${request.sender.user_name}` });
