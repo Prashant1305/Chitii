@@ -2,12 +2,10 @@ const Conversation = require("../models/conversation_model");
 const Message = require("../models/message_model");
 const User = require("../models/user_model");
 const mongoose = require('mongoose');
-const { emitEvent } = require("../utils/features");
-const { ALERT, REFETCH_CHATS, NEW_MESSAGE_ALERTS, NEW_MESSAGE } = require("../Constants/events");
+
+const { REFETCH_CHATS, NEW_MESSAGE } = require("../Constants/events");
 const { ObjectId } = require('mongodb');
 const { uploadOnCloudinary, deleteFromCloudinary } = require("../utils/cloudinaryDb/cloudinary");
-const { InstanceActiveUserSocketIDs } = require("../utils/infoOfActiveSession");
-const { getSockets } = require("../utils/helper");
 const { pub } = require("../utils/redis/connectToRedis");
 
 // const sendMessage = async (req, res, next) => {
