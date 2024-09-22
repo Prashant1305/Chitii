@@ -2,10 +2,9 @@ import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogContentText
 import React from 'react'
 import { MyToggleUiValues } from '../../../context/ToggleUi'
 import CallReceivedIcon from '@mui/icons-material/CallReceived';
-import { GetSocket } from '../../../utils/Socket';
 import { CALL_RECEIVED_RESPONSE } from '../../constants/events';
 import { useNavigate } from 'react-router-dom';
-import { MyCallingValues } from '../../../context/CallContext';
+import { GetSocket } from '../../../context/SocketConnectContext';
 
 function IncomingCallDialog({ incomingCallUserData }) {
     const { uiState, setUiState } = MyToggleUiValues()

@@ -2,7 +2,7 @@ import React, { Fragment, useCallback, useEffect, useState } from 'react'
 import { Button, CardMedia, IconButton, Stack } from '@mui/material';
 import PhoneDisabledIcon from '@mui/icons-material/PhoneDisabled';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { GetSocket } from '../../utils/Socket';
+import { GetSocket } from '../../context/SocketConnectContext';
 import ReactPlayer from "react-player";
 import { useSelector } from 'react-redux';
 import { incoming_call_api } from '../../utils/ApiUtils';

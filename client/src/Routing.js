@@ -27,8 +27,9 @@ import { fetch_user_data } from "./utils/ApiUtils";
 // import Error from "./pages/Error";
 import { toast } from "react-toastify";
 import RootLayout from "./components/layout/RootLayout";
-import SocketProvider from "./utils/Socket";
+
 import CallContext from "./context/CallContext";
+import SocketProvider from "./context/SocketConnectContext";
 // import Groups from "./pages/Groups";
 // import Chat from "./pages/Chat";
 
