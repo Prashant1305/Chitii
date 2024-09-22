@@ -14,7 +14,7 @@ import { Link } from '../components/styles/StyledComponent';
 import { MyToggleUiValues } from '../context/ToggleUi';
 import { useSocketEvent } from '../hooks/socket_hooks';
 import { chat_details, get_group_chat_list_api, rename_chat_api } from '../utils/ApiUtils';
-import { GetSocket } from '../utils/Socket';
+import { GetSocket } from "../context/SocketConnectContext";
 
 function Groups() {
     const navigate = useNavigate();
@@ -32,7 +32,6 @@ function Groups() {
 
 
     const [isEdit, setIsEdit] = useState(false);
-    // const [groupName, setGroupName] = useState("");
     const [groupDetails, setGroupDetails] = useState({
         name: "",
         members: [],

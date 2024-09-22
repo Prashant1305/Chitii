@@ -44,5 +44,4 @@ function initializeSocket(server, corsOptions) {
     return io;
 }
 
-
 module.exports = { initializeSocket };

@@ -12,7 +12,7 @@ import { MyToggleUiValues } from '../context/ToggleUi'
 import { useSocketEvent } from '../hooks/socket_hooks'
 import { popInTypingArray, pushInTypingArray } from '../redux/reducers/typing'
 import { get_my_chats } from '../utils/ApiUtils'
-import { GetSocket } from '../utils/Socket'
+import { GetSocket } from '../context/SocketConnectContext'
 
 function ChatWindow() {
     const params = useParams();
