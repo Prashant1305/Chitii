@@ -18,7 +18,7 @@ function LiveCalling({ callId }) {
     const { user } = useSelector(state => state.auth)
     const [myStream, setMyStream] = useState()
     const [remoteStream, setRemoteStream] = useState()
-    const [remoteSocketId, setRemoteSocketId] = useState();
+    const [remoteUserId, setRemoteUserId] = useState();
     const [searchParams] = useSearchParams();
     const [uiOfLiveCalling, setUiOfLiveCalling] = useState({
         connectButtonIsActive: searchParams.get('received') ? true : false,
@@ -27,7 +27,8 @@ function LiveCalling({ callId }) {
     })
     const navigate = useNavigate()
 
-    const initiateP2pHandler = useCallback(async (data) => { // data-{to:socketId of receiver / otherPerson}
+    const initiateP2pHandler = useCallback(async (data) => { // data-(to:userId of receiver / otherPerson)
+        console.log(INITIATE_P2P, data);
         const stream = await navigator.mediaDevices.getUserMedia({
             audio: true,
             video: {
@@ -44,15 +45,15 @@ function LiveCalling({ callId }) {
             },
         });
         const offer = await peer.getOffer();
-        setRemoteSocketId(data.socketId);
+        setRemoteUserId(data.userId);
         setMyStream(stream);
-        socket.emit(CLIENT_CREATE_OFFER, { to: data.socketId, offer })
-    }, [remoteSocketId, socket])
+        socket.emit(CLIENT_CREATE_OFFER, { to: data.userId, offer })
+    }, [remoteUserId, socket])
 
 
     const handleOfferCreateAnswereHandler = useCallback(async ({ from, offer }) => {
-        console.log("handleOfferCreateAnswereHandler", { from, offer })
-        setRemoteSocketId(from);
+        console.log(HANDLE_OFFER_CREATE_ANSWERE, { from, offer })
+        setRemoteUserId(from);
         const stream = await navigator.mediaDevices.getUserMedia({
             audio: true,
             video: {
@@ -81,6 +82,7 @@ function LiveCalling({ callId }) {
     }, [myStream]);
 
     const handleAnswerehandler = useCallback(({ from, ans }) => {
+        console.log(HANDLE_ANSWERE, { from, ans })
         peer.setLocalDescription(ans);
 
         setUiOfLiveCalling({ ...uiOfLiveCalling, disconnectButtonIsActive: true })
@@ -120,16 +122,19 @@ function LiveCalling({ callId }) {
 
     const handleIncomingNego = useCallback(
         async ({ from, offer }) => {
+            console.log(PEER_NEGO_NEEDED, { from, offer })
             const ans = await peer.getAnswer(offer);
             socket.emit(PEER_NEGO_DONE, { to: from, ans });
         }, [socket]
     );
 
     const handleNegoNeedFinal = useCallback(async ({ ans }) => {
+        console.log(PEER_NEGO_FINAL, { ans })
         await peer.setLocalDescription(ans);
     }, []);
 
     const handleEndCall = () => {
+        console.log(END_CALL)
         setRemoteStream();
         setUiOfLiveCalling({
             ...uiOfLiveCalling, dialButtonIsactive: true,
@@ -153,10 +158,10 @@ function LiveCalling({ callId }) {
     useSocketEvent(socket, eventHandlers);
 
     const handleNegoNeeded = useCallback(async () => {
+        console.log(NEGOTIATION_NEEDED)
         const offer = await peer.getOffer();
-        console.log("handle")
-        socket.emit(PEER_NEGO_NEEDED, { offer, to: remoteSocketId });
-    }, [remoteSocketId, socket]);
+        socket.emit(PEER_NEGO_NEEDED, { offer, to: remoteUserId });
+    }, [remoteUserId, socket]);
 
     useEffect(() => {
         peer.peer.addEventListener(NEGOTIATION_NEEDED, handleNegoNeeded);
@@ -174,7 +179,7 @@ function LiveCalling({ callId }) {
 
     const handleDisconnect = () => {
         handleEndCall()
-        socket.emit(END_CALL, { to: remoteSocketId, roomId: callId })
+        socket.emit(END_CALL, { to: remoteUserId, roomId: callId })
     }
 
     return (
@@ -200,7 +205,7 @@ function LiveCalling({ callId }) {
                     sx={{
                         p: 2,
                         height: "80%",
-                        border: "2px solid pink",
+                        // border: "2px solid pink",
                         width: "100%",
                         padding: "1",
                         alignItems: "center"
@@ -226,7 +231,7 @@ function LiveCalling({ callId }) {
                         p: 1,
                         height: "30%",
                         width: "fit-content",
-                        border: "2px solid black",
+                        // border: "2px solid black",
                         position: "absolute",
                         bottom: "0",
                         right: "0"
