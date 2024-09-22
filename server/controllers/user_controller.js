@@ -1,10 +1,7 @@
 const Conversation = require("../models/conversation_model");
 const User = require("../models/user_model");
 const Request = require("../models/request_model");
-const { emitEvent } = require("../utils/features");
 const { NEW_REQUEST, REFETCH_CHATS } = require("../Constants/events");
-const { getSockets } = require("../utils/helper");
-const { InstanceActiveUserSocketIDs } = require("../utils/infoOfActiveSession");
 const { pub } = require("../utils/redis/connectToRedis");
 
 
@@ -126,7 +123,7 @@ const acceptFriendRequest = async (req, res, next) => {
             })
         ])
 
-        // emitEvent(req, REFETCH_CHATS, members);
+        pub.publish(REFETCH_CHATS, JSON.stringify({ members: [request.sender._id.toString(), request.receiver._id.toString()] }))
 
         await request.deleteOne();
         res.status(200).json({ message: `you are now friends with ${request.sender.user_name}` });

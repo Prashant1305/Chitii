@@ -52,7 +52,7 @@ const comingOnlineFeature = (socket, io) => {
             const userId = socket.clientAuthData._id
             InstanceOnlineUsersIds.add(userId.toString());
 
-            // Add members from set in redis
+            // Add members in set in redis
             redis.sadd("onlineUsersMongoIds", userId.toString()).then().catch((err) => {
                 console.log("error in redis from comingOnlineFeatures", err)
             })
@@ -64,11 +64,8 @@ const comingOnlineFeature = (socket, io) => {
             const valuesToCheck = [];
             chats.forEach((chat) => {
                 if (chat.members[0] + "" === userId + "") {
-                    // friendsIds.push({ _id: chat.members[1] })
                     friendsIds.push(chat.members[1] + "")
-
                 } else {
-                    // friendsIds.push({ _id: chat.members[0] })
                     friendsIds.push(chat.members[0] + "")
                 }
             })

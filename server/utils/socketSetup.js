@@ -4,7 +4,8 @@ const { socketAuthenticator } = require("../middleware/auth_middleware");
 const { InstanceActiveUserSocketIDs, InstanceOnlineUsersIds } = require("./infoOfActiveSession");
 const { startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature, functionCalledForGoingOffline } = require("./features");
 const { callingFeatures } = require("./callingFeature");
-const { getIo, setIo } = require("./socket/io")
+const { getIo, setIo } = require("./socket/io");
+const Room = require("../models/room");
 
 function initializeSocket(server, corsOptions) {
     setIo(new Server(server, { cors: corsOptions }));
@@ -33,6 +34,9 @@ function initializeSocket(server, corsOptions) {
             InstanceOnlineUsersIds.delete(socket.clientAuthData._id.toString());
             if (socket.clientAuthData) { // when client cookies are expired,
                 functionCalledForGoingOffline(socket, io);
+                Room.deleteOne({ members: { $in: socket.clientAuthData._id } }).then(() => {
+                    console.log("room deleted");
+                })
             }
         });
     });

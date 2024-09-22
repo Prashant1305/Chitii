@@ -1,7 +1,7 @@
 const Redis = require("ioredis");
-const { ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS, NEW_REQUEST } = require("../../Constants/events");
+const { ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS, NEW_REQUEST, CALL_INCOMING, CALL_RECEIVED_RESPONSE, INITIATE_P2P, HANDLE_OFFER_CREATE_ANSWERE, HANDLE_ANSWERE, PEER_NEGO_NEEDED, PEER_NEGO_FINAL, END_CALL } = require("../../Constants/events");
 const { getSockets } = require("../helper");
-const { InstanceActiveUserSocketIDs, InstanceOnlineUsersIds } = require("../infoOfActiveSession");
+const { InstanceActiveUserSocketIDs } = require("../infoOfActiveSession");
 const { getIo } = require("../socket/io");
 
 const userCredentials = {
@@ -16,7 +16,7 @@ const sub = new Redis(userCredentials); // connection in subscriber mode for sub
 const pub = new Redis(userCredentials); // connection in publisher mode for publishing only
 const initializeRedis = () => {
 
-    const channels = ["MESSAGES", ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS, NEW_REQUEST];
+    const channels = ["MESSAGES", ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS, NEW_REQUEST, CALL_INCOMING, INITIATE_P2P, HANDLE_OFFER_CREATE_ANSWERE, HANDLE_ANSWERE, PEER_NEGO_NEEDED, PEER_NEGO_FINAL, END_CALL];
     // Subscribe to multiple channels
     sub.subscribe(channels, (err, count) => {
         if (err) {
@@ -89,11 +89,99 @@ const initializeRedis = () => {
                 }
                 break;
 
+            case CALL_INCOMING:
+                const modifiedMemberOfCallIncoming = data.members.map((id) => ({ _id: id }));
+                membersSocket = getSockets(modifiedMemberOfCallIncoming, InstanceActiveUserSocketIDs);
+                if (membersSocket.length > 0) {
+                    io.to(membersSocket).emit(CALL_INCOMING, { user: data.user, roomId: data.roomId });
+                    /* ********* // Access a specific socket by its ID */
+                    const specificIncomingCallReceiverSocket = io.sockets.sockets.get(membersSocket[0]);
+
+                    let responseOfReceiverPromise = () =>
+                    (new Promise((resolve, reject) => {
+                        specificIncomingCallReceiverSocket.once(CALL_RECEIVED_RESPONSE, (data) => { // once means it will trigger only once
+                            if (data.status === "ACCEPTED") {
+                                resolve(data);
+                            }
+                            else { // data.status === "DECLINED"
+                                reject(data);
+                            }
+                        });
+                    })
+                    )
+                    try {
+                        const receivedCallStatus = await responseOfReceiverPromise();
+                        pub.publish(CALL_RECEIVED_RESPONSE, JSON.stringify(receivedCallStatus))
+
+                    } catch (error) {
+                        pub.publish(CALL_RECEIVED_RESPONSE, JSON.stringify(error));
+                    }
+
+                }
+
+                break;
+
+            case INITIATE_P2P:
+                const modifiedMemberOfInitiateP2P = data.members.map((id) => ({ _id: id }));
+                membersSocket = getSockets(modifiedMemberOfInitiateP2P, InstanceActiveUserSocketIDs);
+                if (membersSocket.length > 0) {
+                    io.to(membersSocket).emit(INITIATE_P2P, { userId: data._id });
+                }
+                break;
+
+            case HANDLE_OFFER_CREATE_ANSWERE:
+                const modifiedMemberOfHandleOfferCreateAnswer = data.members.map((id) => ({ _id: id }));
+                membersSocket = getSockets(modifiedMemberOfHandleOfferCreateAnswer, InstanceActiveUserSocketIDs);
+
+                if (membersSocket.length > 0) {
+                    io.to(membersSocket).emit(HANDLE_OFFER_CREATE_ANSWERE, {
+                        from: data.from, offer: data.offer
+                    });
+                }
+                break;
+
+            case HANDLE_ANSWERE:
+                const modifiedMemberOfHandleAnswer = data.members.map((id) => ({ _id: id }));
+                membersSocket = getSockets(modifiedMemberOfHandleAnswer, InstanceActiveUserSocketIDs);
+                if (membersSocket.length > 0) {
+                    io.to(membersSocket).emit(HANDLE_ANSWERE, {
+                        from: data.from,
+                        ans: data.ans
+                    })
+                }
+                break;
+
+            case PEER_NEGO_NEEDED:
+                const modifiedMemberOfPeerNegoNeeded = data.members.map((id) => ({ _id: id }));
+                membersSocket = getSockets(modifiedMemberOfPeerNegoNeeded, InstanceActiveUserSocketIDs);
+                if (membersSocket.length > 0) {
+                    io.to(membersSocket).emit(PEER_NEGO_NEEDED, {
+                        from: data.from,
+                        offer: data.offer
+                    });
+                }
+                break;
+
+            case PEER_NEGO_FINAL:
+                const modifiedMemberOfPeerNegoFinal = data.members.map((id) => ({ _id: id }));
+                membersSocket = getSockets(modifiedMemberOfPeerNegoFinal, InstanceActiveUserSocketIDs)
+                if (membersSocket.length > 0) {
+                    io.to(membersSocket).emit(PEER_NEGO_FINAL, { from: data.from, ans: data.ans });
+                }
+                break;
+
+            case END_CALL:
+                const modifiedMemberOfEndCall = data.members.map((id) => ({ _id: id }));
+                membersSocket = getSockets(modifiedMemberOfEndCall, InstanceActiveUserSocketIDs);
+                if (membersSocket.length > 0) {
+                    io.to(membersSocket).emit(END_CALL, { from: data.from });
+                }
+                break;
+
             default:
                 console.log("from redis.js", { channel, message })
                 break;
         }
-
     })
 
     // Handle errors
@@ -101,8 +189,5 @@ const initializeRedis = () => {
         console.error("From Redis side error:", err);
     });
 }
-
-
-
 
 module.exports = { redis, initializeRedis, sub, pub }
