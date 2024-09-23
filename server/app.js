@@ -43,7 +43,10 @@ else {
 
     var corsOptions = {
         origin: function (origin, callback) {
-            console.log("req is from ", origin);
+            if (process.env.NODE_ENV === "development") {
+                console.log("req is from ", origin);
+            }
+
             if (allowedOrigins.includes(origin) || !origin) {
                 callback(null, true); // Allow the request
             } else {
