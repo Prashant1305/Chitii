@@ -37,8 +37,9 @@ else {
         `${process.env.CORS_ORIGIN}`,
         'https://jq4m0xhj-3000.inc1.devtunnels.ms',
         'https://chitii.vercel.app',
-        'https://chitii.netlify.app/',
-        'http://localhost:3001'
+        'https://chitii.netlify.app',
+        'http://localhost:3001',
+        'http://10.45.28.85:3000',
     ]
 
     var corsOptions = {
