@@ -19,7 +19,8 @@ function ToggleUi({ children }) {
             groupChat: false
         },
         isProfileSectionOn: true,
-        isIncomingCallDialogOpen: false
+        isIncomingCallDialogOpen: false,
+        isOnline: false
     })
     return (
         <ToggleContext.Provider value={{ uiState, setUiState }}>{children}</ToggleContext.Provider>

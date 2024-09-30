@@ -1,14 +1,16 @@
-import { Add as AddIcon, AdminPanelSettings as AdminPanelSettingsIcon, Chat as ChatIcon, Group as GroupIcon, Home as HomeIcon, Logout as LogoutIcon, Menu as MenuIcon, Notifications as NotificationIcon, Search as SearchIcon, Call as CallIcon } from "@mui/icons-material";
+import { Add as AddIcon, AdminPanelSettings as AdminPanelSettingsIcon, Call as CallIcon, Chat as ChatIcon, Group as GroupIcon, Home as HomeIcon, Logout as LogoutIcon, Menu as MenuIcon, Notifications as NotificationIcon, Search as SearchIcon } from "@mui/icons-material";
 import CloseIcon from '@mui/icons-material/Close';
 import { AppBar, Backdrop, Box, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
 import React, { Suspense, lazy } from 'react';
+import { SiSocketdotio } from "react-icons/si";
+import { useSelector } from "react-redux";
 import { useNavigate } from 'react-router-dom';
 import { MyToggleUiValues } from '../../context/ToggleUi';
 import IconBtn from './IconBtn';
-import { useSelector } from "react-redux";
 const Search = lazy(() => import("../Dialogs/Search"));
 const Notifications = lazy(() => import("../Dialogs/Notifications"));
 const NewGroup = lazy(() => import("../Dialogs/NewGroup"));
+
 
 
 
@@ -108,6 +110,8 @@ function Header() {
                             <IconBtn title={'Call'} icon={<CallIcon />} pathname={"/call"} />
 
                             <IconBtn title={"Logout"} icon={<LogoutIcon />} pathname={"/signout"} />
+
+                            <IconBtn title={'Status'} icon={<SiSocketdotio color={uiState?.isOnline ? "rgb(2, 245, 124)" : "rgb(245, 2, 51"} style={{ fontWeight: 'bold' }} />} />
 
                         </Box>
                     </Toolbar>

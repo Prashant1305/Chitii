@@ -1,18 +1,17 @@
 import { Backdrop, Grid } from '@mui/material'
-import React, { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import React, { Suspense, useCallback, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Outlet } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { GetSocket } from '../../context/SocketConnectContext'
+import { MyToggleUiValues } from '../../context/ToggleUi'
 import { useSocketEvent } from '../../hooks/socket_hooks'
 import { incrementNotificationCount, setNewMessagesAlert } from '../../redux/reducers/chat'
+import { setOnlineUsersArray } from '../../redux/reducers/online'
 import { CALL_INCOMING, CHAT_JOINED, CHAT_LEFT, NEW_MESSAGE, NEW_REQUEST, ONLINE_USERS } from '../constants/events'
+import IncomingCallDialog from '../Dialogs/call/IncomingCallDialog'
 import Header from '../header/Header'
 import Profile from '../profile.jsx/Profile'
-import { MyToggleUiValues } from '../../context/ToggleUi'
-import { setOnlineUsersArray } from '../../redux/reducers/online'
-import IncomingCallDialog from '../Dialogs/call/IncomingCallDialog'
-import { GetSocket } from '../../context/SocketConnectContext'
-const Search = lazy(() => import("../Dialogs/call/IncomingCallDialog"));
 
 
 function PublicLayout() {

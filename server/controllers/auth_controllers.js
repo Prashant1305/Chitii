@@ -6,7 +6,7 @@ const cookieOptions = {
     maxAge: 15 * 24 * 60 * 60 * 1000,
     httpOnly: true,
     secure: false,
-    sameSite: "none"
+    sameSite: "Strict"
 }
 
 const signup = async (req, res, next) => {

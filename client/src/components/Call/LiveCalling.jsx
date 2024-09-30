@@ -1,17 +1,17 @@
-import React, { Fragment, useCallback, useEffect, useState } from 'react'
-import { Button, CardMedia, IconButton, Stack } from '@mui/material';
 import PhoneDisabledIcon from '@mui/icons-material/PhoneDisabled';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { GetSocket } from '../../context/SocketConnectContext';
+import { Button, Stack } from '@mui/material';
+import React, { useCallback, useEffect, useState } from 'react';
 import ReactPlayer from "react-player";
 import { useSelector } from 'react-redux';
-import { incoming_call_api } from '../../utils/ApiUtils';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { GetSocket } from '../../context/SocketConnectContext';
+import { incoming_call_api } from '../../utils/ApiUtils';
 
 import { useSocketEvent } from '../../hooks/socket_hooks';
 import { CLIENT_CREATE_OFFER, END_CALL, HANDLE_ANSWERE, HANDLE_CREATED_ANSWERE, HANDLE_OFFER_CREATE_ANSWERE, INITIATE_P2P, NEGOTIATION_NEEDED, PEER_NEGO_DONE, PEER_NEGO_FINAL, PEER_NEGO_NEEDED } from '../constants/events';
-import peer from '../lib/peer';
 import IconBtn from '../header/IconBtn';
+import { peer } from '../lib/peer';
 
 function LiveCalling({ callId }) {
     const socket = GetSocket()

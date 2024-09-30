@@ -1,10 +1,10 @@
-import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Menu, Stack, Typography } from '@mui/material'
-import React from 'react'
-import { MyToggleUiValues } from '../../../context/ToggleUi'
 import CallReceivedIcon from '@mui/icons-material/CallReceived';
-import { CALL_RECEIVED_RESPONSE } from '../../constants/events';
+import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GetSocket } from '../../../context/SocketConnectContext';
+import { MyToggleUiValues } from '../../../context/ToggleUi';
+import { CALL_RECEIVED_RESPONSE } from '../../constants/events';
 
 function IncomingCallDialog({ incomingCallUserData }) {
     const { uiState, setUiState } = MyToggleUiValues()
