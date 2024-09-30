@@ -6,13 +6,13 @@ import { toast } from 'react-toastify'
 import ChatList from '../components/chatList/ChatList'
 import Chat from '../components/ChatWindow/Chat'
 import SelectChat from '../components/ChatWindow/SelectChat'
-import { CHAT_JOINED, ONLINE_USERS, REFETCH_CHATS, START_TYPING, STOP_TYPING } from '../components/constants/events'
+import { CHAT_JOINED, REFETCH_CHATS, START_TYPING, STOP_TYPING } from '../components/constants/events'
 import DeleteChatMenu from '../components/Dialogs/DeleteChatMenu'
+import { GetSocket } from '../context/SocketConnectContext'
 import { MyToggleUiValues } from '../context/ToggleUi'
 import { useSocketEvent } from '../hooks/socket_hooks'
 import { popInTypingArray, pushInTypingArray } from '../redux/reducers/typing'
 import { get_my_chats } from '../utils/ApiUtils'
-import { GetSocket } from '../context/SocketConnectContext'
 
 function ChatWindow() {
     const params = useParams();

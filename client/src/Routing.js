@@ -40,7 +40,6 @@ const ErrorRoute = lazy(() => import("./pages/ErrorRoute"));
 const SignOut = lazy(() => import("./pages/SignOut"));
 const Error = lazy(() => import("./pages/Error"));
 const Groups = lazy(() => import("./pages/Groups"));
-const Chat = lazy(() => import("./components/ChatWindow/Chat"));
 const Call = lazy(() => import('./pages/Call'));
 
 function Routing() {

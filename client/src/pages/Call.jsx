@@ -1,11 +1,10 @@
-import FriendsOfUser from '../components/Call/FriendsOfUser'
 import { Box, Drawer, Grid, Skeleton, Typography } from '@mui/material'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { MyToggleUiValues } from '../context/ToggleUi'
+import FriendsOfUser from '../components/Call/FriendsOfUser'
 import LiveCalling from '../components/Call/LiveCalling'
+import { MyToggleUiValues } from '../context/ToggleUi'
 import { get_my_friends_api } from '../utils/ApiUtils'
 
 

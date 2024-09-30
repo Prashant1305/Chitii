@@ -1,8 +1,7 @@
-import { Avatar, AvatarGroup, Box, Link, Stack, Typography } from '@mui/material';
-import React from 'react'
-import { motion } from 'framer-motion';
-import FriendsItem from './FriendsItem';
+import { Stack } from '@mui/material';
+import React from 'react';
 import { useSelector } from 'react-redux';
+import FriendsItem from './FriendsItem';
 
 
 
