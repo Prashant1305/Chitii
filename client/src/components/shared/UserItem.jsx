@@ -29,7 +29,10 @@ function UserItem({ user, handler, handlerIsLoading, isAdded = false, styling = 
                     {name || user_name}
                 </Typography>
 
-                <IconButton
+                <IconButton onClick={(e) => {
+                    e.preventDefault()
+                    handler(_id)
+                }}
                     size='small'
                     sx={{
                         bgcolor: isAdded ? "error.main" : "primary.main",
@@ -41,13 +44,7 @@ function UserItem({ user, handler, handlerIsLoading, isAdded = false, styling = 
 
                     disabled={handlerIsLoading}
                 >
-                    {isAdded ? <RemoveIcon onClick={(e) => {
-                        e.preventDefault()
-                        handler(_id)
-                    }} /> : <AddIcon onClick={(e) => {
-                        e.preventDefault()
-                        handler(_id)
-                    }} />}
+                    {isAdded ? <RemoveIcon /> : <AddIcon />}
                 </IconButton>
             </Stack>
         </ListItem>

@@ -9,7 +9,8 @@ import UserItem from '../shared/UserItem';
 function Search() {
     const [searchText, setSearchText] = useState("");
     const { uiState, setUiState } = MyToggleUiValues();
-    const [users, setUsers] = useState([])
+    const [users, setUsers] = useState([]);
+    const [friendRequestAddedList, setFriendRequestAddedList] = useState([]);
 
     const changeHandler = (e) => {
         setSearchText(`${e.currentTarget.value}`)
@@ -35,6 +36,7 @@ function Search() {
                     autoClose: 1000,
                 })
             }
+            setFriendRequestAddedList([...friendRequestAddedList, id]);
         } catch (error) {
             console.log(error)
             toast.update(toastId, {
@@ -91,7 +93,7 @@ function Search() {
                 <List>
                     {
                         users.map((user) => (
-                            <UserItem user={user} key={user._id} handler={addFriendHandler} handlerIsLoading={isLoadingSendFriendRequest.includes(user._id)} />
+                            <UserItem user={user} key={user._id} handler={addFriendHandler} handlerIsLoading={isLoadingSendFriendRequest.includes(user._id)} isAdded={friendRequestAddedList.some((id) => id + "" === user._id + "")} />
                         ))
                     }
                 </List>

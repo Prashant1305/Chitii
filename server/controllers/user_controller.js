@@ -78,7 +78,7 @@ const sendFriendRequest = async (req, res, next) => {
         });
 
         if (request) {
-            return res.status(400).json({ message: "request already sent" });
+            return res.status(201).json({ message: "request already sent" });
         }
 
         await Request.create({ sender: req.clientAuthData._id, receiver: userId });

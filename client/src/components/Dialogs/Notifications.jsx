@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { MyToggleUiValues } from '../../context/ToggleUi';
 import { resetNotificationCount } from '../../redux/reducers/chat';
 import { accept_friend_request, my_notification } from '../../utils/ApiUtils';
+import { v4 as uuid } from 'uuid';
 
 
 function Notifications() {
@@ -23,7 +24,6 @@ function Notifications() {
             const res = await my_notification();
             if (res.status === 200) {
                 setNotificationData(res.data.message);
-                toast.success("Notification fetched successfully");
             }
         } catch (error) {
             console.log(error);
@@ -35,18 +35,27 @@ function Notifications() {
     }
 
     const freindRequestHandler = async ({ _id, accept }) => {
+        const toastId = toast.loading("updating Friend Request");
         try {
             const res = await accept_friend_request({ requestId: _id, accept })
-            console.log(res)
             if (res.status === 200) {
-                accept ? toast.success("Friend Request Accepted") : toast.success("Friend Request Rejected");
+                toast.update(toastId, {
+                    render: accept ? "Request Accepted" : "Request Rejected",
+                    type: "info",
+                    isLoading: false,
+                    autoClose: 1000,
+                })
                 fetchNotification();
             }
         } catch (error) {
-            toast.error(error.response.data.message || "failed to take action, plz try later");
+            toast.update(toastId, {
+                render: error?.response?.data?.message || "failed to take action, plz try later",
+                type: "error",
+                isLoading: false,
+                autoClose: 1000,
+            })
             console.log(error);
         }
-
     }
     useEffect(() => {
         fetchNotification();
@@ -59,7 +68,7 @@ function Notifications() {
                 <DialogTitle>Notifications</DialogTitle>
                 {isLoading ? <Skeleton /> : (
                     notificationData.map((i, index) => {
-                        return (<>
+                        return (<React.Fragment key={uuid()}>
                             <NotificationItem
                                 sender={{ name: i.sender.user_name, avatar: i.sender.avatar_url }}
                                 _id={i._id}
@@ -67,7 +76,7 @@ function Notifications() {
                                 key={i._id}
                                 type={"FriendRequestNotification"} />
                             {(index < notificationData.length - 1 || notificationData.length > 0) && <Divider />}
-                        </>)
+                        </React.Fragment>)
                     })
                 )
                 }
@@ -77,9 +86,9 @@ function Notifications() {
                             return (<>
                                 <NotificationItem
                                     sender={{ name: i.messageData[0].sender.user_name, avatar: i.messageData[0].sender.avatar_url }}
-                                    _id={i._id}
+                                    _id={i.chatId}
                                     handler={freindRequestHandler}
-                                    key={i._id}
+                                    key={i.chatId}
                                     type={"NewMessageNotification"}
                                     messageData={i.messageData}
                                 />
@@ -99,6 +108,7 @@ function Notifications() {
 const NotificationItem = memo(({ sender, _id, handler, type, messageData }) => {
     const { name, avatar } = sender;
     const navigate = useNavigate()
+    // console.log({ _id })
 
     switch (type) {
         case "FriendRequestNotification":
