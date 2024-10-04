@@ -77,7 +77,7 @@ function SignIn() {
                         <form >
                             <h1>Sign-In</h1>
                             <div className='form_data'>
-                                <label htmlFor='Email'>Email</label>
+                                <label htmlFor='Email'>Email / User Name</label>
                                 <input type='text' name="email" id="email" placeholder='abc@domain.com' onChange={(e) => { handleChange(e) }} value={userData.email} />
                             </div>
                             <div className='form_data'>
