@@ -83,7 +83,7 @@ function Notifications() {
                 {
                     newMessageAlert.length > 0 && (
                         newMessageAlert.map((i, index) => {
-                            return (<>
+                            return (<React.Fragment key={uuid()}>
                                 <NotificationItem
                                     sender={{ name: i.messageData[0].sender.user_name, avatar: i.messageData[0].sender.avatar_url }}
                                     _id={i.chatId}
@@ -93,7 +93,7 @@ function Notifications() {
                                     messageData={i.messageData}
                                 />
                                 {(index < newMessageAlert.length - 1) && <Divider />}
-                            </>)
+                            </React.Fragment>)
                         })
                     )
                 }
@@ -107,8 +107,8 @@ function Notifications() {
 
 const NotificationItem = memo(({ sender, _id, handler, type, messageData }) => {
     const { name, avatar } = sender;
-    const navigate = useNavigate()
-    // console.log({ _id })
+    const { uiState, setUiState } = MyToggleUiValues();
+    const navigate = useNavigate();
 
     switch (type) {
         case "FriendRequestNotification":
@@ -147,6 +147,7 @@ const NotificationItem = memo(({ sender, _id, handler, type, messageData }) => {
             return (
                 <ListItem onClick={() => {
                     navigate(`./chat/${messageData[0].conversation}`)
+                    setUiState({ ...uiState, isNotification: false });
                 }} sx={{
                     cursor: "pointer"
                 }}>
