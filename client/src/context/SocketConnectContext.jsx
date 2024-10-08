@@ -13,7 +13,8 @@ const SocketProvider = ({ children }) => {
         reconnectionAttempts: Infinity, // Number of reconnection attempts before giving up
         reconnectionDelay: 200, // Time to wait before attempting to reconnect (in ms)
         reconnectionDelayMax: 5000, // Maximum time to wait between reconnections (in ms)
-        randomizationFactor: 0.5 // Randomization factor for reconnection delay
+        randomizationFactor: 0.5,// Randomization factor for reconnection delay
+        transports: ['websocket', 'polling'],
     }), []);
 
     useEffect(() => {

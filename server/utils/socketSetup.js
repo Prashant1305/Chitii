@@ -13,7 +13,7 @@ function initializeSocket(server, corsOptions) {
     const io = getIo();
 
     io.use((socket, next) => {
-        cookieParser()(socket.request, socket.request.res, async (err) => {
+        cookieParser()(socket.request, socket.request.res, async (err) => { // cookieParser returns a middleware function which can be used like this
             return await socketAuthenticator(err, socket, next);
         });
     });
