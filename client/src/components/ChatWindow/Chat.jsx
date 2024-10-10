@@ -55,7 +55,7 @@ function Chat({ chatId }) {
             const res = await send_message_api(form_data);
             if (res.status === 200) {
                 toast.update(toastId, {
-                    render: res?.data?.message || "message sent succesfully",
+                    render: "message sent succesfully",
                     type: "success",
                     isLoading: false,
                     autoClose: 1000,
@@ -270,7 +270,25 @@ function Chat({ chatId }) {
                         <AttachFileIcon />
                     </IconButton>
 
-                    <InputBox placeholder='Type your text here' value={sendMessage.text_content} onChange={handleInputMessageChange} />
+                    {/* <InputBox placeholder='Type your text here' value={sendMessage.text_content} onChange={handleInputMessageChange} /> */}
+                    <textarea
+                        placeholder='Type your text here'
+                        value={sendMessage.text_content}
+                        onChange={handleInputMessageChange}
+                        style={{
+                            resize: 'none', // Prevents manual resizing by the user
+                            overflow: "scroll", // Hides scrollbars
+                            minHeight: '50px', // Initial height
+                            height: '100%', // Allows auto-resize
+                            width: "100%",
+                            outline: "none",
+                            padding: "0 3.5rem",
+                            borderRadius: "1.5rem",
+                            fontSize: "1.5rem",
+                            scrollbarWidth: "none"
+                        }}
+                        rows={1} // Ensures the initial size
+                    />
 
                     <IconButton type='submit' sx={{
                         backgroundColor: "rgb(4, 237, 254)",

@@ -21,7 +21,6 @@ const SocketProvider = ({ children }) => {
         socket.on('connect', () => {
             setUiState({ ...uiState, isOnline: true });
         });
-
         socket.on('disconnect', (reason) => {
             if (uiState) {
                 setUiState({ ...uiState, isOnline: false })
@@ -38,7 +37,7 @@ const SocketProvider = ({ children }) => {
             }
             socket.off();
         }
-    }, [socket])
+    }, [socket, setUiState])
 
     return (
         <SocketContext.Provider value={socket}>
