@@ -128,8 +128,8 @@ function LiveCalling({ callId }) {
         }, [socket]
     );
 
-    const handleNegoNeedFinal = useCallback(async ({ ans }) => {
-        console.log(PEER_NEGO_FINAL, { ans })
+    const handleNegoNeedDone = useCallback(async ({ ans }) => {
+        console.log(PEER_NEGO_DONE, { ans })
         await peer.setLocalDescription(ans);
     }, []);
 
@@ -151,7 +151,7 @@ function LiveCalling({ callId }) {
         [HANDLE_OFFER_CREATE_ANSWERE]: handleOfferCreateAnswereHandler,
         [HANDLE_ANSWERE]: handleAnswerehandler,
         [PEER_NEGO_NEEDED]: handleIncomingNego,
-        [PEER_NEGO_FINAL]: handleNegoNeedFinal,
+        [PEER_NEGO_DONE]: handleNegoNeedDone,
         [END_CALL]: handleEndCall
     }
 

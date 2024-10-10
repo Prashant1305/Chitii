@@ -25,7 +25,7 @@ const callingFeatures = (socket, io) => {
     });
 
     socket.on(PEER_NEGO_DONE, ({ to, ans }) => {
-        pub.publish(PEER_NEGO_FINAL, JSON.stringify({
+        pub.publish(PEER_NEGO_DONE, JSON.stringify({
             members: [to + ""],
             from: socket.clientAuthData._id + "",
             ans

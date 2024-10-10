@@ -1,5 +1,5 @@
 const Redis = require("ioredis");
-const { ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS, NEW_REQUEST, CALL_INCOMING, CALL_RECEIVED_RESPONSE, INITIATE_P2P, HANDLE_OFFER_CREATE_ANSWERE, HANDLE_ANSWERE, PEER_NEGO_NEEDED, PEER_NEGO_FINAL, END_CALL } = require("../../Constants/events");
+const { ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS, NEW_REQUEST, CALL_INCOMING, CALL_RECEIVED_RESPONSE, INITIATE_P2P, HANDLE_OFFER_CREATE_ANSWERE, HANDLE_ANSWERE, PEER_NEGO_NEEDED, PEER_NEGO_DONE, END_CALL } = require("../../Constants/events");
 const { getSockets } = require("../helper");
 const { InstanceActiveUserSocketIDs } = require("../infoOfActiveSession");
 const { getIo } = require("../socket/io");
@@ -16,7 +16,7 @@ const sub = new Redis(userCredentials); // connection in subscriber mode for sub
 const pub = new Redis(userCredentials); // connection in publisher mode for publishing only
 const initializeRedis = () => {
 
-    const channels = ["MESSAGES", ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS, NEW_REQUEST, CALL_INCOMING, INITIATE_P2P, HANDLE_OFFER_CREATE_ANSWERE, HANDLE_ANSWERE, PEER_NEGO_NEEDED, PEER_NEGO_FINAL, END_CALL];
+    const channels = ["MESSAGES", ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS, NEW_REQUEST, CALL_INCOMING, INITIATE_P2P, HANDLE_OFFER_CREATE_ANSWERE, HANDLE_ANSWERE, PEER_NEGO_NEEDED, PEER_NEGO_DONE, END_CALL];
     // Subscribe to multiple channels
     sub.subscribe(channels, (err, count) => {
         if (err) {
@@ -162,11 +162,11 @@ const initializeRedis = () => {
                 }
                 break;
 
-            case PEER_NEGO_FINAL:
+            case PEER_NEGO_DONE:
                 const modifiedMemberOfPeerNegoFinal = data.members.map((id) => ({ _id: id }));
                 membersSocket = getSockets(modifiedMemberOfPeerNegoFinal, InstanceActiveUserSocketIDs)
                 if (membersSocket.length > 0) {
-                    io.to(membersSocket).emit(PEER_NEGO_FINAL, { from: data.from, ans: data.ans });
+                    io.to(membersSocket).emit(PEER_NEGO_DONE, { from: data.from, ans: data.ans });
                 }
                 break;
 
