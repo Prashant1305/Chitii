@@ -27,9 +27,8 @@ import { fetch_user_data } from "./utils/ApiUtils";
 // import Error from "./pages/Error";
 import { toast } from "react-toastify";
 import RootLayout from "./components/layout/RootLayout";
-
-import CallContext from "./context/CallContext";
 import SocketProvider from "./context/SocketConnectContext";
+import { MyToggleUiValues } from "./context/ToggleUi";
 // import Groups from "./pages/Groups";
 // import Chat from "./pages/Chat";
 
@@ -44,6 +43,7 @@ const Call = lazy(() => import('./pages/Call'));
 
 function Routing() {
   const { user, isLoading } = useSelector(state => state.auth);
+  const { uiState, setUiState } = MyToggleUiValues()
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -51,8 +51,10 @@ function Routing() {
       const toastId = toast.loading("fetching user data...")
       try {
         const res = await fetch_user_data();
+        console.log("time setted", new Date(res.data.exp) - new Date())
         if (res.status === 200) {
           dispatch(userExist(res?.data?.message));
+          setUiState((prev) => ({ ...prev, logoutTime: new Date(res.data.exp) - new Date() })); //setting logout time
           toast.update(toastId, {
             render: "user data fetched Successfully",
             type: "success",
@@ -86,7 +88,7 @@ function Routing() {
       <Route>
         <Route element={<ProtectRoutes conditionValue={user && !user.isLoading} navigateTo={"/signin"} />}> {/*protecting inside routes*/}
           <Route path="/" element={<SocketProvider><RootLayout /></SocketProvider>} errorElement={<Error />}>
-            <Route element={<CallContext><PublicLayout /></CallContext>}>
+            <Route element={<PublicLayout />}>
               <Route index element={<Suspense fallback={<LayoutLoader />}><Home /></Suspense>} />
               <Route path="groups" element={<Suspense fallback={<LayoutLoader />}><Groups /></Suspense>} />
 

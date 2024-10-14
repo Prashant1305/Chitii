@@ -53,7 +53,9 @@ const generateAccessToken = async (userId) => {
         const accessToken = user.generateAccessToken();
 
         await user.save({ validateBeforeSave: false });
-        return { accessToken };
+        const time = process.env.ACCESS_TOKEN_EXPIRY.match(/^[^m]*/)[0];
+
+        return { accessToken, exp: new Date(new Date() + time * 60 * 1000) };
 
     } catch (error) {
         const err = new Error("token generation failed");
@@ -82,7 +84,7 @@ const login = async (req, res, next) => {
         if (!isPasswordValid) {
             return next({ message: "password invalid", status: 400, extraDetails: "from login function inside authcontroller" });
         }
-        const { accessToken } = await generateAccessToken(user._id);
+        const { accessToken, exp } = await generateAccessToken(user._id);
 
         res
             .status(200)
@@ -99,7 +101,7 @@ const login = async (req, res, next) => {
                     avatar_url: user.avatar_url,
                     createdAt: user.createdAt,
                     isAdmin: user.isAdmin
-                }
+                }, exp
             });
     } catch (error) {
         const err = new Error("unable to login");

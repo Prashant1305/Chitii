@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { login_api } from '../utils/ApiUtils';
 import { useDispatch } from 'react-redux';
 import { userExist, userNotExist } from '../redux/reducers/Auth';
+import { MyToggleUiValues } from '../context/ToggleUi';
 
 function SignIn() {
     const [userData, setUserData] = useState({
@@ -12,6 +13,7 @@ function SignIn() {
         password: "",
     })
     const [btnActive, setbtnActive] = useState(false);
+    const { setUiState } = MyToggleUiValues();
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [loginLoading, setLoginLoading] = useState(false)

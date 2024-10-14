@@ -23,6 +23,7 @@ const allowedOrigins = [
     'https://jq4m0xhj-3000.inc1.devtunnels.ms',
     'https://chitii.vercel.app',
     'https://chitii.netlify.app',
+    'https://chittidev.ril.com',
     'http://localhost:3001',
     'http://10.45.28.85:3000',
 ]
@@ -60,9 +61,9 @@ io.use((socket, next) => {
 });
 
 // checking connection
-app.get('/check', (req, res) => {
+app.get('/api/check', (req, res) => {
     res.status(200).json({
-        msg: `hello from ${PORT}`
+        msg: `hello from server at port ${PORT}`
     });
 });
 

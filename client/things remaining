@@ -12,3 +12,7 @@ is in call with you from calling items remaining
 whole online usersList is sent to friends when user comes online
 
 verify socketAuthenticator is working or not
+
+refresh token at frontend
+
+route to login page when time expires

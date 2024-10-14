@@ -22,8 +22,6 @@ function FriendsItem({
             to={`/call/${_id}`}
             onContextMenu={(e) => {
                 e.preventDefault();
-                // setUiState({ ...uiState, isDeleteMenu: true })
-                // handleDeleteChat(e, _id, group_chat)
             }} >
             <motion.div
                 initial={{ opacity: 0, y: "-100%" }}

@@ -77,7 +77,7 @@ function Chat({ chatId }) {
 
     const handleAttachFile = (e) => {
 
-        setUiState({ ...uiState, isFileMenu: true })
+        setUiState((prev) => ({ ...prev, isFileMenu: true }))
     }
 
     const handleInputMessageChange = (e) => {

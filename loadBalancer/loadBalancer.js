@@ -11,6 +11,7 @@ const allowedOrigins = [
     `${process.env.CORS_ORIGIN}`,
     'http://localhost:3000',
     'http://10.45.28.85:3000',
+    'https://chittidev.ril.com',
 ]
 
 var corsOptions = {
@@ -48,6 +49,13 @@ const addCookie = (req, res, next) => {
 };
 
 app.use(addCookie)
+
+// checking connection
+app.get('/check', (req, res) => {
+    res.status(200).json({
+        msg: `hello from server at port ${PORT}`
+    });
+});
 
 const server = http.createServer(app);
 

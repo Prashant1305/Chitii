@@ -5,7 +5,7 @@ const proxy = httpProxy.createProxyServer({});
 let current;
 proxy.on('upgrade', function (req, socket, head) {
     console.log('WebSocket upgrade request');
-    proxy.ws(req, socket, head);
+    // proxy.ws(req, socket, head,{ target: `http://${target.host}:${target.port}` });
 });
 proxy.on('error', (err, req, res) => {
     console.log('Proxy error:', err);
@@ -22,7 +22,6 @@ const roundRobin = (servers, req, res) => {
     const target = servers[current];
     console.log(target);
 
-    // proxy.web(req, res, { target: `http://${target.host}:${target.port}` });
 
     if (req.originalUrl.startsWith('/socket.io')) {
         console.log(`lb socket forwarded http://${target.host}:${target.port}`)

@@ -32,7 +32,9 @@ const { pub } = require("../utils/redis/connectToRedis");
 const getMyProfile = async (req, res, next) => {
     try {
         res.status(200).json({
-            message: req.clientAuthData
+            message: req.clientAuthData,
+            iat: req.iat,
+            exp: req.exp
         });
     }
     catch (error) {
