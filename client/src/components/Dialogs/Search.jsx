@@ -75,7 +75,7 @@ function Search() {
     }, [searchText]);
     return (
         <Dialog open={uiState.isSearch} onClose={() => {
-            setUiState({ ...uiState, isSearch: false });
+            setUiState(prev => ({ ...prev, isSearch: false }));
         }}>
             <Stack p={"2rem"} direction={"column"} width={"25rem"}>
                 <DialogTitle textAlign={"center"}>Find People</DialogTitle>

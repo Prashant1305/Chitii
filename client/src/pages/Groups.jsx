@@ -117,11 +117,11 @@ function Groups() {
         }
     }
     useEffect(() => {
-        setUiState({ ...uiState, mobileBtnExist: true })
+        setUiState(prev => ({ ...prev, mobileBtnExist: true }))
 
         getGroupList();
         return () => {
-            setUiState({ ...uiState, mobileBtnExist: false })
+            setUiState(prev => ({ ...prev, mobileBtnExist: false }))
         }
     }, [])
 
@@ -230,7 +230,7 @@ function Groups() {
         <Button size='large' color='error' variant='outlined' startIcon={<DeleteIcon />} onClick={() => {
             setConfirmDeleteDialogOpen(true);
         }}>Delete Group</Button>
-        <Button size='large' variant='contained' startIcon={<AddIcon />} onClick={() => { setUiState({ ...uiState, isAddMember: true }) }}>Add Member</Button>
+        <Button size='large' variant='contained' startIcon={<AddIcon />} onClick={() => { setUiState(prev => ({ ...prev, isAddMember: true })) }}>Add Member</Button>
     </Stack>
     return (
         <Grid container height={"calc(100vh - 4rem)"}>
@@ -346,7 +346,7 @@ function Groups() {
                         backgroundImage: "linear-gradient(#A9FF99, rgb(217, 234, 237))"
                     }
                 }}
-                open={uiState.isMobileOpen} onClose={() => { setUiState({ ...uiState, isMobileOpen: false }) }}>{groupListIsLoading ? <Skeleton
+                open={uiState.isMobileOpen} onClose={() => { setUiState(prev => ({ ...prev, isMobileOpen: false })) }}>{groupListIsLoading ? <Skeleton
                     animation="wave"
                     variant="rectangular"
                     height={"100%"}

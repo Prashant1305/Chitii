@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react'
-import "./Sign.css";
+import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
-import { login_api } from '../utils/ApiUtils';
-import { useDispatch } from 'react-redux';
 import { userExist, userNotExist } from '../redux/reducers/Auth';
-import { MyToggleUiValues } from '../context/ToggleUi';
+import { login_api } from '../utils/ApiUtils';
+import "./Sign.css";
 
 function SignIn() {
     const [userData, setUserData] = useState({
@@ -13,7 +12,6 @@ function SignIn() {
         password: "",
     })
     const [btnActive, setbtnActive] = useState(false);
-    const { setUiState } = MyToggleUiValues();
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [loginLoading, setLoginLoading] = useState(false)

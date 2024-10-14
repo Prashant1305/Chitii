@@ -43,7 +43,7 @@ function PublicLayout() {
         console.log(data)
         console.log("callIcoming")
         setIncomingCallUserData(data);
-        setUiState({ ...uiState, isIncomingCallDialogOpen: true })
+        setUiState(prev => ({ ...prev, isIncomingCallDialogOpen: true }));
     }, []);
 
     const eventHandlers = {

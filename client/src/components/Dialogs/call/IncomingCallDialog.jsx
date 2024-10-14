@@ -12,20 +12,20 @@ function IncomingCallDialog({ incomingCallUserData }) {
     const socket = GetSocket()
     const handleAccept = (e) => {
         e.preventDefault();
-        setUiState({ ...uiState, isIncomingCallDialogOpen: false });
+        setUiState(prev => ({ ...prev, isIncomingCallDialogOpen: false }));
         socket.emit(CALL_RECEIVED_RESPONSE, { _id: incomingCallUserData.user._id, status: "ACCEPTED" });
         // socket.emit("myEvent", { _id: incomingCallUserData.user._id, status: "ACCEPTED" });
 
         navigate(`/call/${incomingCallUserData.roomId}?received=true`);
     }
     const handleDecline = () => {
-        setUiState({ ...uiState, isIncomingCallDialogOpen: false });
+        setUiState(prev => ({ ...prev, isIncomingCallDialogOpen: false }));
         socket.emit(CALL_RECEIVED_RESPONSE, { _id: incomingCallUserData.user._id, status: "DECLINED" });
         // socket.emit("myEvent", { _id: incomingCallUserData.user._id, status: "DECLINED" });
     }
     return (
         <Dialog open={uiState?.isIncomingCallDialogOpen} onClose={() => {
-            setUiState({ ...uiState, isIncomingCallDialogOpen: false })
+            setUiState(prev => ({ ...prev, isIncomingCallDialogOpen: false }))
         }} >
             <DialogTitle ><CallReceivedIcon sx={{
                 marginRight: "0.3rem",

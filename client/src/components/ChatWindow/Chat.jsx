@@ -7,12 +7,11 @@ import { all_messages_of_chat, send_message_api } from '../../utils/ApiUtils';
 import FileMenu from '../Dialogs/FileMenu';
 import { START_TYPING, STOP_TYPING } from '../constants/events';
 import MessageComponent from '../shared/MessageComponent';
-import { InputBox } from '../styles/StyledComponent';
 
 import { v4 as uuid } from 'uuid';
+import { GetSocket } from '../../context/SocketConnectContext';
 import { MyToggleUiValues } from '../../context/ToggleUi';
 import { popMessageAlert } from '../../redux/reducers/chat';
-import { GetSocket } from '../../context/SocketConnectContext';
 
 
 function Chat({ chatId }) {
@@ -31,7 +30,7 @@ function Chat({ chatId }) {
 
     const user = useSelector(state => state.auth);
     const chatNotification = useSelector(state => state.chat);
-    const { uiState, setUiState } = MyToggleUiValues();
+    const { setUiState } = MyToggleUiValues();
     let page = 1;
     let totalPageOfChat = 0;
 

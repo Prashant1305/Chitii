@@ -43,7 +43,7 @@ const Call = lazy(() => import('./pages/Call'));
 
 function Routing() {
   const { user, isLoading } = useSelector(state => state.auth);
-  const { uiState, setUiState } = MyToggleUiValues()
+  const { setUiState } = MyToggleUiValues()
   const dispatch = useDispatch();
 
   useEffect(() => {
