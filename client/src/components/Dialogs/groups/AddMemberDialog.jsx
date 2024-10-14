@@ -56,7 +56,7 @@ function AddMemberDialog({ groupDetails, setGroupDetails, getGroupDetails, chatI
     }
     const closeHandler = () => {
         setSelectedMembers([]);
-        setUiState({ ...uiState, isAddMember: false })
+        setUiState(prev => ({ ...prev, isAddMember: false }))
     }
 
     useEffect(() => {

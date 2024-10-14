@@ -10,7 +10,7 @@ function FileMenu({ anchor, files, setFiles }) {
         // console.log("fileChangeHandler got fired")
         // console.dir(e.currentTarget.files)
         setFiles([...files, ...Array.from(e.currentTarget.files)]);
-        setUiState({ ...uiState, isFileMenu: false })
+        setUiState((prev) => ({ ...prev, isFileMenu: false }));
     }
 
     const selectFileHandler = (e) => {
@@ -19,7 +19,7 @@ function FileMenu({ anchor, files, setFiles }) {
 
     return (
         <Menu anchorEl={anchor} open={uiState.isFileMenu} onClose={() => {
-            setUiState({ ...uiState, isFileMenu: false });
+            setUiState((prev) => ({ ...prev, isFileMenu: false }));
         }}>
             <div
                 style={{

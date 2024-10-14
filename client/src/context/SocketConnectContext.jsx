@@ -6,46 +6,44 @@ import { MyToggleUiValues } from "./ToggleUi";
 const SocketContext = createContext();
 
 const SocketProvider = ({ children }) => {
-    const { uiState, setUiState } = MyToggleUiValues()
+    const { setUiState } = MyToggleUiValues();
+
     const socket = useMemo(() => io(baseUrl, {
         withCredentials: true,
         reconnection: true, // Enable reconnection
         reconnectionAttempts: Infinity, // Number of reconnection attempts before giving up
         reconnectionDelay: 200, // Time to wait before attempting to reconnect (in ms)
         reconnectionDelayMax: 5000, // Maximum time to wait between reconnections (in ms)
-        randomizationFactor: 0.5,// Randomization factor for reconnection delay
+        randomizationFactor: 0.5, // Randomization factor for reconnection delay
         transports: ['websocket', 'polling'],
     }), []);
 
     useEffect(() => {
-        socket.on('connect', () => {
-            setUiState({ ...uiState, isOnline: true });
-        });
-        socket.on('disconnect', (reason) => {
-            if (uiState) {
-                setUiState({ ...uiState, isOnline: false })
-            }
-        });
-        socket.on('error', (error) => {
-            if (uiState) {
-                setUiState({ ...uiState, isOnline: false })
-            }
-        });
-        return () => {
-            if (uiState) {
-                setUiState({ ...uiState, isOnline: false })
-            }
-            socket.off();
+        const onlineStatusChange = (val) => {
+            setUiState((prev) => ({ ...prev, isOnline: val }));
         }
-    }, [socket, setUiState])
+
+        const handleConnect = () => onlineStatusChange(true);
+        const handleDisconnect = () => onlineStatusChange(false);
+        const handleError = () => onlineStatusChange(false);
+
+        socket.on('connect', handleConnect);
+        socket.on('disconnect', handleDisconnect);
+        socket.on('error', handleError);
+
+        return () => {
+            socket.off('connect', handleConnect);
+            socket.off('disconnect', handleDisconnect);
+            socket.off('error', handleError);
+        }
+    }, [socket, setUiState]);
 
     return (
         <SocketContext.Provider value={socket}>
             {children}
         </SocketContext.Provider>
-    )
+    );
 }
 
 export const GetSocket = () => useContext(SocketContext);
-
-export default SocketProvider
+export default SocketProvider;

@@ -19,7 +19,7 @@ function ChatItem({
     handleDeleteChat
 }) {
 
-    const { uiState, setUiState } = MyToggleUiValues();
+    const { setUiState } = MyToggleUiValues();
     const { typingArray } = useSelector(state => state.typing);
     const typingUser = typingArray?.find((ele) => ele.chatId + "" === _id + "")
     return (

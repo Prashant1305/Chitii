@@ -7,7 +7,7 @@ import AdminHeader from '../header/AdminHeader';
 
 function AdminLayout() {
     const { isMobileOpen, setIsmobileOpen } = MyToggleUiValues();
-    const { uiState, setUiState } = MyToggleUiValues();
+    const { setUiState } = MyToggleUiValues();
 
     const navigate = useNavigate();
 
@@ -78,8 +78,8 @@ function AdminLayout() {
 
     useEffect(() => {
 
-        setUiState({ ...uiState, mobileBtnExist: true })
-        return () => { setUiState({ ...uiState, mobileBtnExist: false }) }
+        setUiState(prev => ({ ...prev, mobileBtnExist: true }));
+        return () => { setUiState(prev => ({ ...prev, mobileBtnExist: false })); }
     }, []);
 
     return (

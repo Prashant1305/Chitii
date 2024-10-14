@@ -107,7 +107,7 @@ function Notifications() {
 
 const NotificationItem = memo(({ sender, _id, handler, type, messageData }) => {
     const { name, avatar } = sender;
-    const { uiState, setUiState } = MyToggleUiValues();
+    const { setUiState } = MyToggleUiValues();
     const navigate = useNavigate();
 
     switch (type) {
@@ -147,7 +147,7 @@ const NotificationItem = memo(({ sender, _id, handler, type, messageData }) => {
             return (
                 <ListItem onClick={() => {
                     navigate(`./chat/${messageData[0].conversation}`)
-                    setUiState({ ...uiState, isNotification: false });
+                    setUiState(prev => ({ ...prev, isNotification: false }));
                 }} sx={{
                     cursor: "pointer"
                 }}>
