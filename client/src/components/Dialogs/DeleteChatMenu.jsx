@@ -36,7 +36,7 @@ function DeleteChatMenu({ deleteMenuAnchor, setDeleteChat, deleteChat }) {
                 autoClose: 1000,
             })
         } finally {
-            setUiState({ ...uiState, isDeleteMenu: false })
+            setUiState((prev) => ({ ...prev, isDeleteMenu: false }))
         }
     }
     const unfriendAndDeleteChat = async (e) => {
@@ -67,12 +67,12 @@ function DeleteChatMenu({ deleteMenuAnchor, setDeleteChat, deleteChat }) {
                 autoClose: 1000,
             })
         } finally {
-            setUiState({ ...uiState, isDeleteMenu: false })
+            setUiState((prev) => ({ ...prev, isDeleteMenu: false }))
         }
     }
     return (
         <Menu open={uiState.isDeleteMenu} onClose={() => {
-            setUiState({ ...uiState, isDeleteMenu: false })
+            setUiState((prev) => ({ ...prev, isDeleteMenu: false }))
         }} anchorEl={deleteMenuAnchor.current} anchorOrigin={{
             vertical: "bottom",
             horizontal: "right",

@@ -31,7 +31,7 @@ function ChatItem({
             to={`/chat/${_id}`}
             onContextMenu={(e) => {
                 e.preventDefault();
-                setUiState({ ...uiState, isDeleteMenu: true })
+                setUiState((prev) => ({ ...prev, isDeleteMenu: true }))
                 handleDeleteChat(e, _id, group_chat)
             }} >
             <motion.div

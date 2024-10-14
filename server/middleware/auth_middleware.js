@@ -13,7 +13,8 @@ const verifyJwt = async (req, res, next) => {
         let isVerified_access_token
         try {
             isVerified_access_token = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-            // console.log("isVerified_access_token: ", isVerified_access_token);
+            req.iat = new Date(isVerified_access_token.iat * 1000);
+            req.exp = new Date(isVerified_access_token.exp * 1000);
         } catch (error) {
             return res.status(401).json({ message: "access token expired" })
         }
