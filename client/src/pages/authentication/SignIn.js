@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
-import { userExist, userNotExist } from '../redux/reducers/Auth';
-import { login_api } from '../utils/ApiUtils';
+import { userExist, userNotExist } from '../../redux/reducers/Auth';
+import { login_api } from '../../utils/ApiUtils';
 import "./Sign.css";
 
 function SignIn() {
@@ -66,6 +66,22 @@ function SignIn() {
             setbtnActive(false);
         }
     }, [userData]);
+
+    const redirectToGoogle = () => {
+        console.log({ uri: process.env.REACT_APP_REDIRECT_URI })
+        const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+        const params = {
+            client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+            redirect_uri: process.env.REACT_APP_REDIRECT_URI,
+            response_type: 'code',
+            // scope: 'openid email profile',
+            scope: 'openid email profile https://www.googleapis.com/auth/user.phonenumbers.read https://www.googleapis.com/auth/user.birthday.read',
+            access_type: 'offline', // Add this for refresh token support
+            prompt: 'consent', // Ensures the consent screen is always shown
+        };
+        const queryString = new URLSearchParams(params).toString();
+        window.location.href = `${googleAuthUrl}?${queryString}`;
+    }
     return (
         <>
             <section>
@@ -104,7 +120,9 @@ function SignIn() {
                 <div className='login_with_other'>
                     <div className='heading_of_logo_container'> Login with</div>
                     <div className='logo_container'>
-                        <div><img src='./google_logo.png' alt='google_logo' /></div>
+                        <div onClick={() => {
+                            redirectToGoogle()
+                        }}><img src='./google_logo.png' alt='google_logo' /></div>
                         <div><img src='./facebook_logo.png' alt='facebook_logo' /></div>
                         <div><img src='./twitter_logo.png' alt='twitter_logo' /></div>
                     </div>

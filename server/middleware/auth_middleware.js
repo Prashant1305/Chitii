@@ -1,32 +1,35 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user_model");
+const { cookieOptions, generateAccessToken } = require("../utils/helper");
 
 const verifyJwt = async (req, res, next) => {
+    console.log("verifyJwt")
     const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
-
-    // console.log("from line 8", process.env.ACCESS_TOKEN_SECRET);
 
     if (!accessToken) {
         return res.status(401).json({ message: "cookies not available plz login" });
     }
     try {
-        let isVerified_access_token
+        const { _id, email } = jwt.decode(accessToken);
+        const user = await User.findById(_id);
         try {
-            isVerified_access_token = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-            req.iat = new Date(isVerified_access_token.iat * 1000);
-            req.exp = new Date(isVerified_access_token.exp * 1000);
-        } catch (error) {
-            return res.status(401).json({ message: "access token expired" })
+            jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+
+        } catch (error) { // when access token is expired
+            console.log("first", error);
+            if (error.name === "TokenExpiredError") { // if token is tampered then it will be different error
+                try {
+                    jwt.verify(user.refresh_token, process.env.REFRESH_TOKEN_SECRET);
+                    const { accessToken, refreshToken, exp } = generateAccessToken(user);
+                    user.refresh_token = refreshToken;
+                    res.cookie("accessToken", accessToken, cookieOptions)
+                    await user.save()
+                } catch (error) {
+                    return res.status(497).json({ message: "refresh token expired, plz login" });
+                }
+            }
         }
-
-        const clientAuthData = await User.findOne({ "email": isVerified_access_token.email }).select({ password: 0 })
-
-
-        if (!clientAuthData) {
-            res.status(401).json({ message: "token did not match any data" });
-        }
-        // console.log(clientAuthData);
-        req.clientAuthData = clientAuthData;
+        req.clientAuthData = user;
         next();
     } catch (error) {
         const err = new Error("token from Cookie, authentication failed");

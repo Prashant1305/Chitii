@@ -6,9 +6,9 @@ import Stack from '@mui/material/Stack';
 import { toast } from 'react-toastify';
 import { Avatar, IconButton, Typography } from "@mui/material";
 import { CameraAlt } from "@mui/icons-material"
-import { VisuallyHiddenInput } from "../components/styles/StyledComponent";
+import { VisuallyHiddenInput } from "../../components/styles/StyledComponent";
 import { useFileHandler } from "6pp";
-import { signup_api } from "../utils/ApiUtils";
+import { signup_api } from "../../utils/ApiUtils";
 
 function SignUp() {
   const [userData, setUserData] = useState({

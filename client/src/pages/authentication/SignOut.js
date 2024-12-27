@@ -2,8 +2,8 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { userNotExist } from '../redux/reducers/Auth';
-import { logout } from '../utils/ApiUtils';
+import { userNotExist } from '../../redux/reducers/Auth';
+import { logout } from '../../utils/ApiUtils';
 import "./Sign.css";
 
 function SignOut() {

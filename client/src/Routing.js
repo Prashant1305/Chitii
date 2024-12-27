@@ -29,14 +29,15 @@ import { toast } from "react-toastify";
 import RootLayout from "./components/layout/RootLayout";
 import SocketProvider from "./context/SocketConnectContext";
 import { MyToggleUiValues } from "./context/ToggleUi";
+import LoginWithGoogle from "./pages/authentication/LoginWithGoogle";
 // import Groups from "./pages/Groups";
 // import Chat from "./pages/Chat";
 
 const Home = lazy(() => import("./pages/Home")); // using lazy, now this page will load when needed at first
-const SignUp = lazy(() => import("./pages/SignUp"));
-const SignIn = lazy(() => import("./pages/SignIn"));
+const SignUp = lazy(() => import("./pages/authentication/SignUp"));
+const SignIn = lazy(() => import("./pages/authentication/SignIn"));
 const ErrorRoute = lazy(() => import("./pages/ErrorRoute"));
-const SignOut = lazy(() => import("./pages/SignOut"));
+const SignOut = lazy(() => import("./pages/authentication/SignOut"));
 const Error = lazy(() => import("./pages/Error"));
 const Groups = lazy(() => import("./pages/Groups"));
 const Call = lazy(() => import('./pages/Call'));
@@ -115,6 +116,7 @@ function Routing() {
         </Route>
 
         <Route path="signin" element={<ProtectRoutes conditionValue={!user} navigateTo={"/"}><Suspense fallback={<LayoutLoader />}><SignIn /></Suspense></ProtectRoutes>} />
+        <Route path="auth/google/callback" element={<ProtectRoutes conditionValue={!user} navigateTo={"/"}><Suspense fallback={<LayoutLoader />}><LoginWithGoogle /></Suspense></ProtectRoutes>} />
         <Route path="signup" element={<Suspense fallback={<LayoutLoader />}><SignUp /></Suspense>} />
 
 

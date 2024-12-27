@@ -2,12 +2,7 @@ const User = require("../models/user_model");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { uploadOnCloudinary } = require("../utils/cloudinaryDb/cloudinary");
-const cookieOptions = {
-    maxAge: 15 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    secure: false,
-    sameSite: "Strict"
-}
+const { generateAccessToken, cookieOptions } = require("../utils/helper");
 
 const signup = async (req, res, next) => {
     try {
@@ -47,23 +42,6 @@ const signup = async (req, res, next) => {
     }
 }
 
-const generateAccessToken = async (userId) => {
-    try {
-        const user = await User.findById(userId);
-        const accessToken = user.generateAccessToken();
-
-        await user.save({ validateBeforeSave: false });
-        const time = process.env.ACCESS_TOKEN_EXPIRY.match(/^[^m]*/)[0];
-
-        return { accessToken, exp: new Date(new Date() + time * 60 * 1000) };
-
-    } catch (error) {
-        const err = new Error("token generation failed");
-        err.status = 500;
-        err.extraDetails = "from generateAccessToken function inside authcontroller";
-        next(err);
-    }
-}
 
 const login = async (req, res, next) => {
     try {
@@ -84,13 +62,18 @@ const login = async (req, res, next) => {
         if (!isPasswordValid) {
             return next({ message: "password invalid", status: 400, extraDetails: "from login function inside authcontroller" });
         }
-        const { accessToken, exp } = await generateAccessToken(user._id);
+        const { accessToken, refreshToken } = await generateAccessToken(user);
+        user.refresh_token = refreshToken;
+        await user.save();
 
         res
             .status(200)
             .cookie("accessToken", accessToken, cookieOptions)
             .json({
-                message: "userlogged in succesfully", tokens: { accessToken }, time: process.env.ACCESS_TOKEN_EXPIRY, user: {
+                message: "userlogged in succesfully",
+                tokens: { accessToken },
+                time: process.env.ACCESS_TOKEN_EXPIRY,
+                user: {
                     _id: user._id,
                     user_name: user.user_name,
                     email: user.email,
@@ -101,7 +84,7 @@ const login = async (req, res, next) => {
                     avatar_url: user.avatar_url,
                     createdAt: user.createdAt,
                     isAdmin: user.isAdmin
-                }, exp
+                }
             });
     } catch (error) {
         const err = new Error("unable to login");
@@ -119,9 +102,7 @@ const logout = async (req, res, next) => {
             .status(200)
             .clearCookie("accessToken", { ...cookieOptions, maxAge: 0 })
             .json({ message: "User logged Out" });
-    }
-
-    catch (error) {
+    } catch (error) {
         const err = new Error("unable to logout");
         err.status = 400;
         err.extraDetails = "from logout function inside authcontroller";
@@ -129,7 +110,20 @@ const logout = async (req, res, next) => {
     }
 }
 
+const loginWithGoogleCode = async (req, res, next) => {
+    try {
+        const { googleCode } = req.body;
 
 
+        console.log(googleCode);
+        res.status(200).json({ message: "yaa hoo" })
+    } catch (error) {
+        const err = new Error("login with google failed");
+        err.status = 400;
+        err.extraDetails = "from loginWithGoogleCode function inside authcontroller";
+        next(err);
+    }
+}
 
-module.exports = { login, signup, logout };
+
+module.exports = { login, signup, logout, loginWithGoogleCode };

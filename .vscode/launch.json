@@ -1,0 +1,11 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "command": "cd server; npx cross-env PORT=3001 nodemon app.js",
+            "name": "Run server",
+            "request": "launch",
+            "type": "node-terminal"
+        }
+    ]
+}

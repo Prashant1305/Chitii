@@ -10,4 +10,24 @@ const getSockets = (users = [], InstanceActiveUserSocketIDs) => {// user [{_id:"
     return sockets;
 
 }
-module.exports = { getSockets };
+const generateAccessToken = (user) => {
+    try {
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
+
+        return { accessToken, refreshToken };
+
+    } catch (error) {
+        const err = new Error("token generation failed");
+        err.status = 500;
+        err.extraDetails = "from generateAccessToken function inside authcontroller";
+        next(err);
+    }
+}
+const cookieOptions = {
+    maxAge: 15 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    secure: false,
+    sameSite: "Strict"
+}
+module.exports = { getSockets, generateAccessToken, cookieOptions };
