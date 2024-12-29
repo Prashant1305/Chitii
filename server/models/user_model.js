@@ -2,12 +2,12 @@ const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const generateUniqueUserName = async function (user_name) { // cannot use arrow as "this" value will be undefined here
+const generateUniqueUserName = async function (full_name) {
     try {
-        let uniqueName = user_name;
+        let uniqueName = full_name.replaceAll(' ', '_');
         let counter = 1;
         while (await User.findOne({ user_name: uniqueName })) {
-            uniqueName = user_name + counter;
+            uniqueName = uniqueName + counter;
             counter++;
         }
         return uniqueName;
@@ -87,9 +87,15 @@ userSchema.pre("save", async function (next) { // cannot use arrow as "this" val
             err.extraDetails = "from user_models inside userschema.pre(save)";
             next(err);
         }
-    } else if (this.account_type === "GOOGLE" && !this.user_name) {
-        this.user_name = await generateUniqueUserName(this.user_name || this.full_name || "user");
     }
+});
+
+// assigning username for loginh with google
+userSchema.pre("validate", async function (next) {
+    if (this.account_type === "GOOGLE" && !this.user_name) {
+        this.user_name = await generateUniqueUserName(this.full_name || "user");
+    }
+    next();
 });
 
 //JWT

@@ -75,8 +75,8 @@ function SignIn() {
             redirect_uri: process.env.REACT_APP_REDIRECT_URI,
             response_type: 'code',
             // scope: 'openid email profile',
-            scope: 'openid email profile https://www.googleapis.com/auth/user.phonenumbers.read https://www.googleapis.com/auth/user.birthday.read',
-            access_type: 'offline', // Add this for refresh token support
+            scope: 'openid email profile https://www.googleapis.com/auth/user.phonenumbers.read', // generate code for getting fullname, userInfo, phoneNumber
+            // access_type: 'offline', // Add this for refresh token support
             prompt: 'consent', // Ensures the consent screen is always shown
         };
         const queryString = new URLSearchParams(params).toString();

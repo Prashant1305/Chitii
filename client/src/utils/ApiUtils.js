@@ -34,6 +34,12 @@ export const login_api = async ({ emailOrUsername, password }) => {
     return res
 }
 
+export const login_via_google = async (code) => {
+    const url = `${baseUrl}/api/auth/signupviagooglecode?code=${code}`;
+    const res = await axios.get(url, { withCredentials: true });
+    return res;
+}
+
 export const logout = async () => {
     const url = `${baseUrl}/api/auth/logout`;
     const res = await axios.get(url, { withCredentials: true });

@@ -3,6 +3,7 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { uploadOnCloudinary } = require("../utils/cloudinaryDb/cloudinary");
 const { generateAccessToken, cookieOptions } = require("../utils/helper");
+const axios = require("axios");
 
 const signup = async (req, res, next) => {
     try {
@@ -43,7 +44,7 @@ const signup = async (req, res, next) => {
 }
 
 
-const login = async (req, res, next) => {
+const loginWithChitii = async (req, res, next) => {
     try {
         const { emailOrUsername, password } = req.body;
 
@@ -62,7 +63,7 @@ const login = async (req, res, next) => {
         if (!isPasswordValid) {
             return next({ message: "password invalid", status: 400, extraDetails: "from login function inside authcontroller" });
         }
-        const { accessToken, refreshToken } = await generateAccessToken(user);
+        const { accessToken, refreshToken } = generateAccessToken(user);
         user.refresh_token = refreshToken;
         await user.save();
 
@@ -97,10 +98,10 @@ const login = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
     try {
-
         return res
             .status(200)
             .clearCookie("accessToken", { ...cookieOptions, maxAge: 0 })
+            .clearCookie("session_number", { ...cookieOptions, maxAge: 0 })
             .json({ message: "User logged Out" });
     } catch (error) {
         const err = new Error("unable to logout");
@@ -112,12 +113,72 @@ const logout = async (req, res, next) => {
 
 const loginWithGoogleCode = async (req, res, next) => {
     try {
-        const { googleCode } = req.body;
+        const { code: googleCode } = req.query;
+        const googleCodeRequestUrl = 'https://oauth2.googleapis.com/token';
+        const googleCodeRequestData = {
+            'code': `${googleCode}`,
+            'client_id': process.env.GOOGLE_CLIENT_ID,
+            'client_secret': process.env.GOOGLE_CLIENT_SECRET,
+            'redirect_uri': process.env.GOOGLE_REDIRECT_URI,
+            'grant_type': 'authorization_code'
+        }
+        const responseOfGoogleCodeRequest = await axios.post(googleCodeRequestUrl, googleCodeRequestData, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+        })
+        if (responseOfGoogleCodeRequest.status === 200) {
+            // from accessToken now retriving userInfo
+            const googleAccessToken = responseOfGoogleCodeRequest.data.access_token;
+            const retriveUserInfoGoogleUrl = `https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,phoneNumbers,photos`
+            const retriveUserInfoGoogleRequest = await axios.get(retriveUserInfoGoogleUrl, {
+                headers: {
+                    'Authorization': `Bearer ${googleAccessToken}`
+                }
+            });
+            if (retriveUserInfoGoogleRequest.status === 200) {
+                const name = retriveUserInfoGoogleRequest.data.names[0].displayName, email = retriveUserInfoGoogleRequest.data.emailAddresses[0].value, avatar_url = retriveUserInfoGoogleRequest.data.photos[0].default ? `https://avatar.iran.liara.run/public/boy?username=${name}` : retriveUserInfoGoogleRequest.data.photos[0].url;
 
-
-        console.log(googleCode);
-        res.status(200).json({ message: "yaa hoo" })
+                let user = await User.findOne({ email });
+                if (!user) {
+                    user = await User.create({ email, account_type: "GOOGLE", full_name: name, avatar_url });
+                }
+                const { accessToken, refreshToken } = generateAccessToken(user);
+                user.refresh_token = refreshToken;
+                await user.save();
+                return res
+                    .status(200)
+                    .cookie("accessToken", accessToken, cookieOptions)
+                    .json({
+                        message: "userlogged in succesfully",
+                        tokens: { accessToken },
+                        time: process.env.ACCESS_TOKEN_EXPIRY,
+                        user: {
+                            _id: user._id,
+                            user_name: user.user_name,
+                            email: user.email,
+                            full_name: user.full_name,
+                            mobile_number: user.mobile_number,
+                            bio: user.bio,
+                            gender: user.gender,
+                            avatar_url: user.avatar_url,
+                            createdAt: user.createdAt,
+                            isAdmin: user.isAdmin
+                        }
+                    });
+            } else {
+                const err = new Error("getting userInfo via access token failed");
+                err.status = 400;
+                err.extraDetails = "from loginWithGoogleCode function inside authcontroller";
+                return next(err);
+            }
+        }
+        const err = new Error("getting accesstoken via code failed");
+        err.status = 400;
+        err.extraDetails = "from loginWithGoogleCode function inside authcontroller";
+        return next(err);
     } catch (error) {
+        console.log(error)
         const err = new Error("login with google failed");
         err.status = 400;
         err.extraDetails = "from loginWithGoogleCode function inside authcontroller";
@@ -126,4 +187,4 @@ const loginWithGoogleCode = async (req, res, next) => {
 }
 
 
-module.exports = { login, signup, logout, loginWithGoogleCode };
+module.exports = { loginWithChitii, signup, logout, loginWithGoogleCode };
