@@ -63,7 +63,26 @@ const userSchema = new mongoose.Schema({
         default: "CHITII",
         enum: ["CHITII", "GOOGLE", "TWITTER", "FACEBOOK"],
         required: true
-    }
+    },
+    google_data: {
+        type: Object,
+        required: function () {
+            return this.account_type === "GOOGLE";
+        }
+    },
+    twitter_data: {
+        type: Object,
+        required: function () {
+            return this.account_type === "TWITTER";
+        }
+    },
+    facebook_data: {
+        type: Object,
+        required: function () {
+            return this.account_type === "FACEBOOK";
+        }
+    },
+
 },
     { timestamps: true }
 );
@@ -92,7 +111,7 @@ userSchema.pre("save", async function (next) { // cannot use arrow as "this" val
 
 // assigning username for loginh with google
 userSchema.pre("validate", async function (next) {
-    if (this.account_type === "GOOGLE" && !this.user_name) {
+    if ((this.account_type === "GOOGLE" || this.account_type === "TWITTER" || this.account_type === "FACEBOOK") && !this.user_name) {
         this.user_name = await generateUniqueUserName(this.full_name || "user");
     }
     next();

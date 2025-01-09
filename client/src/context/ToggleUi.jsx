@@ -21,17 +21,7 @@ function ToggleUi({ children }) {
         isProfileSectionOn: true,
         isIncomingCallDialogOpen: false,
         isOnline: false,
-        logoutTime: 10
     })
-    useEffect(() => {
-        console.log(uiState)
-        const timer = setTimeout(() => {
-            //referesh token function to be made
-        }, uiState.logoutTime * 0.8);
-
-        // Cleanup the timeout if the variable changes or the component unmounts
-        return () => clearTimeout(timer);
-    }, [uiState]);
     return (
         <ToggleContext.Provider value={{ uiState, setUiState }}>{children}</ToggleContext.Provider>
     )

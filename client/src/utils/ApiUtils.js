@@ -40,6 +40,19 @@ export const login_via_google = async (code) => {
     return res;
 }
 
+export const login_via_twitter = async (code, codeVerifier) => {
+    const url = `${baseUrl}/api/auth/signupviatwittercode?code=${code}&codeVerifier=${codeVerifier}`;
+    const res = await axios.get(url, { withCredentials: true });
+    return res;
+}
+
+export const login_via_facebook = async (code, facebookCodeVerifier) => {
+    const url = `${baseUrl}/api/auth/signupviafacebookcode?code=${code}&codeVerifier=${facebookCodeVerifier}`;
+    const res = await axios.get(url, { withCredentials: true });
+    return res;
+}
+
+
 export const logout = async () => {
     const url = `${baseUrl}/api/auth/logout`;
     const res = await axios.get(url, { withCredentials: true });

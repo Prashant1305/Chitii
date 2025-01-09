@@ -4,6 +4,7 @@ import { login_via_google } from '../../utils/ApiUtils';
 import { userExist } from '../../redux/reducers/Auth';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
+import PageLoader from '../../components/shared/pageLoader/PageLoader';
 
 function LoginWithGoogle() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -59,7 +60,7 @@ function LoginWithGoogle() {
     }, [error])
     console.log(code)
     return (
-        <div>LoginWithGoogle</div>
+        <div><PageLoader /></div>
     )
 }
 

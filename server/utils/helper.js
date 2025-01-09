@@ -24,10 +24,18 @@ const generateAccessToken = (user) => {
         next(err);
     }
 }
-const cookieOptions = {
-    maxAge: 15 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    secure: false,
-    sameSite: "Strict"
+
+// const cookieOptions = {
+//     maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
+//     httpOnly: true,                 // Prevent access via JavaScript
+//     secure: true,                   // Required for HTTPS
+//     sameSite: "none"                // Allows cross-site cookies
+// }
+const cookieOptions = { // for http
+    maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
+    httpOnly: true,                 // Prevent access via JavaScript
+    secure: false,                   // Required for HTTPS
+    sameSite: "lax"                // Allows cross-site cookies
 }
 module.exports = { getSockets, generateAccessToken, cookieOptions };
+

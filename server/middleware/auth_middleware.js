@@ -3,11 +3,11 @@ const User = require("../models/user_model");
 const { cookieOptions, generateAccessToken } = require("../utils/helper");
 
 const verifyJwt = async (req, res, next) => {
-    console.log("verifyJwt")
+
     const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
 
     if (!accessToken) {
-        return res.status(401).json({ message: "cookies not available plz login" });
+        return res.status(497).json({ message: "cookies not available plz login" });
     }
     try {
         const { _id, email } = jwt.decode(accessToken);
@@ -16,7 +16,6 @@ const verifyJwt = async (req, res, next) => {
             jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
 
         } catch (error) { // when access token is expired
-            console.log("first", error);
             if (error.name === "TokenExpiredError") { // if token is tampered then it will be different error
                 try {
                     jwt.verify(user.refresh_token, process.env.REFRESH_TOKEN_SECRET);
@@ -33,7 +32,7 @@ const verifyJwt = async (req, res, next) => {
         next();
     } catch (error) {
         const err = new Error("token from Cookie, authentication failed");
-        err.status = 400;
+        err.status = 497;
         err.extraDetails = "from auth_middleware";
         next(err);
     }

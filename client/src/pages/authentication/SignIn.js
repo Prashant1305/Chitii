@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { userExist, userNotExist } from '../../redux/reducers/Auth';
 import { login_api } from '../../utils/ApiUtils';
 import "./Sign.css";
+import { generateCodeChallenge, generateCodeVerifier } from './AuthHelper';
 
 function SignIn() {
     const [userData, setUserData] = useState({
@@ -68,11 +69,10 @@ function SignIn() {
     }, [userData]);
 
     const redirectToGoogle = () => {
-        console.log({ uri: process.env.REACT_APP_REDIRECT_URI })
         const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
         const params = {
             client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
-            redirect_uri: process.env.REACT_APP_REDIRECT_URI,
+            redirect_uri: process.env.REACT_APP_GOOGLE_REDIRECT_URI,
             response_type: 'code',
             // scope: 'openid email profile',
             scope: 'openid email profile https://www.googleapis.com/auth/user.phonenumbers.read', // generate code for getting fullname, userInfo, phoneNumber
@@ -81,6 +81,50 @@ function SignIn() {
         };
         const queryString = new URLSearchParams(params).toString();
         window.location.href = `${googleAuthUrl}?${queryString}`;
+    }
+
+    const redirectToTwitter = async () => {
+
+        const codeVerifier = generateCodeVerifier();
+        const state = generateCodeVerifier();
+
+        // storoing in local storage
+        localStorage.setItem('twitterCodeVerifier', codeVerifier);
+        localStorage.setItem('twitterState', state);
+
+        const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+        const twitterAuthUrl = 'https://twitter.com/i/oauth2/authorize';
+        const params = {
+            client_id: process.env.REACT_APP_TWITTER_CLIENT_ID, // Your Twitter Client ID
+            redirect_uri: process.env.REACT_APP_TWITTER_REDIRECT_URI, // Your Redirect URI
+            response_type: 'code', // Request an authorization code
+            // scope: 'tweet.read users.read email offline.access', //Permissions to request (adjust based on your app's needs)
+            state, // Optional: CSRF token to validate the response
+            code_challenge: codeChallenge, // Code challenge for PKCE
+            code_challenge_method: 'S256', // Use SHA-256 for code challenge method
+        };
+
+        const queryString = new URLSearchParams(params).toString();
+        window.location.href = `${twitterAuthUrl}?${queryString}`;
+    };
+    const redirectToFacebook = async () => {
+        const facebookCodeVerifier = generateCodeVerifier();
+        const state = generateCodeVerifier();
+        localStorage.setItem('facebookState', state);
+        localStorage.setItem('facebookCodeVerifier', facebookCodeVerifier);
+        const codeChallenge = await generateCodeChallenge(facebookCodeVerifier);
+        const facebookAuthUrl = "https://www.facebook.com/v15.0/dialog/oauth"; const params = {
+            client_id: process.env.REACT_APP_FACEBOOK_CLIENT_ID,
+            redirect_uri: process.env.REACT_APP_FACEBOOK_REDIRECT_URI,
+            state, // Optional CSRF protection 
+            scope: "email", // Request email permission 
+            response_type: 'code',
+            code_challenge: codeChallenge,
+            code_challenge_method: 'S256',  // Use SHA-256 for code challenge
+        };
+        const queryString = new URLSearchParams(params).toString();
+        window.location.href = `${facebookAuthUrl}?${queryString}`;
     }
     return (
         <>
@@ -122,9 +166,23 @@ function SignIn() {
                     <div className='logo_container'>
                         <div onClick={() => {
                             redirectToGoogle()
-                        }}><img src='./google_logo.png' alt='google_logo' /></div>
-                        <div><img src='./facebook_logo.png' alt='facebook_logo' /></div>
-                        <div><img src='./twitter_logo.png' alt='twitter_logo' /></div>
+                        }}>
+                            <img src='./google_logo.png' alt='google_logo' />
+                        </div>
+
+                        <div onClick={() => {
+                            redirectToFacebook()
+                        }}>
+                            <img src='./facebook_logo.png' alt='facebook_logo' />
+                        </div>
+
+                        <div onClick={async () => {
+                            // await redirectToTwitter()
+
+                            toast.info("Twitter has disabled email temporarily for oAuth2.O")
+                        }}>
+                            <img src='./twitter_logo.png' alt='twitter_logo' />
+                        </div>
                     </div>
                 </div>
             </section>

@@ -25,13 +25,14 @@ import { fetch_user_data } from "./utils/ApiUtils";
 // import Home from "./pages/Home";
 // import SignOut from "./pages/SignOut";
 // import Error from "./pages/Error";
+import axios from "axios";
 import { toast } from "react-toastify";
 import RootLayout from "./components/layout/RootLayout";
 import SocketProvider from "./context/SocketConnectContext";
 import { MyToggleUiValues } from "./context/ToggleUi";
 import LoginWithGoogle from "./pages/authentication/LoginWithGoogle";
-// import Groups from "./pages/Groups";
-// import Chat from "./pages/Chat";
+import LoginWithTwitter from "./pages/authentication/LoginWithTwitter";
+import LoginWithFaceBook from "./pages/authentication/LoginWithFaceBook";
 
 const Home = lazy(() => import("./pages/Home")); // using lazy, now this page will load when needed at first
 const SignUp = lazy(() => import("./pages/authentication/SignUp"));
@@ -47,15 +48,31 @@ function Routing() {
   const { setUiState } = MyToggleUiValues()
   const dispatch = useDispatch();
 
+  axios.interceptors.response.use(// adding interceptor, so that user will logout when midlleware sends request 497
+    (res) => {
+      // Successful response
+      if (res.status === 497) {
+        dispatch(userNotExist()); // Update Redux store or state
+      }
+      return res; // Pass the response to the next handler
+    },
+    (error) => {
+      // Error response
+      if (error.response && error.response.status === 497) { //Detected status 497 in error response. Logging out user...
+        dispatch(userNotExist());
+      }
+      return Promise.reject(error); // Pass the error to the next handler
+    }
+  )
+
   useEffect(() => {
     const fetchingUserData = async () => {
       const toastId = toast.loading("fetching user data...")
       try {
         const res = await fetch_user_data();
-        console.log("time setted", new Date(res.data.exp) - new Date())
+
         if (res.status === 200) {
           dispatch(userExist(res?.data?.message));
-          setUiState((prev) => ({ ...prev, logoutTime: new Date(res.data.exp) - new Date() })); //setting logout time
           toast.update(toastId, {
             render: "user data fetched Successfully",
             type: "success",
@@ -87,6 +104,8 @@ function Routing() {
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route>
+
+
         <Route element={<ProtectRoutes conditionValue={user && !user.isLoading} navigateTo={"/signin"} />}> {/*protecting inside routes*/}
           <Route path="/" element={<SocketProvider><RootLayout /></SocketProvider>} errorElement={<Error />}>
             <Route element={<PublicLayout />}>
@@ -117,6 +136,9 @@ function Routing() {
 
         <Route path="signin" element={<ProtectRoutes conditionValue={!user} navigateTo={"/"}><Suspense fallback={<LayoutLoader />}><SignIn /></Suspense></ProtectRoutes>} />
         <Route path="auth/google/callback" element={<ProtectRoutes conditionValue={!user} navigateTo={"/"}><Suspense fallback={<LayoutLoader />}><LoginWithGoogle /></Suspense></ProtectRoutes>} />
+        <Route path="auth/twitter/callback" element={<ProtectRoutes conditionValue={!user} navigateTo={"/"}><Suspense fallback={<LayoutLoader />}><LoginWithTwitter /></Suspense></ProtectRoutes>} />
+        <Route path="auth/facebook/callback" element={<ProtectRoutes conditionValue={!user} navigateTo={"/"}><Suspense fallback={<LayoutLoader />}><LoginWithFaceBook /></Suspense></ProtectRoutes>} />
+
         <Route path="signup" element={<Suspense fallback={<LayoutLoader />}><SignUp /></Suspense>} />
 
 
