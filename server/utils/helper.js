@@ -34,7 +34,7 @@ const generateAccessToken = (user) => {
 const cookieOptions = { // for http
     maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days
     httpOnly: true,                 // Prevent access via JavaScript
-    secure: false,                   // Required for HTTPS
+    secure: true,                   // Required for HTTPS
     sameSite: "lax"                // Allows cross-site cookies
 }
 module.exports = { getSockets, generateAccessToken, cookieOptions };
