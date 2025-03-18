@@ -16,8 +16,18 @@ const onlineSlice = createSlice({
             // console.log(action.payload)
             state.onlineUsersArray = action.payload
         },
+        addOnlineUser: (state, action) => {
+            const userId = action.payload + "";
+            if (!state.onlineUsersArray.includes(userId)) {
+                state.onlineUsersArray.push(userId);
+            }
+        },
+        removeOnlineUser: (state, action) => {
+            const userId = action.payload + "";
+            state.onlineUsersArray = state.onlineUsersArray.filter(id => id + "" !== userId + "");
+        }
     }
 
 })
-export const { setOnlineUsersArray } = onlineSlice.actions
+export const { setOnlineUsersArray, addOnlineUser, removeOnlineUser } = onlineSlice.actions
 export default onlineSlice

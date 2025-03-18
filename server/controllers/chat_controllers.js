@@ -7,75 +7,7 @@ const { REFETCH_CHATS, NEW_MESSAGE } = require("../Constants/events");
 const { ObjectId } = require('mongodb');
 const { uploadOnCloudinary, deleteFromCloudinary } = require("../utils/cloudinaryDb/cloudinary");
 const { pub } = require("../utils/redis/connectToRedis");
-
-// const sendMessage = async (req, res, next) => {
-//     try {
-
-//         const { message } = req.body;
-//         const { id: receiverId } = req.params;
-//         const senderId = req.clientAuthData._id;
-//         if (!mongoose.Types.ObjectId.isValid(receiverId)) {
-//             return res.status(400).json({ message: "wrong receiver id provided" });
-//         }
-//         const receiverExist = await User.findById(receiverId);
-//         if (!receiverExist) {
-//             return res.status(400).json({ message: "receiver does not exist" });
-//         }
-
-//         let conversation = await Conversation.findOne({
-//             participants: { $all: [senderId, receiverId] }
-//         })
-
-//         if (!conversation) { // if conversation does not exist, then create one
-//             conversation = await Conversation.create({
-//                 participants: [senderId, receiverId],
-//             })
-//         }
-
-//         const newMessage = new Message({
-//             senderId, receiverId, message
-//         })
-//         if (newMessage) {
-//             conversation.messages.push(newMessage._id);
-//         }
-
-//         // await conversation.save();
-//         // await newMessage.save();
-//         //since above two promises are independent of each other so we can run them parallely
-//         await Promise.all([conversation.save(), newMessage.save()]);
-
-//         res.status(200).json({ message: "message Successfully sent", newMessage });
-//     } catch (error) {
-//         const err = new Error("message transaction failed");
-//         err.status = 400;
-//         err.extraDetails = "from sendMessage function inside chat_controller";
-//         next(err);
-//     }
-// }
-
-// const getMessages = async (req, res, next) => {
-//     try {
-//         const { id: userToChatId } = req.params;
-//         const senderId = req.clientAuthData._id;
-//         if (!mongoose.Types.ObjectId.isValid(userToChatId)) {
-//             return res.status(400).json({ message: "wrong id provided" });
-//         }
-
-//         const conversation = await Conversation.findOne({
-//             participants: { $all: [senderId, userToChatId] },
-//         }).populate("messages");// via populate command it will replace message refrence with original message
-//         if (!conversation) {
-//             return res.status(200).json([]);
-//         }
-//         // console.log(conversation);
-//         res.status(200).json({ message: conversation.messages });
-//     } catch (error) {
-//         const err = new Error("cannot retrive message");
-//         err.status = 400;
-//         err.extraDetails = "from getMessage function inside chat_controller";
-//         next(err);
-//     }
-// }
+const { findUserConnectedToAndSendSocketEventToRabbit } = require("../utils/helper");
 
 const newGroupChat = async (req, res, next) => {
     try {
@@ -88,7 +20,7 @@ const newGroupChat = async (req, res, next) => {
 
         }
         const allMembers = [...members, req.clientAuthData._id.toString()]
-        const newGroup = await Conversation.create({ name, group_chat: true, members: allMembers, creator: req.clientAuthData._id });
+        const newGroup = await Conversation.create({ name, conversation_type: group, members: allMembers, creator: req.clientAuthData._id });
         // console.log(newGroup);
 
         const messageForDb = { sender: req.clientAuthData._id, conversation: newGroup._id, text_content: `Group Created by ${req.clientAuthData.user_name}`, attachments: [] }
@@ -96,12 +28,19 @@ const newGroupChat = async (req, res, next) => {
         const dbMessageSaved = await Message.create(messageForDb);
 
         const messageNotification = {
-            sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name },
+            sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url },
             conversation: messageForDb.conversation, text_content: messageForDb.text_content, attachments: messageForDb.attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt
         }
 
-        pub.publish(NEW_MESSAGE, JSON.stringify({ members: allMembers, messageNotification }));
-        pub.publish(REFETCH_CHATS, JSON.stringify({ members: allMembers }));
+        // pub.publish(NEW_MESSAGE, JSON.stringify({ members: allMembers, messageNotification }));
+        await findUserConnectedToAndSendSocketEventToRabbit(allMembers, {
+            messageNotification,
+            event_name: NEW_MESSAGE
+        });
+        // pub.publish(REFETCH_CHATS, JSON.stringify({ members: allMembers }));
+        await findUserConnectedToAndSendSocketEventToRabbit(allMembers, {
+            event_name: REFETCH_CHATS
+        });
 
         return res.status(200).json({ message: "Grouop created successfully" });
 
@@ -196,7 +135,7 @@ const addMembers = async (req, res, next) => {
         const dbMessageSaved = await Message.create(messageForDb);
 
         const messageNotification = {
-            sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name },
+            sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url },
             conversation: messageForDb.conversation, text_content: messageForDb.text_content, attachments: messageForDb.attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt
         }
 
@@ -205,8 +144,15 @@ const addMembers = async (req, res, next) => {
 
         // const io = req.app.get('socketio'); // Retrieve io instance from app
 
-        pub.publish(REFETCH_CHATS, JSON.stringify({ members }));
-        pub.publish(NEW_MESSAGE, JSON.stringify({ members: modifiedAllMember, messageNotification }))
+        // pub.publish(REFETCH_CHATS, JSON.stringify({ members }));
+        await findUserConnectedToAndSendSocketEventToRabbit(allMembers, {
+            event_name: REFETCH_CHATS
+        });
+        // pub.publish(NEW_MESSAGE, JSON.stringify({ members: modifiedAllMember, messageNotification }))
+        await findUserConnectedToAndSendSocketEventToRabbit(modifiedAllMember, {
+            messageNotification,
+            event_name: NEW_MESSAGE
+        });
 
         res.status(200).json({ message: "members added successfully" });
 
@@ -256,14 +202,21 @@ const removeMembers = async (req, res, next) => {
         const dbMessageSaved = await Message.create(messageForDb);
 
         const messageNotification = {
-            sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name },
+            sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url },
             conversation: messageForDb.conversation, text_content: messageForDb.text_content, attachments: messageForDb.attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt
         }
-
+        await findUserConnectedToAndSendSocketEventToRabbit([...modifiedMember, userId], {
+            event_name: REFETCH_CHATS
+        });
         const allMembers = modifiedMember.filter((member) => (member + "" !== req.clientAuthData._id + ""))
 
-        pub.publish(NEW_MESSAGE, JSON.stringify({ members: allMembers, messageNotification }));
-        pub.publish(REFETCH_CHATS, JSON.stringify({ members: [userId] }));
+        // pub.publish(NEW_MESSAGE, JSON.stringify({ members: allMembers, messageNotification }));
+        await findUserConnectedToAndSendSocketEventToRabbit(allMembers, {
+            messageNotification,
+            event_name: NEW_MESSAGE
+        });
+        // pub.publish(REFETCH_CHATS, JSON.stringify({ members: [userId] }));
+
 
         res.status(200).json({ message: "members removed successfully" });
     } catch (error) {
@@ -303,15 +256,22 @@ const leaveGroup = async (req, res, next) => {
         const dbMessageSaved = await Message.create(messageForDb);
 
         const messageNotification = {
-            sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name },
+            sender: { _id: req.clientAuthData._id, name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url },
             conversation: messageForDb.conversation, text_content: messageForDb.text_content, attachments: messageForDb.attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt
         }
 
         const allMembers = chat.members.filter((member) => (member + "" !== req.clientAuthData._id + ""))
         const modifiedAllMember = allMembers.map((id) => id.toString());
 
-        await pub.publish(NEW_MESSAGE, JSON.stringify({ members: modifiedAllMember, messageNotification }))
-        await pub.publish(REFETCH_CHATS, JSON.stringify({ members: [req.clientAuthData._id.toString()] }))
+        // await pub.publish(NEW_MESSAGE, JSON.stringify({ members: modifiedAllMember, messageNotification }))
+        await findUserConnectedToAndSendSocketEventToRabbit(modifiedAllMember, {
+            messageNotification,
+            event_name: NEW_MESSAGE
+        });
+        // await pub.publish(REFETCH_CHATS, JSON.stringify({ members: [req.clientAuthData._id.toString()] }))
+        await findUserConnectedToAndSendSocketEventToRabbit([...allMembers, req.clientAuthData._id + ""], {
+            event_name: REFETCH_CHATS
+        });
 
         res.status(200).json({ message: "Group leaved successfully" });
 
@@ -351,7 +311,11 @@ const sendMessage = async (req, res, next) => {
 
             const messageNotification = { sender: { _id: req.clientAuthData._id, user_name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url }, conversation: conversationId, text_content, attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt }
 
-            pub.publish(NEW_MESSAGE, JSON.stringify({ messageNotification, members: chat.members }));
+            // pub.publish(NEW_MESSAGE, JSON.stringify({ messageNotification, members: chat.members }));
+            await findUserConnectedToAndSendSocketEventToRabbit(chat.members, {
+                messageNotification,
+                event_name: NEW_MESSAGE
+            });
 
             // const io = req.app.get('socketio'); // if you want to Retrieve instance from app
 
@@ -413,7 +377,10 @@ const renameConversation = async (req, res, next) => {
         chat.name = conversationName;
         await chat.save();
 
-        pub.publish(REFETCH_CHATS, JSON.stringify({ members: chat.members }))
+        // pub.publish(REFETCH_CHATS, JSON.stringify({ members: chat.members }))
+        await findUserConnectedToAndSendSocketEventToRabbit(chat.members, {
+            event_name: REFETCH_CHATS
+        });
 
         // const io = req.app.get('socketio'); // Retrieve io instance from app
         return res.status(200).json({ message: "Group name changed succesfully" });
@@ -438,7 +405,7 @@ const deleteChat = async (req, res, next) => {
         }
         else if (!chat.group_chat && !chat.members.includes(req.clientAuthData._id.toString())) {
             return res.status(400).json({ message: "you are not allowed to delete the chat" });
-        }
+        };
         // deleting messages of chat
         const messagesOfDeletingConversation = await Message.find({ conversation: conversationId });
 
@@ -452,7 +419,9 @@ const deleteChat = async (req, res, next) => {
         })
         await Conversation.deleteOne({ _id: conversationId })
 
-        pub.publish(REFETCH_CHATS, JSON.stringify({ members: chat.members }))
+        await findUserConnectedToAndSendSocketEventToRabbit(chat.members, {
+            event_name: REFETCH_CHATS
+        });
 
         return res.status(200).json({ message: "Chat deleted succesfully" });
 

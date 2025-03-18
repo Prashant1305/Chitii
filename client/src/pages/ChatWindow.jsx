@@ -6,13 +6,14 @@ import { toast } from 'react-toastify'
 import ChatList from '../components/chatList/ChatList'
 import Chat from '../components/ChatWindow/Chat'
 import SelectChat from '../components/ChatWindow/SelectChat'
-import { CHAT_JOINED, REFETCH_CHATS, START_TYPING, STOP_TYPING } from '../components/constants/events'
+import { REFETCH_CHATS, START_TYPING, STOP_TYPING, UPDATE_ONLINE_STATUS } from '../components/constants/events'
 import DeleteChatMenu from '../components/Dialogs/DeleteChatMenu'
 import { GetSocket } from '../context/SocketConnectContext'
 import { MyToggleUiValues } from '../context/ToggleUi'
 import { useSocketEvent } from '../hooks/socket_hooks'
+import { addOnlineUser, removeOnlineUser, setOnlineUsersArray } from '../redux/reducers/online'
 import { popInTypingArray, pushInTypingArray } from '../redux/reducers/typing'
-import { get_my_chats } from '../utils/ApiUtils'
+import { get_my_chats, get_online_friends_api } from '../utils/ApiUtils'
 
 function ChatWindow() {
     const params = useParams();
@@ -33,8 +34,13 @@ function ChatWindow() {
     const socket = GetSocket();
     const dispatch = useDispatch()
 
+    const fetchOnlineFriends = async () => {
+        const res = await get_online_friends_api();
+        dispatch(setOnlineUsersArray(res.data.message))
+    }
 
     const my_chats = async () => {
+        fetchOnlineFriends();
         try {
             setChatIsLoading(true)
             const res = await get_my_chats();
@@ -53,12 +59,6 @@ function ChatWindow() {
             console.log("form startyping listner", data)
             // store data in typing
             dispatch(pushInTypingArray(data));
-
-            // removing data after some seconds, when user closes it before event fires
-            // setTimeout(() => {
-            //     dispatch(popInTypingArray(data))
-            // }, [2500])
-
         }, []
     )
 
@@ -68,17 +68,30 @@ function ChatWindow() {
 
     const stopTypingListener = useCallback((data) => {
         dispatch(popInTypingArray(data))
-    }, [])
+    }, []);
 
+    const updateOnlineStatusHandler = useCallback((data) => {
+        console.log(data)
+        if (data.is_online) {
+            dispatch(addOnlineUser(data.user._id))
+        } else {
+            dispatch(removeOnlineUser(data.user._id));
+        }
+    }, []);
 
-    const eventHandler = { [START_TYPING]: startTypingListner, [STOP_TYPING]: stopTypingListener, [REFETCH_CHATS]: refetchChatsListner, }
+    const eventHandler = {
+        [START_TYPING]: startTypingListner,
+        [STOP_TYPING]: stopTypingListener,
+        [REFETCH_CHATS]: refetchChatsListner,
+        [UPDATE_ONLINE_STATUS]: updateOnlineStatusHandler,
+    }
 
     useSocketEvent(socket, eventHandler);
 
     useEffect(() => {
         my_chats();
-        setUiState((prev) => ({ ...prev, mobileBtnExist: true }))
-        socket.emit(CHAT_JOINED, {})// firing to get online users
+        setUiState((prev) => ({ ...prev, mobileBtnExist: true }));
+        // fetch online friends
         return () => {
             setUiState((prev) => ({ ...prev, mobileBtnExist: false }))
         };

@@ -12,8 +12,9 @@ const call_routes = require("./routes/call_routes");
 const { createServer } = require('http');
 const bodyParser = require('body-parser');
 const { socketAuthenticator } = require("./middleware/auth_middleware");
-const { initializeSocket } = require("./utils/socketSetup");
 const { initializeRedis } = require("./utils/redis/connectToRedis");
+const { initializeRabbitMQConnection } = require("./utils/rabbitMQ/initailizeRabbitMq")
+
 const PORT = process.env.PORT || 3012;
 const app = express();
 
@@ -47,17 +48,7 @@ app.use(express.json()); // to parse incoming requests with json payload and sto
 app.use(bodyParser.urlencoded({ extended: true })); // to parse incoming urlencoded data that contains only file
 app.use(cookieParser());
 
-// SOCKET
 const server = createServer(app);
-const io = initializeSocket(server, corsOptions)
-
-app.set('socketio', io); // Store io instance in app
-
-io.use((socket, next) => {
-    cookieParser()(socket.request, socket.request.res, async (err) => { // cookieParser returns a middleware function which can be used like this
-        return await socketAuthenticator(err, socket, next);
-    });
-});
 
 // checking connection
 app.get('/api/check', (req, res) => {
@@ -68,6 +59,9 @@ app.get('/api/check', (req, res) => {
 
 // initialize Redis
 initializeRedis();
+
+// initialize rabbitMQ
+initializeRabbitMQConnection();
 
 app.use('/api/auth', auth_routes);
 app.use('/api/chat', chat_routes);

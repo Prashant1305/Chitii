@@ -1,8 +1,7 @@
 const express = require("express");
 const { verifyJwt } = require("../middleware/auth_middleware");
-const { getMyProfile, searchUser, sendFriendRequest, acceptFriendRequest, getAllNotifications, getMyfriends } = require("../controllers/user_controller");
+const { getMyProfile, searchUser, sendFriendRequest, acceptFriendRequest, getAllNotifications, getMyfriends, getAllOnlineFriends, removeFriend } = require("../controllers/user_controller");
 const { sendFriendRequestValidator, validateHandler, acceptFriendRequestValidator } = require("../middleware/express-validator_middleware");
-const { route } = require("./chat_routes");
 
 const router = express.Router();
 
@@ -12,5 +11,7 @@ router.put("/sendfriendrequest", verifyJwt, sendFriendRequestValidator(), valida
 router.delete("/acceptfriendrequest", verifyJwt, acceptFriendRequestValidator(), validateHandler, acceptFriendRequest);
 router.get("/getallnotification", verifyJwt, getAllNotifications);
 router.get("/getmyfriends", verifyJwt, getMyfriends);
+router.get("/onlinefriends", verifyJwt, getAllOnlineFriends);
+router.delete("/unfriend", verifyJwt, removeFriend);
 
 module.exports = router;

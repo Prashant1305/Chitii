@@ -10,18 +10,19 @@ import { v4 as uuid } from 'uuid';
 
 
 function Notifications() {
-    const [notificationData, setNotificationData] = useState([])
+    const [notificationData, setNotificationData] = useState([]);
     const { uiState, setUiState } = MyToggleUiValues();
     const [isLoading, setIsLoading] = useState(false);
     const dispatch = useDispatch();
+    let page = 0, limit = 2;
 
     // getting meesages alert from state variable
     const { newMessageAlert } = useSelector(state => state.chat);
 
-    const fetchNotification = async () => {
+    const fetchNotification = async (page, limit) => {
         try {
             setIsLoading(true);
-            const res = await my_notification();
+            const res = await my_notification(page, limit);
             if (res.status === 200) {
                 setNotificationData(res.data.message);
             }
@@ -34,7 +35,7 @@ function Notifications() {
         }
     }
 
-    const freindRequestHandler = async ({ _id, accept }) => {
+    const freindRequestHandler = async (setDisableBtn, { _id, accept }) => {
         const toastId = toast.loading("updating Friend Request");
         try {
             const res = await accept_friend_request({ requestId: _id, accept })
@@ -45,7 +46,7 @@ function Notifications() {
                     isLoading: false,
                     autoClose: 1000,
                 })
-                fetchNotification();
+                setDisableBtn(true);
             }
         } catch (error) {
             toast.update(toastId, {
@@ -58,45 +59,33 @@ function Notifications() {
         }
     }
     useEffect(() => {
-        fetchNotification();
+        fetchNotification(page, limit);
 
-        dispatch(resetNotificationCount())
+        // dispatch(resetNotificationCount())
     }, []);
     return (
         <Dialog open={uiState.isNotification} onClose={() => { setUiState({ ...uiState, isNotification: false }) }}>
-            <Stack p={{ xs: "1rem", sm: "2rem" }} maxWidth={"30rem"} >
+            <Stack p={{ xs: "1rem", sm: "2rem" }} maxWidth={"35rem"} >
                 <DialogTitle>Notifications</DialogTitle>
                 {isLoading ? <Skeleton /> : (
                     notificationData.map((i, index) => {
                         return (<React.Fragment key={uuid()}>
                             <NotificationItem
-                                sender={{ name: i.sender.user_name, avatar: i.sender.avatar_url }}
-                                _id={i._id}
+                                sender={{ name: i.from.user_name, avatar: i.from.avatar_url }}
+                                content={i.message}
+                                request_id={i.request}
                                 handler={freindRequestHandler}
                                 key={i._id}
-                                type={"FriendRequestNotification"} />
-                            {(index < notificationData.length - 1 || notificationData.length > 0) && <Divider />}
+                                type={i.type}
+                                chat_id={i.chat_id}
+                                status={i.status}
+                            />
+                            {(index < notificationData.length - 1) && <Divider />}
                         </React.Fragment>)
                     })
                 )
                 }
-                {
-                    newMessageAlert.length > 0 && (
-                        newMessageAlert.map((i, index) => {
-                            return (<React.Fragment key={uuid()}>
-                                <NotificationItem
-                                    sender={{ name: i.messageData[0].sender.user_name, avatar: i.messageData[0].sender.avatar_url }}
-                                    _id={i.chatId}
-                                    handler={freindRequestHandler}
-                                    key={i.chatId}
-                                    type={"NewMessageNotification"}
-                                    messageData={i.messageData}
-                                />
-                                {(index < newMessageAlert.length - 1) && <Divider />}
-                            </React.Fragment>)
-                        })
-                    )
-                }
+
                 {
                     notificationData.length === 0 && newMessageAlert.length === 0 && <Typography textAlign={"center"}>No notifications</Typography>
                 }
@@ -105,20 +94,28 @@ function Notifications() {
     )
 }
 
-const NotificationItem = memo(({ sender, _id, handler, type, messageData }) => {
+const NotificationItem = memo(({ sender, request_id, handler, type, content, chat_id, status }) => {
     const { name, avatar } = sender;
     const { setUiState } = MyToggleUiValues();
     const navigate = useNavigate();
+    const [disableBtn, setDisableBtn] = useState(false);
 
     switch (type) {
-        case "FriendRequestNotification":
+        case "friend_request":
             return (
-                <ListItem >
+                <ListItem
+                    sx={{
+                        backgroundColor:
+                            status === 'read' ? '#ffffff' : '#f0f0f0',
+                        padding: '1rem',
+                        borderRadius: '4px'
+                    }}>
                     <Stack
                         direction={"row"}
                         alignItems={"center"}
                         spacing={"1rem"}
-                        width={"100%"}>
+                        width={"100%"}
+                    >
                         <Avatar src={avatar} />
                         <Typography
                             variant='body1'
@@ -131,22 +128,23 @@ const NotificationItem = memo(({ sender, _id, handler, type, messageData }) => {
                                 textOverflow: "ellipsis",
                                 width: "100%"
                             }}>
-                            {`${name} sent you freind request`}
+                            {content ? content : (`${name} sent you freind request`)}
                         </Typography>
                         <Stack direction={{
                             xs: "column",
                             sm: "row"
                         }}>
-                            <Button onClick={() => handler({ _id, accept: true })}>Accept</Button>
-                            <Button color="error" onClick={() => handler({ _id, accept: false })}>Decline</Button>
+                            <Button disabled={disableBtn} onClick={() => handler(setDisableBtn, { _id: request_id, accept: true })}>Accept</Button>
+                            <Button disabled={disableBtn} color="error" onClick={() => handler(setDisableBtn, { _id: request_id, accept: false })}>Decline</Button>
                         </Stack>
                     </Stack>
                 </ListItem>)
 
-        case "NewMessageNotification":
+        case "new_message":
+            console.log(sender)
             return (
                 <ListItem onClick={() => {
-                    navigate(`./chat/${messageData[0].conversation}`)
+                    navigate(`./chat/${chat_id}`)
                     setUiState(prev => ({ ...prev, isNotification: false }));
                 }} sx={{
                     cursor: "pointer"
@@ -168,9 +166,7 @@ const NotificationItem = memo(({ sender, _id, handler, type, messageData }) => {
                                 textOverflow: "ellipsis",
                                 width: "100%"
                             }}>
-                            {`${name.length > 10 ?
-                                name.slice(0, 10) + "..." : name
-                                } sent you ${messageData.length} message${messageData.length > 1 ? "s" : ""} `}
+                            {content}
                         </Typography>
                         <Stack direction={{
                             xs: "column",

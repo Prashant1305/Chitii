@@ -6,9 +6,10 @@ const conversationSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    group_chat: {
-        type: Boolean,
-        default: false
+    conversation_type: {
+        type: String,
+        default: "group",
+        enum: ["private", "group"]
     },
     creator: {
         type: mongoose.Schema.Types.ObjectId,

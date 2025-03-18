@@ -16,5 +16,19 @@
             "host": "localhost",
             "port": 3004
         }
+    ],
+    "socket_servers": [
+        {
+            "host": "localhost",
+            "port": 3011
+        },
+        {
+            "host": "localhost",
+            "port": 3012
+        },
+        {
+            "host": "localhost",
+            "port": 3013
+        }
     ]
 }

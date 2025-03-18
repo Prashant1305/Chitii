@@ -7,12 +7,12 @@ import { GetSocket } from '../../context/SocketConnectContext'
 import { MyToggleUiValues } from '../../context/ToggleUi'
 import { useSocketEvent } from '../../hooks/socket_hooks'
 import { incrementNotificationCount, setNewMessagesAlert } from '../../redux/reducers/chat'
-import { setOnlineUsersArray } from '../../redux/reducers/online'
-import { CALL_INCOMING, CHAT_JOINED, CHAT_LEFT, NEW_MESSAGE, NEW_REQUEST, ONLINE_USERS } from '../constants/events'
+import { addOnlineUser, removeOnlineUser, setOnlineUsersArray } from '../../redux/reducers/online'
+import { CALL_INCOMING, NEW_MESSAGE, NEW_FRIEND_REQUEST, ONLINE_USERS, UPDATE_ONLINE_STATUS } from '../constants/events'
 import IncomingCallDialog from '../Dialogs/call/IncomingCallDialog'
 import Header from '../header/Header'
 import Profile from '../profile.jsx/Profile'
-
+import { get_online_friends_api } from '../../utils/ApiUtils'
 
 function PublicLayout() {
     const socket = GetSocket();
@@ -25,7 +25,6 @@ function PublicLayout() {
 
     const newMessageHandler = useCallback((data) => {
         dispatch(setNewMessagesAlert(data));
-
     }, []);
 
     const newRequestHandler = useCallback((data) => {
@@ -35,7 +34,14 @@ function PublicLayout() {
 
 
     const onlineListner = useCallback((data) => {
-        dispatch(setOnlineUsersArray(data.users))
+        //  data = { user_online_status: true, user: { _id: "phalanaDhimka" } } 
+        // console.log({ data })
+
+        if (data?.user_online_status === "ONLINE") {
+            dispatch(addOnlineUser(data.user));
+        } else {
+            dispatch(removeOnlineUser(data.user))
+        }
 
     }, [])
 
@@ -48,21 +54,30 @@ function PublicLayout() {
 
     const eventHandlers = {
         [NEW_MESSAGE]: newMessageHandler,
-        [NEW_REQUEST]: newRequestHandler,
-        [ONLINE_USERS]: onlineListner,
+        [NEW_FRIEND_REQUEST]: newRequestHandler,
+        [UPDATE_ONLINE_STATUS]: onlineListner,
         [CALL_INCOMING]: callIncomingHandler
     }
     useSocketEvent(socket, eventHandlers);
 
     useEffect(() => {
-        if (user) {
-            socket.emit(CHAT_JOINED, {})
-        } else {
-            socket.emit(CHAT_LEFT, {})
+        const fetchOnlineUsersId = async () => {
+            try {
+                const res = await get_online_friends_api();
+                if (res.status === 200) {
+                    dispatch(setOnlineUsersArray(res.data.message));
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        if (user && user?.preferred_online_status === "ONLINE") {
+            socket.emit(UPDATE_ONLINE_STATUS, { user_online_status: "ONLINE" });
+            fetchOnlineUsersId();
         }
         return (() => {
             // if user leaves public section of application, then he will be offline
-            socket.emit(CHAT_LEFT, {});
+            socket.emit(UPDATE_ONLINE_STATUS, { user_online_status: "OFFLINE" })
         })
     }, [user])
 
@@ -70,41 +85,10 @@ function PublicLayout() {
         <>
             <Header />
             <Grid container height={"calc(100vh - 4rem)"}>
-                {/* <Grid item
-                    sm={4}
-                    md={3}
-                    sx={{
-                        display: { xs: "none", sm: "block" },
-                        backgroundImage: "linear-gradient(#A9FF99, rgb(217, 234, 237))",
-                        border: "2px solid white"
-                    }} height={"100%"} >
-                    <ChatList
-                        chats={sampledChats}
-                        chatId={chatId}
-                        newMessagesAlert={[{
-                            chatId,
-                            count: 4
-                        }]}
-                        handleDeleteChat={handleDeleteChat}
-                        onlineUsers={["1", "2"]} />
-                </Grid>
-
-                <Grid item
-                    xs={12}
-                    sm={8}
-                    md={5}
-                    lg={6}
-                    height={"100%"}
-                    sx={{
-                        backgroundImage: "linear-gradient(#A9FF99, rgb(217, 234, 237))",
-                    }} >
-                    <Outlet />
-                </Grid> */}
-                {/*  edited */}
                 <Grid item
                     xs={12}
                     sm={12}
-                    md={8}
+                    md={uiState.isProfileSectionOn ? 8 : 12}
                     lg={uiState.isProfileSectionOn ? 9 : 12}
                     height={"100%"}
                     sx={{
@@ -113,11 +97,14 @@ function PublicLayout() {
                     <Outlet />
                 </Grid>
 
-                <Grid item md={4} lg={uiState.isProfileSectionOn ? 3 : 0} sx={{
-                    display: { xs: "none", md: "block", lg: uiState.isProfileSectionOn },
-                    padding: "2rem",
-                    bgcolor: "rgba(0,0,0,0.85)"
-                }} height={"100%"} >
+                <Grid item
+                    md={uiState.isProfileSectionOn ? 4 : 0}
+                    lg={uiState.isProfileSectionOn ? 3 : 0}
+                    sx={{
+                        display: { xs: "none", md: uiState.isProfileSectionOn ? 'block' : 'none', lg: uiState.isProfileSectionOn ? 'block' : 'none' },
+                        padding: "2rem",
+                        bgcolor: "rgba(0,0,0,0.85)"
+                    }} height={"100%"} >
                     <Profile />
                 </Grid>
             </Grid>

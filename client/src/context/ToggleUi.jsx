@@ -14,6 +14,7 @@ function ToggleUi({ children }) {
         isFileMenu: false,
         isDeleteMenu: false,
         uploadingLoader: false,
+        isProfileSectionOn: true,
         selectedDeleteChat: {
             chatId: "",
             groupChat: false
@@ -21,6 +22,7 @@ function ToggleUi({ children }) {
         isProfileSectionOn: true,
         isIncomingCallDialogOpen: false,
         isOnline: false,
+        isFriendList: false
     })
     return (
         <ToggleContext.Provider value={{ uiState, setUiState }}>{children}</ToggleContext.Provider>

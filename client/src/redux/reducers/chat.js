@@ -24,7 +24,7 @@ const chatSlice = createSlice({
         },
 
         setNewMessagesAlert: (state, action) => {
-            const index = state.newMessageAlert.findIndex((item) => item.chatId === action.payload.conversation)
+            const index = state.newMessageAlert.findIndex((item) => item.chatId + "" === action.payload.conversation + "")
             // console.log(action)
             if (index !== -1) {
                 state.newMessageAlert[index].count += 1;

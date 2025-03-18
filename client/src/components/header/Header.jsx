@@ -1,4 +1,4 @@
-import { Add as AddIcon, AdminPanelSettings as AdminPanelSettingsIcon, Call as CallIcon, Chat as ChatIcon, Group as GroupIcon, Home as HomeIcon, Logout as LogoutIcon, Menu as MenuIcon, Notifications as NotificationIcon, Search as SearchIcon } from "@mui/icons-material";
+import { Add as AddIcon, AdminPanelSettings as AdminPanelSettingsIcon, Call as CallIcon, Chat as ChatIcon, Group as GroupIcon, Home as HomeIcon, Logout as LogoutIcon, Menu as MenuIcon, Notifications as NotificationIcon, Search as SearchIcon, AccountBox as AccountIcon } from "@mui/icons-material";
 import CloseIcon from '@mui/icons-material/Close';
 import { AppBar, Backdrop, Box, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
 import React, { Suspense, lazy } from 'react';
@@ -108,7 +108,11 @@ function Header() {
                             <IconBtn title={"Manage Groups"} icon={<GroupIcon />} pathname={"/groups"} />
                             <IconBtn title={"Notification"} icon={< NotificationIcon />} value={notificationCount + newMessageAlert.length} handleClick={openNotification} />
                             <IconBtn title={'Call'} icon={<CallIcon />} pathname={"/call"} />
-
+                            <IconBtn title={"Profile"} icon={<AccountIcon />} handleClick={() => {
+                                setUiState((prev) => {
+                                    return { ...prev, isProfileSectionOn: !prev.isProfileSectionOn }
+                                })
+                            }} />
                             <IconBtn title={"Logout"} icon={<LogoutIcon />} pathname={"/signout"} />
 
                             <IconBtn title={'Status'} icon={<SiSocketdotio color={uiState?.isOnline ? "rgb(2, 245, 124)" : "rgb(245, 2, 51"} style={{ fontWeight: 'bold' }} />} />

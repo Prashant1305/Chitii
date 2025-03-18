@@ -5,14 +5,19 @@ import { toast } from 'react-toastify';
 import { userNotExist } from '../../redux/reducers/Auth';
 import { logout } from '../../utils/ApiUtils';
 import "./Sign.css";
+import { GetSocket } from '../../context/SocketConnectContext';
+import { UPDATE_ONLINE_STATUS } from '../../components/constants/events';
 
 function SignOut() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const socket = GetSocket();
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         const toastId = toast.loading("Singing out...")
+        socket.emit(UPDATE_ONLINE_STATUS, { is_online: false })
         try {
             const res = await logout();
             if (res.status === 200) {

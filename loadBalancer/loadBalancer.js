@@ -4,7 +4,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const app = express();
 const cors = require("cors");
-const serverConfig = require("./config.json").servers
+const { servers, socket_servers } = require("./config.json")
 
 const allowedOrigins = [
     'http://www.example.com',
@@ -30,7 +30,9 @@ app.use(cors(corsOptions));
 
 app.use(cookieParser());
 
-const servers = serverConfig.map((server) => ({ ...server }));
+// any modification from json
+// const servers = servers.map((server) => ({ ...server }));
+// const socket_servers = socket_servers.map((server) => ({ ...server }));
 
 const loadBalancingAlgorithm = "RoundRobin";
 
@@ -59,7 +61,7 @@ const server = http.createServer(app);
 
 app.use((req, res) => {
     if (loadBalancingAlgorithm === "RoundRobin") {
-        roundRobin(servers, req, res);
+        roundRobin(servers, socket_servers, req, res);
     } else {
         res.status(200).json({ msg: "Load balancing algorithm not supported" })
     }

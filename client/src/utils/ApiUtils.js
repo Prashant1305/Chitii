@@ -52,7 +52,6 @@ export const login_via_facebook = async (code, facebookCodeVerifier) => {
     return res;
 }
 
-
 export const logout = async () => {
     const url = `${baseUrl}/api/auth/logout`;
     const res = await axios.get(url, { withCredentials: true });
@@ -85,8 +84,8 @@ export const send_friend_request = async (id) => {
     return res;
 }
 
-export const my_notification = async () => {
-    const url = `${baseUrl}/api/user/getallnotification`
+export const my_notification = async (page, limit) => {
+    const url = `${baseUrl}/api/user/getallnotification?page=${page}&limit=${limit}`
     const res = await axios.get(url, { withCredentials: true });
     return res;
 }
@@ -244,4 +243,21 @@ export const incoming_call_api = async (receiverClientId) => {
         }
     })
     return res;
+}
+
+export const get_online_friends_api = async () => {
+    const url = `${baseUrl}/api/user/onlinefriends`;
+    const res = await axios.get(url, {
+        withCredentials: true,
+    });
+    return res;
+}
+
+export const unfriendUserApi = async (id) => {
+    const url = `${baseUrl}/api/user/unfriend?chatId=${id}`;
+    const res = await axios.delete(url, {
+        withCredentials: true,
+    });
+    return res;
+
 }

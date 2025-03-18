@@ -17,6 +17,23 @@ const messageSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    recipient_status: [
+        {
+            user_id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+            status: {
+                type: String,
+                enum: ["sent", "delivered", "read"],
+                default: "sent",
+            },
+            timestamp: {
+                type: Date,
+                default: Date.now,
+            },
+        },
+    ],
     attachments: [
         {
             public_id: {

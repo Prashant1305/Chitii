@@ -1,6 +1,6 @@
 const { START_TYPING, STOP_TYPING, CHAT_JOINED, CHAT_LEFT, ONLINE_USERS } = require("../Constants/events")
 const Conversation = require("../models/conversation_model")
-const { InstanceActiveUserSocketIDs, InstanceOnlineUsersIds } = require("./infoOfActiveSession")
+
 const { getSockets } = require("./helper")
 const { redis, pub } = require("./redis/connectToRedis")
 
@@ -50,7 +50,7 @@ const comingOnlineFeature = (socket, io) => {
     socket.on(CHAT_JOINED, async () => {
         try {
             const userId = socket.clientAuthData._id
-            InstanceOnlineUsersIds.add(userId.toString());
+            // InstanceOnlineUsersIds.add(userId.toString());
 
             // Add members in set in redis
             redis.sadd("onlineUsersMongoIds", userId.toString()).then().catch((err) => {

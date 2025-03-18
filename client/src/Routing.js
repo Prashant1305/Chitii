@@ -130,7 +130,6 @@ function Routing() {
                 <Route path="users" element={<UserManagement />} />
               </Route>
             </Route>
-
           </Route>
         </Route>
 
@@ -140,8 +139,6 @@ function Routing() {
         <Route path="auth/facebook/callback" element={<ProtectRoutes conditionValue={!user} navigateTo={"/"}><Suspense fallback={<LayoutLoader />}><LoginWithFaceBook /></Suspense></ProtectRoutes>} />
 
         <Route path="signup" element={<Suspense fallback={<LayoutLoader />}><SignUp /></Suspense>} />
-
-
         <Route path="*" element={<Suspense fallback={<LayoutLoader />}><ErrorRoute /></Suspense>} />
       </Route>
     )
