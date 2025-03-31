@@ -20,6 +20,7 @@ const initializeRedis = () => {
         if (err) {
             console.error("Failed to subscribe: ", err);
         } else {
+            console.log("connection successful to redis")
             console.log(`Subscribed to ${count} channels.`);
         }
     });

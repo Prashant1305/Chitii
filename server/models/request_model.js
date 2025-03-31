@@ -1,6 +1,4 @@
 const mongoose = require("mongoose");
-const User = require("./user_model");
-const Conversation = require("./conversation_model")
 
 const requestSchema = new mongoose.Schema({
     status: {
@@ -10,12 +8,12 @@ const requestSchema = new mongoose.Schema({
     },
     sender: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: User,
+        ref: "User",
         required: true
     },
     receiver: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: User,
+        ref: "User",
         required: true
     }
 },

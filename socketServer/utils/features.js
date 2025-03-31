@@ -11,7 +11,7 @@ const startTypingFeature = (socket, io) => {
             const { members } = await Conversation.findById(data.chatId)?.select({ members: 1 })?.lean();
             const membersExceptMe = members.filter((member) => member + "" !== socket.clientAuthData._id + "");
 
-            await findUserConnectedToAndSendSocketEventToRabbit(membersExceptMe, { chatId: data.chatId, user: socket.clientAuthData, event_name: START_TYPING })
+            await findUserConnectedToAndSendSocketEventToRabbit(membersExceptMe, { chatId: data.chatId, user: socket.clientAuthData, event_name: START_TYPING }, false)
         } catch (error) {
             console.log("failed to get members of chat")
             console.error(error);
@@ -30,7 +30,7 @@ const stopTypingFeature = (socket, io) => {
                 chatId: data.chatId,
                 user: socket.clientAuthData,
                 event_name: STOP_TYPING
-            })
+            }, false)
         } catch (error) {
             console.log("failed to get members of chat")
         }
@@ -47,13 +47,13 @@ const notifyFriendsOfOnlineStatus = (socket, io) => {
                     user: socket.clientAuthData,
                     user_online_status: data.user_online_status,
                     event_name: UPDATE_ONLINE_STATUS
-                });
+                }, false);
             } else {
                 await findUserConnectedToAndSendSocketEventToRabbit(friendsIds, {
                     user: socket.clientAuthData,
                     user_online_status: "OFFLINE",
                     event_name: UPDATE_ONLINE_STATUS
-                });
+                }, false);
             }
 
 

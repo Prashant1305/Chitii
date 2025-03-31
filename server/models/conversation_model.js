@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const User = require('./user_model');
 
 const conversationSchema = new mongoose.Schema({
     name: {
@@ -13,12 +12,12 @@ const conversationSchema = new mongoose.Schema({
     },
     creator: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: User
+        ref: "User"
     },
     members: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: User
+            ref: "User"
         }
     ],
 

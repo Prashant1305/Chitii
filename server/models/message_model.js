@@ -1,16 +1,14 @@
 const mongoose = require("mongoose");
-const User = require("./user_model");
-const Conversation = require("./conversation_model");
 
 const messageSchema = new mongoose.Schema({
     sender: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: User,
+        ref: "User",
         required: true
     },
     conversation: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: Conversation,
+        ref: "Conversation",
         required: true
     },
     text_content: {

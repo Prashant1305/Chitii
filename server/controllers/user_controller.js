@@ -6,6 +6,7 @@ const { redis } = require("../utils/redis/connectToRedis");
 const { REDIS_ONLINE_USERS_ID_MAPPED_WITH_SOCKET_ID } = require("../Constants/constants");
 const { findUserConnectedToAndSendSocketEventToRabbit } = require("../utils/helper");
 const Notification = require("../models/notification_model");
+const Fcm = require("../models/fcm_model");
 
 
 const getMyProfile = async (req, res, next) => {
@@ -71,6 +72,10 @@ const sendFriendRequest = async (req, res, next) => {
         await findUserConnectedToAndSendSocketEventToRabbit([userId], {
             user_name: req.clientAuthData.user_name,
             event_name: NEW_FRIEND_REQUEST
+        }, true, {
+            text: `friend request from ${req.clientAuthData.user_name}`,
+            title: "New Friend Request",
+            url: req.originalUrl + "/group"
         });
 
         return res.status(200).json({ message: "Friend request sent succesfully" });
@@ -123,7 +128,7 @@ const acceptFriendRequest = async (req, res, next) => {
 
             await findUserConnectedToAndSendSocketEventToRabbit(members, {
                 event_name: REFETCH_CHATS
-            }), // everyone refresh their chat
+            }, false), // everyone refresh their chat
 
             Notification.create({ // create notification 
                 user_id: request.sender._id,
@@ -197,7 +202,7 @@ const getAllNotifications = async (req, res, next) => {
         const skip = (page - 1) * limit;
 
         // Find notifications for the given user, sort by 'date' field in descending order, and apply pagination
-        const notifications = await Notification.find({ user_id: req.clientAuthData._id })
+        const notifications = await Notification.find({ user_id: { $in: req.clientAuthData._id } })
             .populate('from', 'user_name avatar_url')
             .sort({ date: -1 })   // sort by date in descending order
             .skip(skip)           // skip the first (page - 1) * limit documents
@@ -252,10 +257,6 @@ const getMyfriends = async (req, res, next) => {
 
 const getAllOnlineFriends = async (req, res, next) => {
     try {
-        // const chats = await Conversation.find({ members: req.clientAuthData._id, group_chat: false }).select("members").lean();
-
-        // const friends = chats.map((chat) => chat.members).flat().filter((member) => member._id.toString() !== req.clientAuthData._id.toString());
-
         const friends = req.clientAuthData.friends.map((friend) => friend + "");
         const onlineFriendIds = [];
 
@@ -278,4 +279,44 @@ const getAllOnlineFriends = async (req, res, next) => {
     }
 }
 
-module.exports = { getMyProfile, searchUser, sendFriendRequest, acceptFriendRequest, getAllNotifications, getMyfriends, getAllOnlineFriends, removeFriend }
+const addFcmToken = async (req, res, next) => {
+    try {
+        const { token } = req.body;
+        if (!token) {
+            return res.status(200).json({ message: "token not available" });
+        }
+
+        await Fcm.updateOne(
+            { user: req.clientAuthData._id },
+            { $addToSet: { tokens: token } }, // Add token if not exists
+            { upsert: true }
+        );
+        return res.json({ message: "Token saved" });
+    } catch (error) {
+        console.log(error)
+        const err = new Error("fcm token updation failed");
+        err.status = 501;
+        err.extraDetails = "from addFcmToken function inside user_controller";
+        next(err);
+    }
+}
+
+const removeFcmToken = async (req, res, next) => {
+    try {
+        const { token } = req.query;
+        await Fcm.updateOne(
+            { user: req.clientAuthData._id },
+            { $pull: { tokens: token } } // Remove the token
+        );
+        return res.status(200).json({ message: "token deleted successfully" });
+
+    } catch (error) {
+        console.log(error)
+        const err = new Error("fcm token updation failed");
+        err.status = 501;
+        err.extraDetails = "from addFcmToken function inside user_controller";
+        next(err);
+    }
+}
+
+module.exports = { getMyProfile, searchUser, sendFriendRequest, acceptFriendRequest, getAllNotifications, getMyfriends, getAllOnlineFriends, removeFriend, addFcmToken, removeFcmToken }

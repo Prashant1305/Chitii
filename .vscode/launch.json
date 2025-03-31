@@ -2,7 +2,8 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "command": "cd server; npx cross-env PORT=3002 nodemon app.js",
+            // "command": "cd server; npx cross-env PORT=3004 nodemon app.js",
+            "command": "cd socketServer; npx cross-env PORT=3013 nodemon app.js",
             "name": "Run server",
             "request": "launch",
             "type": "node-terminal"

@@ -8,6 +8,7 @@ const { ObjectId } = require('mongodb');
 const { uploadOnCloudinary, deleteFromCloudinary } = require("../utils/cloudinaryDb/cloudinary");
 const { pub } = require("../utils/redis/connectToRedis");
 const { findUserConnectedToAndSendSocketEventToRabbit } = require("../utils/helper");
+const Notification = require("../models/notification_model");
 
 const newGroupChat = async (req, res, next) => {
     try {
@@ -32,15 +33,19 @@ const newGroupChat = async (req, res, next) => {
             conversation: messageForDb.conversation, text_content: messageForDb.text_content, attachments: messageForDb.attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt
         }
 
-        // pub.publish(NEW_MESSAGE, JSON.stringify({ members: allMembers, messageNotification }));
+
         await findUserConnectedToAndSendSocketEventToRabbit(allMembers, {
             messageNotification,
             event_name: NEW_MESSAGE
+        }, true, {
+            text: `From ${req.clientAuthData.user_name}: Created New Group`,
+            title: "New Message",
+            url: req.originalUrl + "/group"
         });
-        // pub.publish(REFETCH_CHATS, JSON.stringify({ members: allMembers }));
+
         await findUserConnectedToAndSendSocketEventToRabbit(allMembers, {
             event_name: REFETCH_CHATS
-        });
+        }, false);
 
         return res.status(200).json({ message: "Grouop created successfully" });
 
@@ -144,14 +149,17 @@ const addMembers = async (req, res, next) => {
 
         // const io = req.app.get('socketio'); // Retrieve io instance from app
 
-        // pub.publish(REFETCH_CHATS, JSON.stringify({ members }));
         await findUserConnectedToAndSendSocketEventToRabbit(allMembers, {
             event_name: REFETCH_CHATS
-        });
-        // pub.publish(NEW_MESSAGE, JSON.stringify({ members: modifiedAllMember, messageNotification }))
+        }, false);
+
         await findUserConnectedToAndSendSocketEventToRabbit(modifiedAllMember, {
             messageNotification,
             event_name: NEW_MESSAGE
+        }, true, {
+            text: ` ${req.clientAuthData.user_name} added ${allUsersName} in ${chat.name}`,
+            title: "New Member Added",
+            url: req.originalUrl + "/group"
         });
 
         res.status(200).json({ message: "members added successfully" });
@@ -207,15 +215,18 @@ const removeMembers = async (req, res, next) => {
         }
         await findUserConnectedToAndSendSocketEventToRabbit([...modifiedMember, userId], {
             event_name: REFETCH_CHATS
-        });
+        }, false);
         const allMembers = modifiedMember.filter((member) => (member + "" !== req.clientAuthData._id + ""))
 
-        // pub.publish(NEW_MESSAGE, JSON.stringify({ members: allMembers, messageNotification }));
         await findUserConnectedToAndSendSocketEventToRabbit(allMembers, {
             messageNotification,
             event_name: NEW_MESSAGE
+        }, true, {
+            text: ` ${req.clientAuthData.user_name} removed ${removedUser.user_name} in ${chat.name}`,
+            title: "Member Removed",
+            url: req.originalUrl + "/group"
+
         });
-        // pub.publish(REFETCH_CHATS, JSON.stringify({ members: [userId] }));
 
 
         res.status(200).json({ message: "members removed successfully" });
@@ -263,15 +274,18 @@ const leaveGroup = async (req, res, next) => {
         const allMembers = chat.members.filter((member) => (member + "" !== req.clientAuthData._id + ""))
         const modifiedAllMember = allMembers.map((id) => id.toString());
 
-        // await pub.publish(NEW_MESSAGE, JSON.stringify({ members: modifiedAllMember, messageNotification }))
         await findUserConnectedToAndSendSocketEventToRabbit(modifiedAllMember, {
             messageNotification,
             event_name: NEW_MESSAGE
+        }, true, {
+            text: ` ${req.clientAuthData.user_name} left ${chat.name}`,
+            title: "Group Left",
+            url: req.originalUrl + "/group"
         });
-        // await pub.publish(REFETCH_CHATS, JSON.stringify({ members: [req.clientAuthData._id.toString()] }))
+
         await findUserConnectedToAndSendSocketEventToRabbit([...allMembers, req.clientAuthData._id + ""], {
             event_name: REFETCH_CHATS
-        });
+        }, false);
 
         res.status(200).json({ message: "Group leaved successfully" });
 
@@ -294,7 +308,7 @@ const sendMessage = async (req, res, next) => {
             return res.status(400).json({ message: "Chat not found" })
         }
 
-        if (chat.members.some((member) => (member + "" === req.clientAuthData._id + ""))) {
+        if (chat.members.some((member) => (member + "" === req.clientAuthData._id + ""))) { //wether sender is part of chat or not
             const responsePromiseArray = req.files.map((file) => uploadOnCloudinary(file.path))
             const fileUrlArray = await Promise.all(responsePromiseArray);
 
@@ -311,19 +325,22 @@ const sendMessage = async (req, res, next) => {
 
             const messageNotification = { sender: { _id: req.clientAuthData._id, user_name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url }, conversation: conversationId, text_content, attachments, _id: dbMessageSaved._id, createdAt: dbMessageSaved.createdAt, updatedAt: dbMessageSaved.updatedAt }
 
-            // pub.publish(NEW_MESSAGE, JSON.stringify({ messageNotification, members: chat.members }));
-            await findUserConnectedToAndSendSocketEventToRabbit(chat.members, {
+            await Promise.all([findUserConnectedToAndSendSocketEventToRabbit(chat.members.filter((member) => member + "" != req.clientAuthData._id), {
                 messageNotification,
                 event_name: NEW_MESSAGE
-            });
-
-            // const io = req.app.get('socketio'); // if you want to Retrieve instance from app
+            }, true, {
+                text: `${req.clientAuthData.user_name} sent a message`,
+                title: "New Message",
+                url: req.originalUrl + "/chat"
+            }),
+            Notification.create({
+                user_id: chat.members.filter((member) => member + "" != req.clientAuthData._id), type: "new_message", from: req.clientAuthData._id, message: `${req.clientAuthData.user_name} has sent message`, chat_id: chat._id,
+            })]);
 
             res.status(200).json({ message: "received send message", text_data: req.body, attachments })
         } else {
-            res.status(400).json({ message: "you are not allowed to send text message here" })
+            res.status(400).json({ message: "you are not allowed to send message here" })
         }
-
 
     } catch (error) {
         const err = new Error("cannot send message, plz try later");
@@ -380,7 +397,7 @@ const renameConversation = async (req, res, next) => {
         // pub.publish(REFETCH_CHATS, JSON.stringify({ members: chat.members }))
         await findUserConnectedToAndSendSocketEventToRabbit(chat.members, {
             event_name: REFETCH_CHATS
-        });
+        }, false);
 
         // const io = req.app.get('socketio'); // Retrieve io instance from app
         return res.status(200).json({ message: "Group name changed succesfully" });
@@ -421,7 +438,7 @@ const deleteChat = async (req, res, next) => {
 
         await findUserConnectedToAndSendSocketEventToRabbit(chat.members, {
             event_name: REFETCH_CHATS
-        });
+        }, false);
 
         return res.status(200).json({ message: "Chat deleted succesfully" });
 

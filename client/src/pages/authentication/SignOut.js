@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { userNotExist } from '../../redux/reducers/Auth';
-import { logout } from '../../utils/ApiUtils';
+import { logout, removeFcmTokenApi } from '../../utils/ApiUtils';
 import "./Sign.css";
 import { GetSocket } from '../../context/SocketConnectContext';
 import { UPDATE_ONLINE_STATUS } from '../../components/constants/events';
@@ -13,12 +13,17 @@ function SignOut() {
     const dispatch = useDispatch();
     const socket = GetSocket();
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         const toastId = toast.loading("Singing out...")
         socket.emit(UPDATE_ONLINE_STATUS, { is_online: false })
         try {
+
+            const fcm_token = localStorage.getItem("fcm_token");
+            if (fcm_token) {
+                localStorage.removeItem("fcm_token");
+                await removeFcmTokenApi(fcm_token);
+            }
             const res = await logout();
             if (res.status === 200) {
                 dispatch(userNotExist());

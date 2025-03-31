@@ -14,7 +14,7 @@ function Notifications() {
     const { uiState, setUiState } = MyToggleUiValues();
     const [isLoading, setIsLoading] = useState(false);
     const dispatch = useDispatch();
-    let page = 0, limit = 2;
+    let page = 0, limit = 10;
 
     // getting meesages alert from state variable
     const { newMessageAlert } = useSelector(state => state.chat);
@@ -61,7 +61,7 @@ function Notifications() {
     useEffect(() => {
         fetchNotification(page, limit);
 
-        // dispatch(resetNotificationCount())
+        dispatch(resetNotificationCount())
     }, []);
     return (
         <Dialog open={uiState.isNotification} onClose={() => { setUiState({ ...uiState, isNotification: false }) }}>

@@ -13,7 +13,8 @@ const { createServer } = require('http');
 const bodyParser = require('body-parser');
 const { socketAuthenticator } = require("./middleware/auth_middleware");
 const { initializeRedis } = require("./utils/redis/connectToRedis");
-const { initializeRabbitMQConnection } = require("./utils/rabbitMQ/initailizeRabbitMq")
+const { initializeRabbitMQConnection } = require("./utils/rabbitMQ/initailizeRabbitMq");
+const { initializeKafkaProducer } = require("./utils/kafka/producerInitialize");
 
 const PORT = process.env.PORT || 3012;
 const app = express();
@@ -47,6 +48,8 @@ app.use(cors(corsOptions));
 app.use(express.json()); // to parse incoming requests with json payload and storing it in req.body
 app.use(bodyParser.urlencoded({ extended: true })); // to parse incoming urlencoded data that contains only file
 app.use(cookieParser());
+
+initializeKafkaProducer(); // intialize kafka connection
 
 const server = createServer(app);
 

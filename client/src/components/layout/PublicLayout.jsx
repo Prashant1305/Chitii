@@ -6,13 +6,13 @@ import { toast } from 'react-toastify'
 import { GetSocket } from '../../context/SocketConnectContext'
 import { MyToggleUiValues } from '../../context/ToggleUi'
 import { useSocketEvent } from '../../hooks/socket_hooks'
-import { incrementNotificationCount, setNewMessagesAlert } from '../../redux/reducers/chat'
+import { incrementNotificationCount } from '../../redux/reducers/chat'
 import { addOnlineUser, removeOnlineUser, setOnlineUsersArray } from '../../redux/reducers/online'
-import { CALL_INCOMING, NEW_MESSAGE, NEW_FRIEND_REQUEST, ONLINE_USERS, UPDATE_ONLINE_STATUS } from '../constants/events'
+import { get_online_friends_api } from '../../utils/ApiUtils'
+import { CALL_INCOMING, NEW_FRIEND_REQUEST, NEW_MESSAGE, UPDATE_ONLINE_STATUS } from '../constants/events'
 import IncomingCallDialog from '../Dialogs/call/IncomingCallDialog'
 import Header from '../header/Header'
 import Profile from '../profile.jsx/Profile'
-import { get_online_friends_api } from '../../utils/ApiUtils'
 
 function PublicLayout() {
     const socket = GetSocket();
@@ -24,7 +24,7 @@ function PublicLayout() {
 
 
     const newMessageHandler = useCallback((data) => {
-        dispatch(setNewMessagesAlert(data));
+        dispatch(incrementNotificationCount());
     }, []);
 
     const newRequestHandler = useCallback((data) => {

@@ -1,5 +1,7 @@
 // const { InstanceActiveUserSocketIDs } = require("../app")
 
+const { KAFKA_TOPIC_PUSH_NOTIFICATION } = require("../Constants/constants");
+const { kafkaProducerObject } = require("./kafka/producerInitialize");
 const { publishMessageToRabbitMQ } = require("./rabbitMQ/Producer");
 const { redis } = require("./redis/connectToRedis");
 
@@ -29,18 +31,23 @@ const generateAccessToken = (user) => {
 }
 
 
-const findUserConnectedToAndSendSocketEventToRabbit = async (members = [], message) => {
+const findUserConnectedToAndSendSocketEventToRabbit = async (members = [], message, firePushNotification = false, pushNotificationMessage = { text: "Defualt Push Notification Message", title: "default title", url: "" }) => { // members is array of mongo ids
     try {
         const onlineServerList = await redis.smembers("onlineSocketServers");
         onlineServerList.map((server_name) => console.log({ server_name }));
 
         const result = await Promise.all(onlineServerList.map((server_name) => redis.smismember(server_name, ...members)));
+        // result=>      [         m1  m2  m3  m4  m5   index
+        // s1  0   1   0   0   0     0
+        // s2  1   0   0   0   0     1
+        // s3  0   0   1   1   0     2  
+        // s4  0   0   0   0   0  ]  3
 
         const onlineServerNameMapToFriendsName = []; //{server_name:"3011",members:["s1",s2]}
 
         onlineServerList.forEach((server_name) => {
             onlineServerNameMapToFriendsName.push({ server_name, members: [] })
-        })
+        });
 
         result.forEach((arr, idx) => {
             arr.forEach((member, index) => {
@@ -63,7 +70,30 @@ const findUserConnectedToAndSendSocketEventToRabbit = async (members = [], messa
             }
         })
 
+        if (firePushNotification) {
+            const offlineMembers = [];
 
+            for (let i = 0; i < result[0].length; i++) {
+                let isConectedToAnyServer = false;
+                for (let j = 0; j < result.length; j++) {
+                    if (result[j][i] === 1) {
+                        isConectedToAnyServer = true;
+                        break;
+                    }
+                }
+                if (!isConectedToAnyServer) {
+                    offlineMembers.push(members[i]);
+                }
+            }
+
+            // sending message to offline members
+            kafkaProducerObject.sendMessage(KAFKA_TOPIC_PUSH_NOTIFICATION, {
+                data: {
+                    members: offlineMembers,
+                    message: pushNotificationMessage // {text:"",title:"",url=""}
+                }
+            });
+        }
 
     } catch (error) {
         console.log(error)

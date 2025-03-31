@@ -261,3 +261,20 @@ export const unfriendUserApi = async (id) => {
     return res;
 
 }
+
+export const addFcmTokenApi = async (token) => {
+    const url = `${baseUrl}/api/user/fcm`;
+    const res = await axios.post(url, { token }, {
+        withCredentials: true,
+        headers: {
+            "Content-Type": "application/json",
+        }
+    })
+    return res;
+}
+
+export const removeFcmTokenApi = async (token) => {
+    const url = `${baseUrl}/api/user/fcm?token=${token}`;
+    const res = await axios.delete(url, { withCredentials: true });
+    return res;
+}
