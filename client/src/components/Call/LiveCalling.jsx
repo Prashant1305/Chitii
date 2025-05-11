@@ -1,254 +1,437 @@
+import CallIcon from '@mui/icons-material/Call';
 import PhoneDisabledIcon from '@mui/icons-material/PhoneDisabled';
-import { Button, Stack } from '@mui/material';
-import React, { useCallback, useEffect, useState } from 'react';
+import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { useCallback, useState } from 'react';
 import ReactPlayer from "react-player";
-import { useSelector } from 'react-redux';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { v4 as uuidv4 } from 'uuid';
 import { GetSocket } from '../../context/SocketConnectContext';
-import { incoming_call_api } from '../../utils/ApiUtils';
 
 import { useSocketEvent } from '../../hooks/socket_hooks';
-import { CLIENT_CREATE_OFFER, END_CALL, HANDLE_ANSWERE, HANDLE_CREATED_ANSWERE, HANDLE_OFFER_CREATE_ANSWERE, INITIATE_P2P, NEGOTIATION_NEEDED, PEER_NEGO_DONE, PEER_NEGO_FINAL, PEER_NEGO_NEEDED } from '../constants/events';
-import IconBtn from '../header/IconBtn';
-import { peer } from '../lib/peer';
+import { CALL_INCOMING_RESPONSE, END_CALL, INITIAL_ANSWER, INITIAL_OFFER, INITIATE_P2P, RENEGOTIATE_ANSWER, RENEGOTIATE_OFFER, REQUEST_CALL, RINGING, SEND_ME_YOUR_STREAM } from '../constants/events';
+import { PeerServices } from '../lib/peerServiceManager';
 
-function LiveCalling({ callId }) {
+
+function LiveCalling({ friendsList, callId }) {
     const socket = GetSocket()
-    const { user } = useSelector(state => state.auth)
     const [myStream, setMyStream] = useState()
-    const [remoteStream, setRemoteStream] = useState()
-    const [remoteUserId, setRemoteUserId] = useState();
-    const [searchParams] = useSearchParams();
+    const [remoteStreams, setRemoteStreams] = useState([]);//{stream:stream,peer:peer}
+
     const [uiOfLiveCalling, setUiOfLiveCalling] = useState({
-        connectButtonIsActive: searchParams.get('received') ? true : false,
         dialButtonIsactive: true,
         disconnectButtonIsActive: false
     })
     const navigate = useNavigate()
-
-    const initiateP2pHandler = useCallback(async (data) => { // data-(to:userId of receiver / otherPerson)
-        console.log(INITIATE_P2P, data);
-        const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: {
-                height: {
-                    min: 480,
-                    ideal: 720,
-                    max: 1080
-                },
-                width: {
-                    min: 480,
-                    ideal: 720,
-                    max: 1080
-                }
-            },
+    // Helper Function to Add a Remote Stream to State
+    const addRemoteStream = (stream) => {
+        setRemoteStreams((prevStreams) => {
+            const streamExists = prevStreams.some(
+                (existingStream) => existingStream.id === stream.id
+            );
+            if (!streamExists) {
+                return [...prevStreams, stream];
+            }
+            return prevStreams;
         });
-        const offer = await peer.getOffer();
-        setRemoteUserId(data.userId);
-        setMyStream(stream);
-        socket.emit(CLIENT_CREATE_OFFER, { to: data.userId, offer })
-    }, [remoteUserId, socket])
-
-
-    const handleOfferCreateAnswereHandler = useCallback(async ({ from, offer }) => {
-        console.log(HANDLE_OFFER_CREATE_ANSWERE, { from, offer })
-        setRemoteUserId(from);
-        const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: {
-                height: {
-                    min: 480,
-                    ideal: 720,
-                    max: 1080
-                },
-                width: {
-                    min: 480,
-                    ideal: 720,
-                    max: 1080
+    };
+    const sendMyStreamToPeers = useCallback(() => {
+        if (myStream) {
+            PeerServices.peerServices.forEach((peer, key) => {
+                // Add local tracks to the connection
+                for (let track of myStream.getTracks()) {
+                    peer.peer.addTrack(track, myStream);
                 }
-            },
-        });
-        setMyStream(stream);
-        const ans = await peer.getAnswer(offer);
-        socket.emit(HANDLE_CREATED_ANSWERE, { to: from, ans });
-        setUiOfLiveCalling({ ...uiOfLiveCalling, connectButtonIsActive: true, disconnectButtonIsActive: true, dialButtonIsactive: false })
-    }, [])
-
-    const sendStreams = useCallback(() => {
-        for (const track of myStream.getTracks()) {
-            peer.peer.addTrack(track, myStream);
+                console.dir(peer.peer);
+            })
         }
     }, [myStream]);
 
-    const handleAnswerehandler = useCallback(({ from, ans }) => {
-        console.log(HANDLE_ANSWERE, { from, ans })
-        peer.setLocalDescription(ans);
+    const initiateP2pHandler = useCallback(async (data) => { // data-(from:userId of receiver / otherPerson)
+        setUiOfLiveCalling({ ...uiOfLiveCalling, dialButtonIsactive: false })
+        console.log(INITIATE_P2P, data);
+        const peer = PeerServices.getPeerService(data.from);
+        const offer = await peer.getOffer();
 
-        setUiOfLiveCalling({ ...uiOfLiveCalling, disconnectButtonIsActive: true })
-        sendStreams();
-    }, [sendStreams]);
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: {
+                height: {
+                    min: 480,
+                    ideal: 720,
+                    max: 1080
+                },
+                width: {
+                    min: 480,
+                    ideal: 720,
+                    max: 1080
+                }
+            },
+        });
+
+        setMyStream(stream);
+        socket.emit(INITIAL_OFFER, { to: data.from, offer })
+    }, [socket])
+
+
+    const handleInitialOfferCreateAnswereHandler = async ({ from, offer }) => {
+        console.log(INITIAL_OFFER + "triggered")
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: {
+                height: {
+                    min: 480,
+                    ideal: 720,
+                    max: 1080
+                },
+                width: {
+                    min: 480,
+                    ideal: 720,
+                    max: 1080
+                }
+            },
+        });
+        setMyStream(stream);
+
+        const peer = PeerServices.getPeerService(from);
+
+        // Listen for incoming tracks
+        peer.peer.ontrack = (event) => {
+            console.log('Track received:')
+            console.dir(event);
+            addRemoteStream({ stream: event.streams[0], peer });
+        };
+
+        // Handle negotiationneeded event
+        peer.peer.onnegotiationneeded = async () => {
+            const newOffer = await peer.getOffer();
+            console.log("negotiation needed")
+            socket.emit(RENEGOTIATE_OFFER, { to: from, offer: newOffer });
+        };
+
+        // when peer connection is closed
+        peer.peer.onconnectionstatechange = () => {
+            console.log(`Connection state: ${peer.peer.connectionState}`);
+            if (peer.peer.connectionState === "closed" || peer.peer.connectionState === "failed") {
+                console.log("Peer connection is closed.");
+
+                setRemoteStreams((prevArray) =>
+                    prevArray.filter((item) => item.peer !== peer) // objects will be compared via refrence
+                );
+                PeerServices.deletePeerService(from)
+            } else { // we wiil update connection statechange in remoteStream arrray
+                setRemoteStreams((prevArray) => prevArray.map((item) => item.peer === peer ? { stream: item.stream, peer } : item))
+
+            }
+        };
+
+        const ans = await peer.getAnswer(offer);
+        socket.emit(INITIAL_ANSWER, { to: from, ans });
+
+        setUiOfLiveCalling({ ...uiOfLiveCalling, disconnectButtonIsActive: true, dialButtonIsactive: false })
+    };
+
+    const handleInitialAnswerehandler = async ({ from, ans }) => {
+        console.log(INITIAL_ANSWER, { from, ans })
+
+        const peer = PeerServices.getPeerService(from)
+
+        // Set the received answer as the remote description
+        await peer.setRemoteDescription(ans);
+
+        // Add local tracks to the connection
+        for (let track of myStream.getTracks()) {
+            peer.peer.addTrack(track, myStream);
+        }
+
+        // Listen for incoming tracks when added
+        peer.peer.ontrack = (event) => {
+            console.log('Track received:', event.streams[0]);
+            addRemoteStream({ stream: event.streams[0], peer });
+        };
+
+        // Handle negotiationneeded event
+        peer.peer.onnegotiationneeded = async () => {
+            const newOffer = await peer.getOffer();
+            console.log("negotiation needed")
+            socket.emit(RENEGOTIATE_OFFER, { to: from, offer: newOffer });
+        };
+
+        // when peer connection is closed
+        peer.peer.onconnectionstatechange = () => {
+
+            console.log(`Connection state: ${peer.peer.connectionState}`);
+            if (peer.peer.connectionState === "closed" || peer.peer.connectionState === "failed") {
+                console.log("Peer connection is closed.");
+
+                setRemoteStreams((prevArray) =>
+                    prevArray.filter((item) => item.peer !== peer) // objects will be compared via refrence
+                );
+                PeerServices.deletePeerService(from)
+            } else { // we wiil update connection statechange in remoteStream arrray
+                setRemoteStreams((prevArray) => prevArray.map((item) => item.peer === peer ? { stream: item.stream, peer } : item))
+
+            }
+        };
+
+        // send socket event to other user for sending his stream after 3seconds
+        setTimeout(() => {
+            socket.emit(SEND_ME_YOUR_STREAM, { to: from });
+        }, 100);
+
+        setUiOfLiveCalling({ ...uiOfLiveCalling, disconnectButtonIsActive: true });
+    };
+
+    const [toastId, setToastId] = useState(null);
 
     const handleDialCall = async () => {
-        const toastId = toast.loading("Calling...")
-        try {
-            const res = await incoming_call_api(callId);
-            if (res.status === 200) {
-                toast.update(toastId, {
-                    render: res?.data?.message || "Call connected succesfully",
-                    type: "success",
-                    isLoading: false,
-                    autoClose: 1000,
-                })
-                setUiOfLiveCalling({ ...uiOfLiveCalling, dialButtonIsactive: false })
-            } else {
-                toast.update(toastId, {
-                    render: res?.data?.message || "OOPS",
-                    type: "info",
-                    isLoading: false,
-                    autoClose: 1000,
-                })
-            }
-        } catch (error) {
-            console.log(error)
+        const id = toast.loading("Calling...");
+        setToastId(id);
+        socket.emit(REQUEST_CALL, { to: callId });
+    };
+
+    const updateRingingStatus = useCallback(({ }) => {
+        if (toastId) {
             toast.update(toastId, {
-                render: error?.response?.data?.message || "calling failed!",
-                type: "error",
+                render: "Ringing...",
+                type: "info",
                 isLoading: false,
-                autoClose: 1000,
-            })
+            });
         }
+    }, [toastId]);
+
+    const handleIncomingRepsonseByUpdatingToast = useCallback(async ({ response }) => {
+        if (toastId) {
+            toast.update(toastId, {
+                render: response === "ACCEPTED" ? "Call Accepted" : "Call Declined",
+                type: response === "ACCEPTED" ? "success" : "error",
+                isLoading: false,
+                autoClose: 2000,
+            });
+            setToastId(null);
+        }
+    }, [toastId]);
+
+    const handleRengotiateOffer = async ({ from, offer }) => {
+        console.log("received negotiation offer")
+        const peer = PeerServices.getPeerService(from);
+        const ans = await peer.getAnswer(offer);
+
+        socket.emit(RENEGOTIATE_ANSWER, { to: from, ans });
     }
 
-    const handleIncomingNego = useCallback(
-        async ({ from, offer }) => {
-            console.log(PEER_NEGO_NEEDED, { from, offer })
-            const ans = await peer.getAnswer(offer);
-            socket.emit(PEER_NEGO_DONE, { to: from, ans });
-        }, [socket]
-    );
+    const handleRengotiateAnswere = async ({ from, ans }) => {
+        console.log("received negotiation ans")
 
-    const handleNegoNeedDone = useCallback(async ({ ans }) => {
-        console.log(PEER_NEGO_DONE, { ans })
-        await peer.setLocalDescription(ans);
-    }, []);
+        const peer = PeerServices.getPeerService(from);
+        await peer.setRemoteDescription(ans);
+    }
 
     const handleEndCall = () => {
-        console.log(END_CALL)
-        setRemoteStream();
+        // 1. Notify other peer(s)
+        // socket.emit(END_CALL, { to: callId });
+
+        // 2. Stop all local media tracks
+        if (myStream) {
+            myStream.getTracks().forEach(track => track.stop());
+        }
+
+        // 3. Clear remote streams and local stream state
+        setRemoteStreams([]);
+        setMyStream(null);
+
+        // 4. Disconnect all peer connections
+        PeerServices.clearAllPeerServices();
+
+        // 5. Update UI and navigate away
         setUiOfLiveCalling({
-            ...uiOfLiveCalling, dialButtonIsactive: true,
+            ...uiOfLiveCalling,
+            dialButtonIsactive: true,
             disconnectButtonIsActive: false
-        })
-        myStream?.getTracks().forEach(track => track.stop());
-        remoteStream?.getTracks().forEach(track => track.stop());
+        });
         toast.success("Call Ended!");
         navigate("/call");
     }
 
     const eventHandlers = {
+        [RINGING]: updateRingingStatus,
+        [CALL_INCOMING_RESPONSE]: handleIncomingRepsonseByUpdatingToast,
         [INITIATE_P2P]: initiateP2pHandler,
-        [HANDLE_OFFER_CREATE_ANSWERE]: handleOfferCreateAnswereHandler,
-        [HANDLE_ANSWERE]: handleAnswerehandler,
-        [PEER_NEGO_NEEDED]: handleIncomingNego,
-        [PEER_NEGO_DONE]: handleNegoNeedDone,
+        [INITIAL_OFFER]: handleInitialOfferCreateAnswereHandler,
+        [INITIAL_ANSWER]: handleInitialAnswerehandler,
+        [SEND_ME_YOUR_STREAM]: sendMyStreamToPeers,
+        [RENEGOTIATE_OFFER]: handleRengotiateOffer,
+        [RENEGOTIATE_ANSWER]: handleRengotiateAnswere,
         [END_CALL]: handleEndCall
     }
 
     useSocketEvent(socket, eventHandlers);
 
-    const handleNegoNeeded = useCallback(async () => {
-        console.log(NEGOTIATION_NEEDED)
-        const offer = await peer.getOffer();
-        socket.emit(PEER_NEGO_NEEDED, { offer, to: remoteUserId });
-    }, [remoteUserId, socket]);
-
-    useEffect(() => {
-        peer.peer.addEventListener(NEGOTIATION_NEEDED, handleNegoNeeded);
-        return () => {
-            peer.peer.removeEventListener(NEGOTIATION_NEEDED, handleNegoNeeded);
-        };
-    }, [handleNegoNeeded]);
-
-    useEffect(() => {
-        peer.peer.addEventListener("track", async (ev) => {
-            const remoteStream = ev.streams;
-            setRemoteStream(remoteStream[0]);
-        });
-    }, []);
-
-    const handleDisconnect = () => {
-        handleEndCall()
-        socket.emit(END_CALL, { to: remoteUserId, roomId: callId })
-    }
-
     return (
         <Stack
-            spacing={3}
-            display={'flex'}
-            flexDirection={'column'}
-            alignItems={'center'}
+            spacing={2}
             sx={{
                 p: 2,
                 height: "100%",
-                position: "relative"
+                width: "100%",
+                background: "linear-gradient(135deg, #232946 0%, #393e6e 100%)",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+                overflow: "hidden"
             }}
         >
-            {uiOfLiveCalling.dialButtonIsactive &&
-                <Stack>
-                    <Button onClick={handleDialCall}>Dial</Button>
-                </Stack>
-            }
+            {/* Top Bar */}
+            <Box
+                sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    p: 2,
+                    zIndex: 2,
+                }}
+            >
+                <Typography variant="h6" color="white">
+                    Live Call
+                </Typography>
+                <Typography variant="body2" color="gray">
+                    {callId}
+                </Typography>
+            </Box>
 
-            {remoteStream && (
-                <Stack
-                    sx={{
-                        p: 2,
-                        height: "80%",
-                        // border: "2px solid pink",
-                        width: "100%",
-                        padding: "1",
-                        alignItems: "center"
-                    }}
-                >
-                    <ReactPlayer
-                        playing
-                        height="100%"
-                        width="100%"
-                        url={remoteStream}
-                    />
-                </Stack>
-            )}
+            {/* Remote Streams */}
+            <Stack
+                direction="row"
+                spacing={2}
+                sx={{
+                    width: "100%",
+                    height: "70%",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    mt: 6,
+                }}
+            >
+                {remoteStreams.length > 0 ? (
+                    remoteStreams.map(({ stream, peer }) => (
+                        <Box
+                            key={uuidv4()}
+                            sx={{
+                                width: 400,
+                                height: 300,
+                                borderRadius: 3,
+                                overflow: "hidden",
+                                boxShadow: 3,
+                                bgcolor: "#393e6e", // soft dark blue
+                                position: "relative",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <ReactPlayer
+                                playing
+                                width="100%"
+                                height="100%"
+                                url={stream}
+                                style={{ background: "#000" }}
+                            />
+                            <Typography
+                                sx={{
+                                    position: "absolute",
+                                    bottom: 8,
+                                    left: 8,
+                                    bgcolor: "rgba(0,0,0,0.6)",
+                                    color: "white",
+                                    px: 1,
+                                    borderRadius: 1,
+                                    fontSize: 12
+                                }}
+                            >
+                                {peer.peer.connectionState}
+                            </Typography>
+                        </Box>
+                    ))
+                ) : (
+                    <Typography color="gray" sx={{ fontStyle: "italic" }}>
+                        Waiting for remote stream...
+                    </Typography>
+                )}
+            </Stack>
 
-            {uiOfLiveCalling.connectButtonIsActive && remoteStream && <Button onClick={() => {
-                setUiOfLiveCalling({ ...uiOfLiveCalling, connectButtonIsActive: false });
-                sendStreams()
-            }}>Connect ...</Button>}
-
+            {/* Local Stream (Picture-in-Picture style) */}
             {myStream && (
-                <Stack
+                <Box
                     sx={{
-                        p: 1,
-                        height: "30%",
-                        width: "fit-content",
-                        // border: "2px solid black",
                         position: "absolute",
-                        bottom: "0",
-                        right: "0"
+                        bottom: 32,
+                        right: 32,
+                        width: 180,
+                        height: 120,
+                        borderRadius: 2,
+                        overflow: "hidden",
+                        boxShadow: 4,
+                        border: "2px solid #fff",
+                        zIndex: 3,
+                        bgcolor: "#111"
                     }}
                 >
                     <ReactPlayer
                         playing
+                        width="100%"
                         height="100%"
-                        width="fit-content"
                         url={myStream}
                         muted
+                        style={{ background: "#000" }}
                     />
-                </Stack>
+                </Box>
             )}
-            {uiOfLiveCalling.disconnectButtonIsActive && <IconBtn title='Disconnect call' icon={<PhoneDisabledIcon color='error' fontSize='large' />} handleClick={handleDisconnect} />}
+
+            {/* Call Controls */}
+            <Stack
+                direction="row"
+                spacing={3}
+                sx={{
+                    position: "absolute",
+                    bottom: 32,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    zIndex: 4,
+                }}
+            >
+                {uiOfLiveCalling.dialButtonIsactive && (
+                    <Button
+                        variant="contained"
+                        color="success"
+                        startIcon={<CallIcon />}
+                        onClick={handleDialCall}
+                        sx={{ minWidth: 120, fontWeight: "bold" }}
+                    >
+                        Dial
+                    </Button>
+                )}
+                {uiOfLiveCalling.disconnectButtonIsActive && (
+                    <IconButton
+                        color="error"
+                        onClick={handleEndCall}
+                        sx={{
+                            bgcolor: "#fff",
+                            '&:hover': { bgcolor: "#ffeaea" },
+                            width: 64,
+                            height: 64,
+                            borderRadius: "50%",
+                            boxShadow: 2,
+                        }}
+                    >
+                        <PhoneDisabledIcon fontSize="large" />
+                    </IconButton>
+                )}
+            </Stack>
         </Stack>
-    )
+    );
 }
 
-export default LiveCalling
+export default LiveCalling;

@@ -1,8 +1,9 @@
 const amqp = require("amqplib");
 const { RABBIT_MQ_EXCHANGE, RABBIT_MQ_EXCHANGE_TYPE } = require("../../Constants/constants");
-const { START_TYPING, STOP_TYPING, UPDATE_ONLINE_STATUS, NEW_MESSAGE, REFETCH_CHATS, NEW_FRIEND_REQUEST } = require("../../Constants/events");
+const { START_TYPING, STOP_TYPING, UPDATE_ONLINE_STATUS, NEW_MESSAGE, REFETCH_CHATS, NEW_FRIEND_REQUEST, RINGING, CALL_INCOMING, CALL_INCOMING_RESPONSE, INITIATE_P2P, INITIAL_OFFER, INITIAL_ANSWER, RENEGOTIATE_OFFER, RENEGOTIATE_ANSWER, END_CALL, SEND_ME_YOUR_STREAM } = require("../../Constants/events");
 const { getIo } = require("../socket/io");
 const { redis } = require("../redis/connectToRedis");
+const { response } = require("express");
 
 let publishChannel, subscribeChannelForSocket;
 
@@ -36,7 +37,7 @@ const initializeRabbitMQConnection = async () => {
         subscribeChannelForSocket.consume(q.queue, async (msg) => {
             if (msg !== null) {
                 const message = JSON.parse(msg.content.toString());
-                console.log("Received new socket event", message);
+                console.info("Received new socket event", message);
                 // Notification handling code will go here!
                 await consumeSocketEvents(message);
 
@@ -44,9 +45,9 @@ const initializeRabbitMQConnection = async () => {
             }
         });
 
-        console.log("conection succesful to RabbitMQ")
+        console.info("conection successful to RabbitMQ")
     } catch (error) {
-        console.log(error);
+        console.error(error);
     }
 }
 
@@ -74,6 +75,7 @@ const consumeSocketEvents = async (message) => {
                 }
                 io.to(socket_ids).emit(START_TYPING, { chatId: message.chatId, user })
                 break;
+
             case STOP_TYPING:
                 console.log(STOP_TYPING);
                 socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);
@@ -82,6 +84,7 @@ const consumeSocketEvents = async (message) => {
                 }
                 io.to(socket_ids).emit(STOP_TYPING, { chatId: message.chatId, user })
                 break;
+
             case UPDATE_ONLINE_STATUS:
                 console.log(UPDATE_ONLINE_STATUS);
                 socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socketIds of friends
@@ -90,6 +93,7 @@ const consumeSocketEvents = async (message) => {
                 // }
                 io.to(socket_ids).emit(UPDATE_ONLINE_STATUS, { user: message.user._id, user_online_status: message.user_online_status });
                 break;
+
             case NEW_MESSAGE:
                 console.log(NEW_MESSAGE);
                 socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socket of chat members
@@ -106,6 +110,66 @@ const consumeSocketEvents = async (message) => {
                 console.log(NEW_FRIEND_REQUEST);
                 socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socketIds of receiver
                 io.to(socket_ids).emit(NEW_FRIEND_REQUEST, { msg: `you received freind request from ${message.user_name}` });
+                break;
+
+            case CALL_INCOMING:
+                console.log("CALL_INCOMING");
+                socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socketIds of receiver
+                io.to(socket_ids).emit("CALL_INCOMING", { msg: `you received call from ${message.user_name}`, roomId: message.roomId, user: message.user });
+                break;
+
+            case RINGING:
+                console.log(RINGING);
+                socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socketIds of receiver
+                io.to(socket_ids).emit(RINGING, {});
+                break;
+
+            case CALL_INCOMING_RESPONSE:
+                console.log(CALL_INCOMING_RESPONSE);
+                socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socketIds of receiver
+                io.to(socket_ids).emit(CALL_INCOMING_RESPONSE, { response: message.response, from: message.from });
+                break;
+
+            case INITIATE_P2P:
+                console.log(INITIATE_P2P);
+                socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socketIds of receiver
+                io.to(socket_ids).emit(INITIATE_P2P, { response: message.response, from: message.from });
+                break;
+
+            case INITIAL_OFFER:
+                console.log(INITIAL_OFFER);
+                socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socketIds of receiver
+                io.to(socket_ids).emit(INITIAL_OFFER, { ...message });
+                break;
+
+            case INITIAL_ANSWER:
+                console.log(INITIAL_ANSWER);
+                socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socketIds of receiver
+                io.to(socket_ids).emit(INITIAL_ANSWER, { ...message });
+                break;
+
+            case SEND_ME_YOUR_STREAM:
+                console.log(SEND_ME_YOUR_STREAM);
+                socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socketIds of receiver
+                io.to(socket_ids).emit(SEND_ME_YOUR_STREAM, { ...message });
+                break;
+
+            case RENEGOTIATE_OFFER:
+                console.log(RENEGOTIATE_OFFER);
+                socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socketIds of receiver
+                io.to(socket_ids).emit(RENEGOTIATE_OFFER, { ...message });
+                break;
+
+            case RENEGOTIATE_ANSWER:
+                console.log(RENEGOTIATE_ANSWER);
+                socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socketIds of receiver
+                io.to(socket_ids).emit(RENEGOTIATE_ANSWER, { ...message });
+                break;
+
+            case END_CALL:
+                console.log(END_CALL);
+                socket_ids = await redis.hmget("onlineUsersSocketId", ...message.members);//getting socketIds of receiver
+                io.to(socket_ids).emit(END_CALL, { ...message });
                 break;
 
             default:

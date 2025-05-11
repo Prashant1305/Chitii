@@ -227,12 +227,16 @@ const getAllNotifications = async (req, res, next) => {
 const getMyfriends = async (req, res, next) => {
     try {
         const { conversationId } = req.query;
-        const chats = await Conversation.find({ members: req.clientAuthData._id, conversation_type: private }).lean().populate("members", "user_name avatar_url")
+        // const chats = await Conversation.find({ members: req.clientAuthData._id, conversation_type: "private" }).lean().populate("members", "user_name avatar_url")
 
-        const friends = chats.map((chat) => chat.members).flat().filter((member) => member._id.toString() !== req.clientAuthData._id.toString());
+        // const friends = chats.map((chat) => chat.members).flat().filter((member) => member._id.toString() !== req.clientAuthData._id.toString());
+        const friends = await User.find({ _id: { $in: req.clientAuthData.friends } }, { user_name: 1, avatar_url: 1 }).lean()
 
         if (conversationId) {
             const chat = await Conversation.findById(conversationId);
+            if (!chat) {
+                return res.status(404).json({ message: "chat not found" });
+            }
 
             const friendsNotInChat = friends.filter((friend) => {
 
@@ -245,7 +249,6 @@ const getMyfriends = async (req, res, next) => {
             });
             return res.status(200).json({ message: friendsNotInChat });
         }
-
         res.status(200).json({ message: friends });
     } catch (error) {
         const err = new Error("unable to retrive friend list, plz try later");

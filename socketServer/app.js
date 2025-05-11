@@ -3,12 +3,10 @@ require('dotenv').config();
 const { createServer } = require('http');
 
 const connectDb = require("./utils/mongoDb/connectToDb");
-
-const { socketAuthenticator } = require("./middleware/auth_middleware");
-const { initializeSocket } = require("./utils/socket/socketSetup");
 const { initializeRedis } = require("./utils/redis/connectToRedis");
 const { initializeRabbitMQConnection } = require("./utils/rabbitMQ/initailizeRabbitMq");
-
+const { socketAuthenticator } = require("./middleware/auth_middleware");
+const { initializeSocket } = require("./utils/socket/socketSetup");
 
 
 const PORT = process.env.PORT || 3011;
@@ -41,24 +39,47 @@ var corsOptions = {
     credentials: true,
 };
 
-// SOCKET
-const server = createServer(app);
-const io = initializeSocket(server, corsOptions)
+// // initialize Redis
+// initializeRedis();
 
-// checking connection
-app.get('/api/check/socketserver', (req, res) => {
-    res.status(200).json({
-        msg: `hello from server at port ${PORT}`
+// //intialize RabbitMQ
+// initializeRabbitMQConnection();
+
+// // SOCKET
+// const server = createServer(app);
+// const io = initializeSocket(server, corsOptions)
+
+// // checking connection
+// app.get('/api/check/socketserver', (req, res) => {
+//     res.status(200).json({
+//         msg: `hello from server at port ${PORT}`
+//     });
+// });
+
+
+
+// server.listen(PORT, () => {
+//     connectDb();
+//     console.log(`server running on port ${PORT}`);
+// })
+
+async function startServer() {
+    initializeRedis();
+    await initializeRabbitMQConnection();
+
+    const server = createServer(app);
+    const io = initializeSocket(server, corsOptions);
+
+    app.get('/api/check/socketserver', (req, res) => {
+        res.status(200).json({
+            msg: `hello from server at port ${PORT}`
+        });
     });
-});
 
-// initialize Redis
-initializeRedis();
+    server.listen(PORT, () => {
+        connectDb();
+        console.log(`server running on port ${PORT}`);
+    });
+}
 
-//intialize RabbitMQ
-initializeRabbitMQConnection();
-
-server.listen(PORT, () => {
-    connectDb();
-    console.log(`server running on port ${PORT}`);
-})
+startServer();

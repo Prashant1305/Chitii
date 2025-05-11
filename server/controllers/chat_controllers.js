@@ -21,7 +21,7 @@ const newGroupChat = async (req, res, next) => {
 
         }
         const allMembers = [...members, req.clientAuthData._id.toString()]
-        const newGroup = await Conversation.create({ name, conversation_type: group, members: allMembers, creator: req.clientAuthData._id });
+        const newGroup = await Conversation.create({ name, conversation_type: "group", members: allMembers, creator: req.clientAuthData._id });
         // console.log(newGroup);
 
         const messageForDb = { sender: req.clientAuthData._id, conversation: newGroup._id, text_content: `Group Created by ${req.clientAuthData.user_name}`, attachments: [] }
@@ -85,7 +85,7 @@ const getMyGroups = async (req, res, next) => {
     try {
         const chats = await Conversation.find({
             members: req.clientAuthData._id,
-            group_chat: true,
+            conversation_type: "group",
             creator: req.clientAuthData._id
         }).populate("members", "avatar_url");
 

@@ -7,7 +7,7 @@ const conversationSchema = new mongoose.Schema({
     },
     conversation_type: {
         type: String,
-        default: "group",
+        default: "private",
         enum: ["private", "group"]
     },
     creator: {

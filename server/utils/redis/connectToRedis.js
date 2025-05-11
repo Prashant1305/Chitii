@@ -1,5 +1,5 @@
 const Redis = require("ioredis");
-const { ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS, NEW_REQUEST, CALL_INCOMING, CALL_RECEIVED_RESPONSE, INITIATE_P2P, HANDLE_OFFER_CREATE_ANSWERE, HANDLE_ANSWERE, PEER_NEGO_NEEDED, PEER_NEGO_DONE, END_CALL } = require("../../Constants/events");
+const { ONLINE_USERS, START_TYPING, STOP_TYPING, NEW_MESSAGE, REFETCH_CHATS, NEW_REQUEST, CALL_INCOMING, CALL_INCOMING_RESPONSE, INITIATE_P2P, HANDLE_OFFER_CREATE_ANSWERE, HANDLE_ANSWERE, PEER_NEGO_NEEDED, PEER_NEGO_DONE, END_CALL } = require("../../Constants/events");
 
 
 const userCredentials = {
@@ -98,7 +98,7 @@ const initializeRedis = () => {
 
         //             let responseOfReceiverPromise = () =>
         //             (new Promise((resolve, reject) => {
-        //                 specificIncomingCallReceiverSocket.once(CALL_RECEIVED_RESPONSE, (data) => { // once means it will trigger only once
+        //                 specificIncomingCallReceiverSocket.once(CALL_INCOMING_RESPONSE, (data) => { // once means it will trigger only once
         //                     if (data.status === "ACCEPTED") {
         //                         resolve(data);
         //                     }
@@ -110,10 +110,10 @@ const initializeRedis = () => {
         //             )
         //             try {
         //                 const receivedCallStatus = await responseOfReceiverPromise();
-        //                 pub.publish(CALL_RECEIVED_RESPONSE, JSON.stringify(receivedCallStatus))
+        //                 pub.publish(CALL_INCOMING_RESPONSE, JSON.stringify(receivedCallStatus))
 
         //             } catch (error) {
-        //                 pub.publish(CALL_RECEIVED_RESPONSE, JSON.stringify(error));
+        //                 pub.publish(CALL_INCOMING_RESPONSE, JSON.stringify(error));
         //             }
 
         //         }

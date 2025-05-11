@@ -9,7 +9,7 @@ import { useSocketEvent } from '../../hooks/socket_hooks'
 import { incrementNotificationCount } from '../../redux/reducers/chat'
 import { addOnlineUser, removeOnlineUser, setOnlineUsersArray } from '../../redux/reducers/online'
 import { get_online_friends_api } from '../../utils/ApiUtils'
-import { CALL_INCOMING, NEW_FRIEND_REQUEST, NEW_MESSAGE, UPDATE_ONLINE_STATUS } from '../constants/events'
+import { CALL_INCOMING, RINGING, NEW_FRIEND_REQUEST, NEW_MESSAGE, UPDATE_ONLINE_STATUS } from '../constants/events'
 import IncomingCallDialog from '../Dialogs/call/IncomingCallDialog'
 import Header from '../header/Header'
 import Profile from '../profile.jsx/Profile'
@@ -49,7 +49,9 @@ function PublicLayout() {
         console.log(data)
         console.log("callIcoming")
         setIncomingCallUserData(data);
+
         setUiState(prev => ({ ...prev, isIncomingCallDialogOpen: true }));
+        socket.emit(RINGING, { to: data.user._id, status: "RECEIVED" });
     }, []);
 
     const eventHandlers = {

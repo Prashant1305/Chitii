@@ -11,6 +11,8 @@ class PeerService {
                     },
                 ],
             });
+        } else {
+            console.error("Peer already exist");
         }
     }
 
@@ -20,6 +22,8 @@ class PeerService {
             const ans = await this.peer.createAnswer();
             await this.peer.setLocalDescription(new RTCSessionDescription(ans));
             return ans;
+        } else {
+            console.error("Peer does not exist");
         }
     }
     // Purpose: Handles an incoming offer and generates an answer.
@@ -29,9 +33,11 @@ class PeerService {
     //  Set Local Description: Sets the generated answer as the local description.
     //  Return Answer: Returns the generated answer to be sent back to the offerer.
 
-    async setLocalDescription(ans) {
+    async setRemoteDescription(ans) {
         if (this.peer) {
             await this.peer.setRemoteDescription(new RTCSessionDescription(ans));
+        } else {
+            console.error("Peer does not exist");
         }
     }
     // Purpose: Sets the remote description with the provided answer.
@@ -43,6 +49,8 @@ class PeerService {
             const offer = await this.peer.createOffer();
             await this.peer.setLocalDescription(new RTCSessionDescription(offer));
             return offer;
+        } else {
+            console.error("Peer does not exist");
         }
     }
     //  Purpose: Creates an SDP offer to initiate a WebRTC connection.
@@ -60,8 +68,10 @@ class PeerService {
             // Close the peer connection
             this.peer.close();
             this.peer = null;
+        } else {
+            console.error("Peer does not exist");
         }
     }
 }
 
-export const peer = new PeerService();
+export default PeerService;

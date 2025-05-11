@@ -1,7 +1,7 @@
 const amqp = require("amqplib");
 const { RABBIT_MQ_EXCHANGE, RABBIT_MQ_EXCHANGE_TYPE } = require("../../Constants/constants");
 
-let publishChannel, subscribeChannelForSocket;
+let publishChannel;
 
 const initializeRabbitMQConnection = async () => {
 

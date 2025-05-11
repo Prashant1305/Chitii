@@ -1,6 +1,7 @@
-const { CALL_INCOMING, CALL_RECEIVED_RESPONSE, INITIATE_P2P } = require("../Constants/events");
+const { CALL_INCOMING, CALL_INCOMING_RESPONSE, INITIATE_P2P } = require("../Constants/events");
 const Conversation = require("../models/conversation_model");
 const Room = require("../models/room");
+const { findUserConnectedToAndSendSocketEventToRabbit } = require("../utils/helper");
 
 const { pub, sub, redis } = require("../utils/redis/connectToRedis");
 
@@ -9,7 +10,7 @@ const incomingCall = async (req, res, next) => {
         const { receiverClientId } = req.body;
         const chat = await Conversation.findOne({
             members: { $all: [receiverClientId, req.clientAuthData._id + ""] },
-            group_chat: false
+            conversation_type: "private"
         }).lean()
 
         if (!chat) {
@@ -17,7 +18,7 @@ const incomingCall = async (req, res, next) => {
         }
 
         // checking wether user is online or not
-        const isUserOnline = await redis.sismember('onlineUsersMongoIds', receiverClientId + "");
+        const isUserOnline = await redis.hexists('onlineUsersSocketId', receiverClientId + "");
         if (isUserOnline === 0) {
             return res.status(203).send({ message: "User is offline" });
         }
@@ -33,11 +34,26 @@ const incomingCall = async (req, res, next) => {
 
         const userIdsForSendingIncomingCallEvent = chat.members.filter((id) => id + "" !== req.clientAuthData._id + "")
 
-        pub.publish(CALL_INCOMING, JSON.stringify({
-            members: userIdsForSendingIncomingCallEvent,
-            user: { _id: req.clientAuthData._id, user_name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url },
-            roomId: room._id + ""
-        }))
+        // pub.publish(CALL_INCOMING, JSON.stringify({
+        //     members: userIdsForSendingIncomingCallEvent,
+        //     user: { _id: req.clientAuthData._id, user_name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url },
+        //     roomId: room._id + ""
+        // }))
+        await findUserConnectedToAndSendSocketEventToRabbit(
+            userIdsForSendingIncomingCallEvent,
+            {
+                members: userIdsForSendingIncomingCallEvent,
+                user: { _id: req.clientAuthData._id, user_name: req.clientAuthData.user_name, avatar_url: req.clientAuthData.avatar_url },
+                roomId: room._id + "",
+                event_name: CALL_INCOMING
+            },
+            true,
+            {
+                text: `${req.clientAuthData.user_name} is calling you`,
+                title: "Incoming call",
+                url: `/call/${room._id}`
+            }
+        )
 
         const timeId = setTimeout(async () => {
             await Room.deleteOne({ _id: room._id });
@@ -47,7 +63,7 @@ const incomingCall = async (req, res, next) => {
         let responseOfReceiverPromise = () =>
         (new Promise((resolve, reject) => {
 
-            sub.subscribe(CALL_RECEIVED_RESPONSE, (err, _) => {
+            sub.subscribe(CALL_INCOMING_RESPONSE, (err, _) => {
                 if (err) {
                     console.error("Failed to subscribe CallStatus: ", err);
                 } else {
@@ -57,14 +73,14 @@ const incomingCall = async (req, res, next) => {
 
             sub.on("message", (channel, message) => {
                 const data = JSON.parse(message)
-                if (channel === CALL_RECEIVED_RESPONSE && data._id + "" === req.clientAuthData._id.toString()) {
+                if (channel === CALL_INCOMING_RESPONSE && data._id + "" === req.clientAuthData._id.toString()) {
                     if (data.status === "ACCEPTED") {
                         resolve(data);
                     }
                     else { // data.status === "DECLINED"
                         reject(data);
                     }
-                    sub.unsubscribe(CALL_RECEIVED_RESPONSE);
+                    sub.unsubscribe(CALL_INCOMING_RESPONSE);
                 }
             });
         })

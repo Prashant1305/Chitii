@@ -1,13 +1,13 @@
 const { Server } = require("socket.io");
 const cookieParser = require("cookie-parser");
 const { socketAuthenticator } = require("../../middleware/auth_middleware");
-const { InstanceActiveUserSocketIDs, InstanceOnlineUsersIds } = require("../infoOfActiveSession");
-const { startTypingFeature, stopTypingFeature, comingOnlineFeature, goingOfflineFeature, functionCalledForGoingOffline, notifyFriendsOfOnlineStatus } = require("../features");
+const { startTypingFeature, stopTypingFeature, notifyFriendsOfOnlineStatus } = require("../features");
 
 const { getIo, setIo } = require("./io");
 const Room = require("../../models/room");
 const { redis } = require("../redis/connectToRedis");
 const { REDIS_ONLINE_USERS_ID_MAPPED_WITH_SOCKET_ID } = require("../../Constants/constants");
+const { callingFeatures } = require("../CallingFeature");
 
 function initializeSocket(server, corsOptions) {
     setIo(new Server(server, { cors: corsOptions }));
@@ -33,6 +33,7 @@ function initializeSocket(server, corsOptions) {
         startTypingFeature(socket, io);
         stopTypingFeature(socket, io);
         notifyFriendsOfOnlineStatus(socket, io);
+        callingFeatures(socket, io);
 
         socket.on("disconnect", async () => {
             console.log("user disconnected");
